@@ -508,10 +508,12 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
       <div class="sb-item" onclick="navTo('groups',this)"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg>Small Groups</div>
       <div class="sb-sec">Gottesdienst</div>
       <div class="sb-item" onclick="navTo('gottesdienste',this)"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13z"/></svg>Gottesdienste</div>
+      <div class="sb-item" onclick="navTo('volunteer',this)"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>Freiwillige</div>
       <div class="sb-item" onclick="navTo('worship',this)"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>Worship</div>
       <div class="sb-item" onclick="navTo('events',this)"><svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2z"/></svg>Veranstaltungen</div>
       <div class="sb-sec">Finanzen</div>
       <div class="sb-item" onclick="navTo('spenden',this)"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2z"/></svg>Twint & Spenden</div>
+      <div class="sb-item" onclick="navTo('artikel',this)"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 17.82 9.64 17 12 17s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>Artikel</div>
       <div class="sb-item" onclick="navTo('kreditoren',this)"><svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>Kreditoren</div>
       <div class="sb-sec">Verwaltung</div>
       <div class="sb-item" onclick="navTo('dokumente',this)"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>Dokumente</div>
@@ -706,7 +708,51 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
             </div>
           </div>
         </div>
-        <div class="page" id="pg-events">
+        <div class="page" id="pg-volunteer" style="display:none">
+  <div class="topbar">
+    <div class="topbar-title">Freiwillige & Dienstplan</div>
+    <div class="topbar-right" style="display:flex;gap:8px">
+      <button class="tbtn tbtn-ghost" id="vol-view-btn" onclick="toggleVolView()">Kalender</button>
+      <button class="tbtn tbtn-ghost" onclick="openNBereich()">+ Bereich</button>
+      <button class="tbtn tbtn-navy" onclick="openNEinsatz()">+ Einsatz planen</button>
+    </div>
+  </div>
+  <!-- Stats -->
+  <div class="sgrid4" style="margin-bottom:16px">
+    <div class="scard"><div class="sico" style="background:#EDE9FE"><svg viewBox="0 0 24 24" style="fill:#7C3AED"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div><div><div class="sn" id="vol-total">0</div><div class="sl">Freiwillige total</div></div></div>
+    <div class="scard"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><div><div class="sn" id="vol-bestaetigt">0</div><div class="sl">Bestätigt diese Woche</div></div></div>
+    <div class="scard"><div class="sico" style="background:#FEF3C7"><svg viewBox="0 0 24 24" style="fill:#D97706"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg></div><div><div class="sn" id="vol-offen">0</div><div class="sl">Angefragt / offen</div></div></div>
+    <div class="scard"><div class="sico" style="background:#DBEAFE"><svg viewBox="0 0 24 24" style="fill:#2563EB"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6z"/></svg></div><div><div class="sn" id="vol-bereiche">0</div><div class="sl">Dienst-Bereiche</div></div></div>
+  </div>
+  <!-- Bereiche overview -->
+  <div id="vol-bereiche-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:20px"></div>
+  <!-- Einsätze table -->
+  <div class="tcard" id="vol-list-view">
+    <div class="tcardh">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select class="afs" id="vol-filter-bereich" onchange="filterEinsaetze()" style="min-width:160px">
+          <option value="">Alle Bereiche</option>
+        </select>
+        <select class="afs" id="vol-filter-status" onchange="filterEinsaetze()">
+          <option value="">Alle Status</option>
+          <option value="angefragt">Angefragt</option>
+          <option value="bestaetigt">Bestätigt</option>
+          <option value="abgelehnt">Abgelehnt</option>
+        </select>
+        <input type="week" id="vol-filter-woche" class="afs" onchange="filterEinsaetze()">
+      </div>
+      <button class="tbtn tbtn-ghost" onclick="exportEinsaetze()">Export</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Datum</th><th>Bereich</th><th>Freiwillige/r</th><th>Zeit</th><th>Status</th><th style="width:120px"></th></tr></thead>
+        <tbody id="vol-tbody"><tr><td colspan="6" class="aempty">Noch keine Einsätze geplant</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="pg-events">
           <div class="sgrid4">
             <div class="scard"><div class="sico" style="background:#EFF6FF"><svg viewBox="0 0 24 24" style="fill:#2563EB"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2z"/></svg></div><div><div class="sn" id="ev-total">0</div><div class="sl">Events total</div></div></div>
             <div class="scard"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><div><div class="sn" id="ev-geplant">0</div><div class="sl">Geplant</div></div></div>
@@ -783,7 +829,42 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
     </div>
   </div>
 </div>
-        <div class="page" id="pg-kreditoren">
+        <div class="page" id="pg-artikel" style="display:none">
+  <div class="topbar">
+    <div class="topbar-title">Artikel</div>
+    <div class="topbar-right" style="display:flex;gap:8px">
+      <input type="text" placeholder="Artikel suchen..." id="art-srch" class="srch" oninput="filterArtikel()" style="width:220px">
+      <select class="afs" id="art-filter-kat" onchange="filterArtikel()" style="min-width:140px">
+        <option value="">Alle Kategorien</option>
+        <option value="material">Material</option>
+        <option value="lebensmittel">Lebensmittel</option>
+        <option value="technik">Technik</option>
+        <option value="moebel">Möbel</option>
+        <option value="verbrauch">Verbrauchsmaterial</option>
+        <option value="sonstiges">Sonstiges</option>
+      </select>
+      <button class="tbtn tbtn-navy" onclick="openNArtikel()">+ Neuer Artikel</button>
+    </div>
+  </div>
+  <!-- Stats -->
+  <div class="sgrid4" style="margin-bottom:16px">
+    <div class="scard"><div class="sico" style="background:#EFF6FF"><svg viewBox="0 0 24 24" style="fill:#2563EB"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg></div><div><div class="sn" id="art-count">0</div><div class="sl">Artikel total</div></div></div>
+    <div class="scard"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><div><div class="sn" id="art-aktiv">0</div><div class="sl">Aktiv</div></div></div>
+    <div class="scard"><div class="sico" style="background:#FEF3C7"><svg viewBox="0 0 24 24" style="fill:#D97706"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg></div><div><div class="sn" id="art-cats">0</div><div class="sl">Kategorien</div></div></div>
+    <div class="scard"><div class="sico" style="background:#EDE9FE"><svg viewBox="0 0 24 24" style="fill:#7C3AED"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div><div><div class="sn" id="art-fav">0</div><div class="sl">Favoriten</div></div></div>
+  </div>
+  <!-- Artikel Table -->
+  <div class="tcard">
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th style="width:60px">Foto</th><th>Bezeichnung</th><th>Nr.</th><th>Kategorie</th><th>Einheit</th><th>Preis</th><th>Bestand</th><th>Status</th><th style="width:100px"></th></tr></thead>
+        <tbody id="art-tbody"><tr><td colspan="9" class="aempty">Noch keine Artikel — jetzt erstellen</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="pg-kreditoren">
   <div class="topbar">
     <div class="topbar-title" id="kred-title">Kreditoren</div>
     <div class="topbar-right">
@@ -1627,6 +1708,7 @@ function renderAU(mandantFilter) {
       <td><span class="abadge ${u.aktiv?'ab-ok':'ab-wait'}">${u.aktiv?'Aktiv':'Ausstehend'}</span></td>
       <td style="display:flex;gap:5px">
         <button class="aaction-btn" style="background:${u.aktiv?'#FEE2E2':'#DCFCE7'};color:${u.aktiv?'#DC2626':'#16A34A'};border-color:${u.aktiv?'#fca5a5':'#86efac'}" onclick="toggleAU('${u.id}',${u.aktiv})">${u.aktiv?'Sperren':'Freischalten'}</button>
+        <button class="aaction-btn" style="background:#EFF6FF;color:#2563EB;border-color:#93c5fd" onclick="sendPasswordReset('${u.email}')">🔑 Reset</button>
         ${u.rolle!=='superadmin'?`<button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteAU('${u.id}','${u.name||u.email}')">Löschen</button>`:''}
       </td>
     </tr>`;
@@ -1708,82 +1790,43 @@ async function saveAU() {
     : document.getElementById('au-mandant').value;
   const rolle = document.getElementById('au-rolle').value;
   if (!email || !mid) { toast('E-Mail und Gemeinde sind Pflicht'); return; }
-
-  // Check if user already exists
   const existing = _AU.find(u => u.email?.toLowerCase() === email && u.id);
-  if(existing) { toast('⚠ Benutzer mit dieser E-Mail existiert bereits'); return; }
-
+  if(existing) { toast('⚠ Benutzer existiert bereits'); return; }
   btn.disabled = true; btn.textContent = 'Wird erstellt...';
   try {
-    // STEP 1: Create Auth user via signUp with random password
-    // User will immediately get a password-reset/magic-link to set their own
-    const tempPw = crypto.randomUUID() + 'Aa1!'; // meets password requirements
+    // STEP 1: signUp with temp password — creates auth user
+    const tempPw = crypto.randomUUID() + 'Aa1!';
     const {data: authData, error: authErr} = await sb.auth.signUp({
-      email,
-      password: tempPw,
-      options: {
-        data: { name, rolle, mandant_id: mid },
-        emailRedirectTo: window.location.origin
-      }
+      email, password: tempPw,
+      options: { data: { name, rolle, mandant_id: mid }, emailRedirectTo: window.location.origin }
     });
+    let authUserId = authData?.user?.id;
 
-    if(authErr) {
-      // User might already exist in Auth but not in profiles
-      if(authErr.message.includes('already registered')) {
-        // Try to create/update profile for existing auth user
-        const {data: existingAuth} = await sb.from('profiles').select('id').eq('email', email).maybeSingle();
-        if(!existingAuth) {
-          // Create profile record linked to existing auth user
-          // We need the auth user ID - try password reset flow
-          await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
-          toast('ℹ Benutzer existiert bereits in Auth. Passwort-Reset wurde gesendet.');
-          btn.disabled=false; btn.textContent='Anlegen';
-          return;
-        }
-      }
-      toast('Fehler beim Erstellen: ' + authErr.message);
+    if(authErr && authErr.message.includes('already registered')) {
+      // User exists in auth but maybe not in profiles - just reset password
+      await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+      toast('Passwort-Reset E-Mail gesendet an ' + email);
       btn.disabled=false; btn.textContent='Anlegen';
+      document.getElementById('amo-u').classList.remove('open');
       return;
     }
+    if(authErr) { toast('Auth-Fehler: ' + authErr.message); btn.disabled=false; btn.textContent='Anlegen'; return; }
+    if(!authUserId) { toast('Fehler: Keine User-ID'); btn.disabled=false; btn.textContent='Anlegen'; return; }
 
-    const authUserId = authData?.user?.id;
-    if(!authUserId) {
-      toast('Fehler: Keine User-ID erhalten');
-      btn.disabled=false; btn.textContent='Anlegen';
-      return;
-    }
-
-    // STEP 2: Create profile record with the real Auth user ID
+    // STEP 2: Create profile
     const {error: pErr} = await sb.from('profiles').upsert({
       id: authUserId, email, name, mandant_id: mid, rolle, aktiv: true
     });
-    if(pErr) {
-      toast('Profil-Fehler: ' + pErr.message);
-      btn.disabled=false; btn.textContent='Anlegen';
-      return;
-    }
+    if(pErr) { toast('Profil-Fehler: ' + pErr.message); btn.disabled=false; btn.textContent='Anlegen'; return; }
 
-    // STEP 3: Send magic link / OTP so user can log in without knowing password
-    // This is the most reliable method - works with Supabase's default email
-    const {error: otpErr} = await sb.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: window.location.origin,
-        shouldCreateUser: false // user already created
-      }
+    // STEP 3: Send password reset email — user clicks link, sets own password
+    // This is more reliable than OTP because it works with custom SMTP too
+    const {error: resetErr} = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '?setup=1'
     });
 
-    // Add to local cache
     const newUser = {id: authUserId, email, name, mandant_id: mid, rolle, aktiv: true};
     _AU.push(newUser);
-
-    if(otpErr) {
-      // OTP failed but user was created - show instructions
-      toast('✓ Benutzer erstellt! E-Mail-Versand fehlgeschlagen – SMTP in Supabase prüfen.');
-    } else {
-      toast('✓ ' + email + ' wurde erstellt und erhält einen Login-Link per E-Mail!');
-    }
-
     document.getElementById('amo-u').classList.remove('open');
     await loadAdminData();
     if(_activeMandant) {
@@ -1792,9 +1835,12 @@ async function saveAU() {
       const dm_u=document.getElementById('a-dm-users');if(dm_u)dm_u.textContent=users.length;
       const dm_a=document.getElementById('a-dm-aktiv');if(dm_a)dm_a.textContent=users.filter(u=>u.aktiv).length;
     }
-  } catch(e) {
-    toast('Fehler: ' + e.message);
-  }
+    if(resetErr) {
+      toast('✓ Benutzer erstellt — E-Mail fehlgeschlagen. SMTP in Supabase prüfen!');
+    } else {
+      toast('✓ Einladungs-E-Mail gesendet an ' + email + ' — bitte Passwort setzen.');
+    }
+  } catch(e) { toast('Fehler: ' + e.message); }
   btn.disabled=false; btn.textContent='Anlegen';
 }
 
@@ -1869,7 +1915,7 @@ function rndrTbl(){
   document.getElementById('m-tbody').innerHTML=page.map(m=>{
     const cells=vis.map(c=>{
       if(c.key==='name')return`<td><div class="td-n"><div class="m-av" style="background:${m.color}">${ini(m)}</div><div><div class="m-fn">${m.vorname} ${m.nachname}</div><div class="m-em">${m.email}</div></div></div></td>`;
-      if(c.key==='email')return`<td style="color:#6B7280">${m.email}</td>`;
+      if(c.key==='email')return`<td>${m.email?`<a href='mailto:${m.email}' onclick='event.stopPropagation()' style='color:#2563EB;text-decoration:none'>${m.email}</a>`:'—'}</td>`;
       if(c.key==='mobil')return`<td style="color:#6B7280">${m.mobil}</td>`;
       if(c.key==='status')return`<td><span class="sbadge ${sC(m.status)}">${sL(m.status)}</span></td>`;
       if(c.key==='rolle')return`<td><select class="edit-sel" onclick="event.stopPropagation()" onchange="chR(this,${m.id})">${rollen.map(r=>`<option value="${r.id}"${m.rolleId===r.id?' selected':''}>${r.name}</option>`).join('')}<option value="__n">+ Neue Rolle...</option></select></td>`;
@@ -1956,7 +2002,7 @@ function openK(id){
   sv('k-vn',m.vorname);si('k-vn-i',m.vorname);sv('k-nn',m.nachname);si('k-nn-i',m.nachname);
   const a=aY(m.geburt);sv('k-geb',m.geburt?`${fD(m.geburt)}${a?' ('+a+' J.)':''}`:'');si('k-geb-i',m.geburt);
   sv('k-ges',m.geschlecht);si('k-ges-i',m.geschlecht);
-  sv('k-em',m.email);si('k-em-i',m.email);sv('k-mob',m.mobil);si('k-mob-i',m.mobil);
+  svEmail('k-em',m.email);si('k-em-i',m.email);sv('k-mob',m.mobil);si('k-mob-i',m.mobil);
   sv('k-str',m.strasse);si('k-str-i',m.strasse);sv('k-plz',m.plzort);si('k-plz-i',m.plzort);
   document.getElementById('k-st-v').innerHTML=`<span class="sbadge ${sC(m.status)}">${sL(m.status)}</span>`;
   sv('k-ein',fD(m.eingetreten));si('k-ein-i',m.eingetreten);
@@ -2126,7 +2172,7 @@ function openKK(id){
   const sv=(i2,v)=>{const e=document.getElementById(i2);if(e)e.textContent=v||'—';};
   const si=(i2,v)=>{const e=document.getElementById(i2);if(e)e.value=v||'';};
   sv('kk-vn',k.vorname);si('kk-vn-i',k.vorname);sv('kk-nn',k.nachname);si('kk-nn-i',k.nachname);
-  sv('kk-em',k.email);si('kk-em-i',k.email);sv('kk-tel',k.telefon);si('kk-tel-i',k.telefon);
+  svEmail('kk-em',k.email);si('kk-em-i',k.email);sv('kk-tel',k.telefon);si('kk-tel-i',k.telefon);
   sv('kk-st',kStatusLbl[k.status]);si('kk-st-i',k.status);sv('kk-src',k.quelle||'—');si('kk-src-i',k.quelle);
   sv('kk-date',k.datum?k.datum.split('-').reverse().join('.'):'—');
   const nb=document.getElementById('kk-notes-body');
@@ -2705,9 +2751,12 @@ function navTo(p,el2){
   if(p==='gottesdienste'){rndrGD();}
   if(p==='worship'){rndrWorship();}
   if(p==='events'){rndrEvents();}
+  if(p==='volunteer'){if(!dienstBereiche.length)loadVolunteer();else{filterEinsaetze();rndrBereiche();}}
   if(p==='spenden'){if(!spenden.length)loadSpenden();else filterSpenden();}
   if(p==='kreditoren'){if(!kreditoren.length)loadKreditoren();else{rndrKreditoren();filterRechnungen();}}
   if(p==='dokumente'){if(!dokumente.length)loadDokumente();else filterDok();}
+  if(p==='artikel'){if(!artikel.length)loadArtikel();else{filterArtikel();}}
+  if(p==='volunteer'){if(!dienstBereiche.length)loadVolunteer();else{filterEinsaetze();rndrBereiche();}}
 }
 
 
@@ -3018,6 +3067,15 @@ function renderDetailUsers(users) {
       ${u.rolle!=='superadmin'?`<button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteAUFromDetail('${u.id}','${u.name||u.email}')">Löschen</button>`:''}
     </td>
   </tr>`).join('');
+}
+
+async function sendPasswordReset(email) {
+  if(!email) { toast('Keine E-Mail für diesen Benutzer'); return; }
+  const {error} = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '?reset=1'
+  });
+  if(error) toast('Fehler: ' + error.message);
+  else toast('✓ Passwort-Reset E-Mail gesendet an ' + email);
 }
 
 async function deleteAUFromDetail(id, name) {
@@ -3439,19 +3497,15 @@ async function markBezahlt(id) {
 let dokumente=[], dokFilter='alle', dokFilt=[];
 
 async function loadDokumente() {
-  const data=await dbLoad('dokumente','created_at');
-  dokumente=data.map(d=>({...d,_dbId:d.id}));
-  filterDok();updDokStats();
-}
-
-function updDokStats() {
-  const total=dokumente.length;
-  const proto=dokumente.filter(d=>d.typ==='protokoll').length;
-  const vert=dokumente.filter(d=>d.typ==='vertrag').length;
-  const size=dokumente.reduce((a,d)=>a+(d.datei_groesse||0),0);
-  const sizeMB=(size/1024/1024).toFixed(1);
-  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
-  set('dok-count',total); set('dok-size',sizeMB+' MB'); set('dok-protokolle',proto); set('dok-vertraege',vert);
+  try {
+    const data = await dbLoad('dokumente', 'created_at');
+    dokumente = data.map(d => ({...d, _dbId: d.id}));
+  } catch(e) {
+    console.warn('loadDokumente error:', e);
+    dokumente = [];
+  }
+  filterDok();
+  updDokStats();
 }
 
 function setDokFilter(f,el) {
@@ -3476,49 +3530,98 @@ function rndrDok() {
   if(!dokFilt.length){grid.innerHTML='<div style="text-align:center;color:#9CA3AF;padding:40px;grid-column:1/-1">Keine Dokumente gefunden</div>';return;}
   const icons={protokoll:'📋',vertrag:'📄',rechnung:'💰',bild:'🖼',sonstiges:'📁'};
   const colors={protokoll:'#DBEAFE',vertrag:'#EDE9FE',rechnung:'#DCFCE7',bild:'#FEF3C7',sonstiges:'#F3F4F6'};
-  grid.innerHTML=dokFilt.sort((a,b)=>b.created_at?.localeCompare(a.created_at)).map(d=>`
-    <div style="background:white;border:1px solid #E5E7EB;border-radius:12px;padding:16px;transition:all .2s;cursor:pointer" 
-         onmouseover="this.style.borderColor='#C8941A'" onmouseout="this.style.borderColor='#E5E7EB'">
-      <div style="width:44px;height:44px;border-radius:10px;background:${colors[d.typ]||'#F3F4F6'};display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px">${icons[d.typ]||'📁'}</div>
-      <div style="font-size:13px;font-weight:600;color:#1A3560;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name}</div>
-      <div style="font-size:11px;color:#9CA3AF;margin-bottom:10px">${d.typ} · ${new Date(d.created_at).toLocaleDateString('de-CH')}</div>
-      ${d.beschreibung?`<div style="font-size:11px;color:#6B7280;margin-bottom:10px">${d.beschreibung}</div>`:''}
+  const fmtSize = b => b > 1048576 ? (b/1048576).toFixed(1)+' MB' : b > 1024 ? (b/1024).toFixed(0)+' KB' : b+' B';
+  grid.innerHTML = dokFilt.sort((a,b) => (b.created_at||'').localeCompare(a.created_at||'')).map(d => {
+    const icon = icons[d.typ] || '📁';
+    const color = colors[d.typ] || '#F3F4F6';
+    const date = d.created_at ? new Date(d.created_at).toLocaleDateString('de-CH') : '—';
+    const size = d.datei_groesse ? fmtSize(d.datei_groesse) : '';
+    const openBtn = d.datei_url
+      ? `<a href="${d.datei_url}" target="_blank" rel="noopener" class="aaction-btn" style="text-decoration:none;flex:1;text-align:center">📂 Öffnen</a>`
+      : `<button class="aaction-btn" style="flex:1;opacity:.5;cursor:not-allowed" title="Kein Storage-Link verfügbar">📂 Öffnen</button>`;
+    return \`<div style="background:white;border:1px solid #E5E7EB;border-radius:12px;padding:16px;transition:all .2s" 
+         onmouseover="this.style.borderColor='#C8941A';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'" 
+         onmouseout="this.style.borderColor='#E5E7EB';this.style.boxShadow='none'">
+      <div style="width:44px;height:44px;border-radius:10px;background:\${color};display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px">\${icon}</div>
+      <div style="font-size:13px;font-weight:600;color:#1A3560;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="\${d.name}">\${d.name}</div>
+      <div style="font-size:11px;color:#9CA3AF;margin-bottom:4px">\${d.typ}\${size?' · '+size:''}</div>
+      <div style="font-size:10px;color:#9CA3AF;margin-bottom:10px">\${date}</div>
+      \${d.beschreibung ? \`<div style="font-size:11px;color:#6B7280;margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">\${d.beschreibung}</div>\` : ''}
       <div style="display:flex;gap:6px">
-        ${d.datei_url?`<a href="${d.datei_url}" target="_blank" class="aaction-btn" style="text-decoration:none">Öffnen</a>`:''}
-        <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="delDok('${d._dbId}')">Löschen</button>
+        \${openBtn}
+        <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="event.stopPropagation();delDok('\${d._dbId}')">🗑</button>
       </div>
-    </div>
-  `).join('');
+    </div>\`;
+  }).join('');
 }
 
 async function uploadDok(input) {
-  const files=Array.from(input.files);
+  const files = Array.from(input.files);
   if(!files.length) return;
-  const mid=_S?.working_mandant_id||_S?.mandant_id;
-  if(!mid){toast('Bitte Gemeinde auswählen');return;}
-  toast('Wird hochgeladen...');
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid) { toast('Bitte Gemeinde auswählen (Arbeiten als)'); return; }
+  
+  let uploaded = 0, failed = 0;
+  toast('⏳ ' + files.length + ' Datei(en) werden hochgeladen...');
+  
   for(const file of files) {
-    const typ=file.type.includes('image')?'bild':file.name.includes('protokoll')?'protokoll':file.name.includes('vertrag')?'vertrag':'sonstiges';
-    // Upload to Supabase Storage
-    const path=`${mid}/${Date.now()}_${file.name}`;
-    let url='';
+    // Detect type from filename and mimetype
+    let typ = 'sonstiges';
+    const nameLow = file.name.toLowerCase();
+    if(file.type.includes('image')) typ = 'bild';
+    else if(nameLow.includes('protokoll') || nameLow.includes('minutes')) typ = 'protokoll';
+    else if(nameLow.includes('vertrag') || nameLow.includes('contract')) typ = 'vertrag';
+    else if(nameLow.includes('rechnung') || nameLow.includes('invoice')) typ = 'rechnung';
+    
+    // Try Supabase Storage upload
+    let datei_url = '';
     try {
-      const {data:upData,error:upErr}=await sb.storage.from('dokumente').upload(path,file,{upsert:true});
-      if(!upErr&&upData){
-        const {data:urlData}=sb.storage.from('dokumente').getPublicUrl(path);
-        url=urlData?.publicUrl||'';
+      const path = mid + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const { data: upData, error: upErr } = await sb.storage
+        .from('dokumente')
+        .upload(path, file, { upsert: true, contentType: file.type });
+      
+      if(!upErr && upData) {
+        const { data: urlData } = sb.storage.from('dokumente').getPublicUrl(path);
+        datei_url = urlData?.publicUrl || '';
+      } else if(upErr) {
+        console.warn('Storage error:', upErr.message);
+        // Storage bucket might not exist - save metadata only
       }
     } catch(storageErr) {
-      console.warn('Storage upload failed (bucket may not exist):', storageErr);
-      // Continue without URL - document metadata is still saved
+      console.warn('Storage exception:', storageErr);
     }
-    const payload={name:file.name,typ,datei_url:url,datei_name:file.name,datei_groesse:file.size,beschreibung:''};
-    const saved=await dbSave('dokumente',payload);
-    if(saved){dokumente.push({...payload,_dbId:saved.id,created_at:new Date().toISOString()});}
+    
+    // Always save metadata to DB (even without storage URL)
+    const payload = {
+      name: file.name,
+      typ,
+      datei_url,
+      datei_name: file.name,
+      datei_groesse: file.size,
+      beschreibung: ''
+    };
+    
+    const saved = await dbSave('dokumente', payload);
+    if(saved) {
+      dokumente.push({...payload, _dbId: saved.id, id: saved.id, created_at: new Date().toISOString()});
+      uploaded++;
+    } else {
+      failed++;
+    }
   }
-  filterDok();updDokStats();
-  input.value='';
-  toast(files.length+' Dokument(e) hochgeladen ✓');
+  
+  input.value = '';
+  filterDok();
+  updDokStats();
+  
+  if(uploaded > 0 && failed === 0) {
+    toast('✓ ' + uploaded + ' Dokument(e) hochgeladen');
+  } else if(uploaded > 0 && failed > 0) {
+    toast('⚠ ' + uploaded + ' hochgeladen, ' + failed + ' fehlgeschlagen');
+  } else {
+    toast('✗ Fehler beim Hochladen — DB-Verbindung prüfen');
+  }
 }
 
 async function delDok(id) {
@@ -3527,6 +3630,494 @@ async function delDok(id) {
   if(error){toast('Fehler: '+error.message);return;}
   dokumente=dokumente.filter(d=>d._dbId!==id);
   filterDok();updDokStats();toast('Gelöscht ✓');
+}
+
+function makeEmailClickable(spanId, email) {
+  const el = document.getElementById(spanId);
+  if(!el) return;
+  if(email) {
+    el.innerHTML = `<a href="mailto:${email}" onclick="event.stopPropagation()" style="color:#2563EB;text-decoration:none;cursor:pointer" title="E-Mail öffnen">${email}</a>`;
+  } else {
+    el.textContent = '—';
+  }
+}
+function svEmail(id, email) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  if(email) {
+    el.innerHTML = `<a href="mailto:${email}" onclick="event.stopPropagation()" style="color:#2563EB;text-decoration:none;cursor:pointer">${email}</a>`;
+  } else {
+    el.textContent = '—';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// VOLUNTEER / FREIWILLIGE MODULE
+// ══════════════════════════════════════════════════════════
+let dienstBereiche=[], einsaetze=[], einsaetzeFilt=[];
+
+async function loadVolunteer() {
+  const [b,e] = await Promise.all([dbLoad('dienst_bereiche','name'), dbLoad('dienst_einsaetze','datum')]);
+  dienstBereiche = b.map(x=>({...x,_dbId:x.id}));
+  einsaetze = e.map(x=>({...x,_dbId:x.id}));
+  if(!dienstBereiche.length) initDefaultBereiche();
+  filterEinsaetze(); updVolStats(); rndrBereiche();
+}
+
+async function initDefaultBereiche() {
+  const defaults = [
+    {name:'Begrüssung',icon:'👋',farbe:'#2563EB'},
+    {name:'Kids Treff',icon:'👶',farbe:'#16A34A'},
+    {name:'Technik / AV',icon:'🎙',farbe:'#7C3AED'},
+    {name:'Worship Team',icon:'🎵',farbe:'#C8941A'},
+    {name:'Kaffee & Bar',icon:'☕',farbe:'#DC2626'},
+    {name:'Bestuhlung',icon:'🪑',farbe:'#0891B2'},
+    {name:'Putzdienst',icon:'🧹',farbe:'#D97706'},
+    {name:'Parkplatz',icon:'🅿️',farbe:'#059669'},
+  ];
+  for(const d of defaults) {
+    const saved = await dbSave('dienst_bereiche', d);
+    if(saved) dienstBereiche.push({...d, _dbId:saved.id});
+  }
+  rndrBereiche();
+}
+
+function updVolStats() {
+  const now = new Date();
+  const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate()+7);
+  const thisWeek = einsaetze.filter(e => { const d=new Date(e.datum); return d>=weekStart&&d<weekEnd; });
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  const freiwillige = new Set(einsaetze.map(e=>e.mitglied_id).filter(Boolean)).size;
+  set('vol-total', freiwillige);
+  set('vol-bestaetigt', thisWeek.filter(e=>e.status==='bestaetigt').length);
+  set('vol-offen', einsaetze.filter(e=>e.status==='angefragt').length);
+  set('vol-bereiche', dienstBereiche.length);
+  // Update filter dropdown
+  const sel = document.getElementById('vol-filter-bereich');
+  if(sel) sel.innerHTML = '<option value="">Alle Bereiche</option>' + dienstBereiche.map(b=>`<option value="${b._dbId}">${b.icon} ${b.name}</option>`).join('');
+}
+
+function rndrBereiche() {
+  const grid = document.getElementById('vol-bereiche-grid'); if(!grid) return;
+  grid.innerHTML = dienstBereiche.map(b => {
+    const count = einsaetze.filter(e=>e.bereich_id===b._dbId).length;
+    const thisWeek = einsaetze.filter(e => {
+      if(e.bereich_id!==b._dbId) return false;
+      const d=new Date(e.datum), now=new Date();
+      const ws=new Date(now); ws.setDate(now.getDate()-now.getDay());
+      const we=new Date(ws); we.setDate(ws.getDate()+7);
+      return d>=ws&&d<we;
+    }).length;
+    return `<div style="background:white;border:1px solid #E5E7EB;border-radius:12px;padding:16px;border-left:4px solid ${b.farbe}">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:24px">${b.icon}</span>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:#1A3560">${b.name}</div>
+          <div style="font-size:11px;color:#9CA3AF">${count} Einsätze total</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div style="font-size:18px;font-weight:700;color:${b.farbe}">${thisWeek}</div>
+          <div style="font-size:10px;color:#9CA3AF">diese Woche</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="aaction-btn" onclick="openNEinsatz('${b._dbId}')" style="flex:1;justify-content:center">+ Einsatz</button>
+        <button class="aaction-btn" onclick="filterEinsaetze('${b._dbId}')" style="background:#EDE9FE;color:#7C3AED;border-color:#c4b5fd">Anzeigen</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterEinsaetze(bereichId) {
+  if(bereichId) document.getElementById('vol-filter-bereich').value = bereichId;
+  const bid = document.getElementById('vol-filter-bereich')?.value||'';
+  const status = document.getElementById('vol-filter-status')?.value||'';
+  const woche = document.getElementById('vol-filter-woche')?.value||'';
+  einsaetzeFilt = einsaetze.filter(e => {
+    if(bid && e.bereich_id!==bid) return false;
+    if(status && e.status!==status) return false;
+    if(woche) {
+      const [y,w] = woche.split('-W');
+      const jan4 = new Date(y,0,4);
+      const weekStart = new Date(jan4);
+      weekStart.setDate(jan4.getDate() - (jan4.getDay()||7) + 1 + (parseInt(w)-1)*7);
+      const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate()+7);
+      const d=new Date(e.datum);
+      if(d<weekStart||d>=weekEnd) return false;
+    }
+    return true;
+  });
+  rndrEinsaetze();
+}
+
+function rndrEinsaetze() {
+  const tb = document.getElementById('vol-tbody'); if(!tb) return;
+  if(!einsaetzeFilt.length) { tb.innerHTML='<tr><td colspan="6" class="aempty">Keine Einsätze gefunden</td></tr>'; return; }
+  const statusBadge = s=>({angefragt:'background:#FEF3C7;color:#D97706',bestaetigt:'background:#DCFCE7;color:#16A34A',abgelehnt:'background:#FEE2E2;color:#DC2626'}[s]||'');
+  const statusLabel = s=>({angefragt:'Angefragt',bestaetigt:'Bestätigt',abgelehnt:'Abgelehnt'}[s]||s);
+  tb.innerHTML = [...einsaetzeFilt].sort((a,b)=>a.datum.localeCompare(b.datum)).map(e => {
+    const b = dienstBereiche.find(x=>x._dbId===e.bereich_id);
+    const m = members.find(x=>x._dbId===e.mitglied_id||x.id===e.mitglied_id);
+    const name = m ? m.vorname+' '+m.nachname : '—';
+    return `<tr>
+      <td style="font-size:13px;color:#6B7280">${fD(e.datum)}</td>
+      <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${b?.farbe||'#1A3560'}20;color:${b?.farbe||'#1A3560'}">${b?.icon||''} ${b?.name||'—'}</span></td>
+      <td><div style="font-weight:500;color:#1A3560;font-size:13px">${name}</div></td>
+      <td style="font-size:12px;color:#6B7280">${e.zeit_von&&e.zeit_bis?e.zeit_von+' – '+e.zeit_bis:'—'}</td>
+      <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;${statusBadge(e.status)}">${statusLabel(e.status)}</span></td>
+      <td style="display:flex;gap:4px">
+        ${e.status==='angefragt'?`<button class="aaction-btn" style="background:#DCFCE7;color:#16A34A;border-color:#86efac" onclick="setEinsatzStatus('${e._dbId}','bestaetigt')">✓</button>
+        <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="setEinsatzStatus('${e._dbId}','abgelehnt')">✗</button>`:''}
+        <button class="aaction-btn" onclick="delEinsatz('${e._dbId}')">Löschen</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openNEinsatz(bereichId='') {
+  refreshSel();
+  // Populate mitglieder for einsatz
+  const msel = document.getElementById('ne-mitglied');
+  if(msel) msel.innerHTML='<option value="">— wählen —</option>'+[...members].sort((a,b)=>(a.nachname||'').localeCompare(b.nachname||'')).map(m=>`<option value="${m._dbId||m.id}">${m.vorname} ${m.nachname}</option>`).join('');
+  document.getElementById('ne-datum').value = new Date().toISOString().split('T')[0];
+  ['ne-von','ne-bis','ne-notiz'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  // Populate Bereiche
+  const sel = document.getElementById('ne-bereich');
+  if(sel) { sel.innerHTML='<option value="">— Bereich wählen —</option>'+dienstBereiche.map(b=>`<option value="${b._dbId}">${b.icon} ${b.name}</option>`).join(''); if(bereichId) sel.value=bereichId; }
+  document.getElementById('ne-status').value='angefragt';
+  document.getElementById('mo-ne').classList.add('open');
+}
+
+async function saveEinsatz() {
+  const bereich_id = document.getElementById('ne-bereich').value;
+  const mitglied_id = document.getElementById('ne-mitglied').value;
+  const datum = document.getElementById('ne-datum').value;
+  if(!bereich_id||!datum) { toast('Bereich und Datum sind Pflicht'); return; }
+  const m = members.find(x=>x.id==mitglied_id||x._dbId==mitglied_id);
+  const payload = { bereich_id, mitglied_id: m?._dbId||mitglied_id||null, datum, zeit_von: document.getElementById('ne-von').value, zeit_bis: document.getElementById('ne-bis').value, status: document.getElementById('ne-status').value, notiz: document.getElementById('ne-notiz').value };
+  const saved = await dbSave('dienst_einsaetze', payload);
+  if(saved) { einsaetze.push({...payload,_dbId:saved.id}); filterEinsaetze(); updVolStats(); rndrBereiche(); closeMo('mo-ne'); toast('Einsatz gespeichert ✓'); }
+}
+
+async function setEinsatzStatus(id, status) {
+  await dbUpdate('dienst_einsaetze', id, {status});
+  const e = einsaetze.find(x=>x._dbId===id); if(e) e.status=status;
+  filterEinsaetze(); updVolStats(); toast(status==='bestaetigt'?'Bestätigt ✓':'Abgelehnt');
+}
+
+async function delEinsatz(id) {
+  if(!confirm('Einsatz löschen?')) return;
+  await sb.from('dienst_einsaetze').delete().eq('id',id);
+  einsaetze = einsaetze.filter(e=>e._dbId!==id);
+  filterEinsaetze(); updVolStats(); rndrBereiche(); toast('Gelöscht');
+}
+
+function openNBereich() {
+  ['nb-name','nb-beschr'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('nb-icon').value='🙋';
+  document.getElementById('nb-farbe').value='#1A3560';
+  document.getElementById('mo-nb').classList.add('open');
+}
+
+async function saveBereich() {
+  const name = document.getElementById('nb-name').value.trim();
+  if(!name) { toast('Name Pflicht'); return; }
+  const payload = { name, icon: document.getElementById('nb-icon').value, farbe: document.getElementById('nb-farbe').value, beschreibung: document.getElementById('nb-beschr').value, aktiv: true };
+  const saved = await dbSave('dienst_bereiche', payload);
+  if(saved) { dienstBereiche.push({...payload,_dbId:saved.id}); updVolStats(); rndrBereiche(); closeMo('mo-nb'); toast('Bereich erstellt ✓'); }
+}
+
+function exportEinsaetze() {
+  const BOM='﻿';
+  const rows=[['Datum','Bereich','Freiwillige/r','Von','Bis','Status','Notiz']];
+  einsaetzeFilt.forEach(e=>{
+    const b=dienstBereiche.find(x=>x._dbId===e.bereich_id);
+    const m=members.find(x=>x._dbId===e.mitglied_id||x.id===e.mitglied_id);
+    rows.push([e.datum,b?.name||'',m?m.vorname+' '+m.nachname:'',e.zeit_von,e.zeit_bis,e.status,e.notiz]);
+  });
+  const csv=BOM+rows.map(r=>r.map(v=>'"'+String(v||'')+'"').join(',')).join('
+');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='Dienstplan_AJConnect.csv';a.click();
+  toast('Exportiert ✓');
+}
+
+// ══════════════════════════════════════════════════════════
+// EVENT ANMELDUNGEN
+// ══════════════════════════════════════════════════════════
+let eventAnmeldungen=[], activeEventForAnm=null;
+
+async function loadEventAnmeldungen(eventId) {
+  const {data} = await sb.from('event_anmeldungen').select('*').eq('event_id', eventId).eq('mandant_id', _S?.working_mandant_id||_S?.mandant_id);
+  return (data||[]).map(a=>({...a,_dbId:a.id}));
+}
+
+async function showEvAnmeldungen() {
+  // Open anmeldungen panel for selected event
+  if(!activeEventForAnm) { toast('Bitte erst ein Event öffnen'); return; }
+  const anm = await loadEventAnmeldungen(activeEventForAnm._dbId||activeEventForAnm.id);
+  const ev = activeEventForAnm;
+  // Show in modal
+  const total = anm.length;
+  const erschienen = anm.filter(a=>a.status==='erschienen').length;
+  const warteliste = anm.filter(a=>a.status==='warteliste').length;
+  document.getElementById('anm-ev-title').textContent = ev.name;
+  document.getElementById('anm-ev-stats').textContent = `${total} Anmeldungen · ${erschienen} erschienen · ${warteliste} Warteliste`;
+  const max = ev.max||0;
+  document.getElementById('anm-ev-cap').textContent = max ? `Kapazität: ${total}/${max}` : '';
+  // Render list
+  const tb = document.getElementById('anm-tbody');
+  const statusBadge = s=>({angemeldet:'background:#DBEAFE;color:#2563EB',warteliste:'background:#FEF3C7;color:#D97706',erschienen:'background:#DCFCE7;color:#16A34A',storniert:'background:#FEE2E2;color:#DC2626'}[s]||'');
+  tb.innerHTML = anm.length ? anm.map(a=>`<tr>
+    <td style="font-size:13px;font-weight:500;color:#1A3560">${a.vorname} ${a.nachname}</td>
+    <td>${a.email?`<a href="mailto:${a.email}" style="color:#2563EB;text-decoration:none">${a.email}</a>`:'—'}</td>
+    <td style="font-size:12px;color:#6B7280">${a.telefon||'—'}</td>
+    <td style="text-align:center;font-size:13px">${a.anzahl_personen||1}</td>
+    <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;${statusBadge(a.status)}">${a.status}</span></td>
+    <td style="display:flex;gap:4px">
+      ${a.status!=='erschienen'?`<button class="aaction-btn" style="background:#DCFCE7;color:#16A34A;border-color:#86efac" onclick="markErschienen('${a._dbId}')">✓ Erschienen</button>`:''}
+      <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="storniereAnm('${a._dbId}')">Stornieren</button>
+    </td>
+  </tr>`).join('') : '<tr><td colspan="6" class="aempty">Noch keine Anmeldungen</td></tr>';
+  document.getElementById('mo-anm').classList.add('open');
+}
+
+function openNAnmeldung(ev) {
+  activeEventForAnm = ev;
+  ['na-vn','na-nn','na-email','na-tel','na-notiz'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('na-anzahl').value='1';
+  // Pre-fill from member if selected
+  const sel = document.getElementById('na-mitglied');
+  if(sel) sel.innerHTML='<option value="">— Ohne Mitgliedskonto —</option>'+[...members].sort((a,b)=>(a.nachname||'').localeCompare(b.nachname||'')).map(m=>`<option value="${m._dbId||m.id}">${m.vorname} ${m.nachname}</option>`).join('');
+  document.getElementById('mo-na').classList.add('open');
+}
+
+document.addEventListener('change', function(e) {
+  if(e.target.id === 'na-mitglied' && e.target.value) {
+    const m = members.find(x=>x._dbId===e.target.value||String(x.id)===e.target.value);
+    if(m) {
+      document.getElementById('na-vn').value = m.vorname;
+      document.getElementById('na-nn').value = m.nachname;
+      document.getElementById('na-email').value = m.email||'';
+      document.getElementById('na-tel').value = m.mobil||'';
+    }
+  }
+});
+
+async function saveAnmeldung() {
+  const vn = document.getElementById('na-vn').value.trim();
+  const nn = document.getElementById('na-nn').value.trim();
+  if(!vn||!nn) { toast('Name Pflicht'); return; }
+  if(!activeEventForAnm) { toast('Kein Event ausgewählt'); return; }
+  const ev = activeEventForAnm;
+  const evId = ev._dbId || ev.id;
+  // Check capacity
+  const existing = await loadEventAnmeldungen(evId);
+  const angemeldet = existing.filter(a=>a.status!=='storniert').reduce((s,a)=>s+(a.anzahl_personen||1),0);
+  const max = ev.max||0;
+  const anzahl = parseInt(document.getElementById('na-anzahl').value)||1;
+  const status = (max>0 && angemeldet+anzahl>max) ? 'warteliste' : 'angemeldet';
+  const mitglied_id = document.getElementById('na-mitglied').value||null;
+  const m = mitglied_id ? members.find(x=>x._dbId===mitglied_id||String(x.id)===mitglied_id) : null;
+  const payload = { event_id: evId, mitglied_id: m?._dbId||mitglied_id||null, vorname: vn, nachname: nn, email: document.getElementById('na-email').value, telefon: document.getElementById('na-tel').value, anzahl_personen: anzahl, status, notiz: document.getElementById('na-notiz').value };
+  const saved = await dbSave('event_anmeldungen', payload);
+  if(saved) {
+    closeMo('mo-na');
+    if(status==='warteliste') toast('⚠ Event ausgebucht — auf Warteliste gesetzt');
+    else toast('Anmeldung gespeichert ✓');
+    // Update event anmeldungen count in UI
+    const evRow = document.getElementById('evr-'+evId);
+    if(evRow) { const countCell=evRow.querySelector('td:nth-child(6)'); if(countCell) countCell.textContent=(angemeldet+anzahl)+(max?'/'+max:''); }
+  }
+}
+
+async function markErschienen(id) {
+  await dbUpdate('event_anmeldungen', id, {status:'erschienen'});
+  toast('Als erschienen markiert ✓');
+  if(activeEventForAnm) showEvAnmeldungen();
+}
+
+async function storniereAnm(id) {
+  if(!confirm('Anmeldung stornieren?')) return;
+  await dbUpdate('event_anmeldungen', id, {status:'storniert'});
+  toast('Storniert');
+  if(activeEventForAnm) showEvAnmeldungen();
+}
+
+function toggleVolView() {
+  const btn = document.getElementById('vol-view-btn');
+  if(btn) btn.textContent = btn.textContent==='Kalender'?'Liste':'Kalender';
+}
+
+// ══════════════════════════════════════════════════════════
+// ARTIKEL MODULE (wie Business Central)
+// ══════════════════════════════════════════════════════════
+let artikel=[], artikelFilt=[];
+
+async function loadArtikel() {
+  try {
+    const data = await dbLoad('artikel','bezeichnung');
+    artikel = data.map(a=>({...a,_dbId:a.id}));
+  } catch(e) { artikel=[]; }
+  filterArtikel(); updArtikelStats();
+}
+
+function updArtikelStats() {
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('art-count', artikel.length);
+  set('art-aktiv', artikel.filter(a=>a.aktiv).length);
+  set('art-cats', new Set(artikel.map(a=>a.kategorie)).size);
+  set('art-fav', artikel.filter(a=>a.favorit).length);
+}
+
+function filterArtikel() {
+  const q=(document.getElementById('art-srch')?.value||'').toLowerCase();
+  const kat=document.getElementById('art-filter-kat')?.value||'';
+  artikelFilt = artikel.filter(a => {
+    if(kat && a.kategorie!==kat) return false;
+    if(q && !(a.bezeichnung?.toLowerCase().includes(q)||a.nummer?.toLowerCase().includes(q)||a.beschreibung?.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  rndrArtikel();
+}
+
+function rndrArtikel() {
+  const tb = document.getElementById('art-tbody'); if(!tb) return;
+  if(!artikelFilt.length) {
+    tb.innerHTML='<tr><td colspan="9" class="aempty">Keine Artikel gefunden — jetzt erstellen</td></tr>'; return;
+  }
+  const katColors = {material:'#DBEAFE/#2563EB',lebensmittel:'#DCFCE7/#16A34A',technik:'#EDE9FE/#7C3AED',moebel:'#FEF3C7/#D97706',verbrauch:'#FEE2E2/#DC2626',sonstiges:'#F3F4F6/#6B7280'};
+  tb.innerHTML = artikelFilt.map(a => {
+    const [bg,col]=(katColors[a.kategorie]||'#F3F4F6/#6B7280').split('/');
+    const bestandColor = a.bestand<=0?'#DC2626':a.bestand<=a.bestand_min?'#D97706':'#16A34A';
+    return `<tr style="cursor:pointer" onclick="openArtikel('${a._dbId}')">
+      <td>
+        ${a.foto_url
+          ? `<img src="${a.foto_url}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid #E5E7EB">`
+          : `<div style="width:40px;height:40px;background:#F3F4F6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid #E5E7EB">📦</div>`}
+      </td>
+      <td>
+        <div style="font-weight:600;color:#1A3560">${a.bezeichnung}${a.favorit?' ⭐':''}</div>
+        <div style="font-size:11px;color:#9CA3AF">${a.beschreibung||''}</div>
+      </td>
+      <td style="font-size:12px;color:#6B7280;font-family:monospace">${a.nummer||'—'}</td>
+      <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${bg};color:${col}">${a.kategorie}</span></td>
+      <td style="font-size:12px;color:#6B7280">${a.einheit||'Stück'}</td>
+      <td style="font-weight:500;color:#1A3560">CHF ${parseFloat(a.preis||0).toFixed(2)}</td>
+      <td style="font-weight:600;color:${bestandColor}">${a.bestand||0}</td>
+      <td>${a.aktiv?'<span style="color:#16A34A;font-size:11px;font-weight:600">● Aktiv</span>':'<span style="color:#9CA3AF;font-size:11px">○ Inaktiv</span>'}</td>
+      <td style="display:flex;gap:4px" onclick="event.stopPropagation()">
+        <button class="aaction-btn" onclick="openArtikel('${a._dbId}')">Bearbeiten</button>
+        <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="delArtikel('${a._dbId}')">✗</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+let activeArtikelId = null;
+
+function openNArtikel() {
+  activeArtikelId = null;
+  ['art-bez','art-nr','art-beschr','art-preis','art-bestand','art-bestand-min','art-barcode','art-lieferant','art-notiz'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('art-einheit').value='Stück';
+  document.getElementById('art-kat').value='sonstiges';
+  document.getElementById('art-aktiv-cb').checked=true;
+  document.getElementById('art-fav-cb').checked=false;
+  document.getElementById('art-foto-preview').style.display='none';
+  document.getElementById('art-modal-title').textContent='Neuer Artikel';
+  document.getElementById('art-save-btn').textContent='Erstellen';
+  document.getElementById('art-save-btn').onclick=saveArtikel;
+  document.getElementById('mo-art').classList.add('open');
+}
+
+function openArtikel(id) {
+  const a = artikel.find(x=>x._dbId===id); if(!a) return;
+  activeArtikelId = id;
+  const set=(eid,val)=>{const el=document.getElementById(eid);if(el)el.value=val||'';};
+  set('art-bez',a.bezeichnung); set('art-nr',a.nummer); set('art-beschr',a.beschreibung);
+  set('art-preis',a.preis); set('art-bestand',a.bestand); set('art-bestand-min',a.bestand_min);
+  set('art-barcode',a.barcode); set('art-lieferant',a.lieferant); set('art-notiz',a.notiz);
+  document.getElementById('art-einheit').value=a.einheit||'Stück';
+  document.getElementById('art-kat').value=a.kategorie||'sonstiges';
+  document.getElementById('art-aktiv-cb').checked=a.aktiv!==false;
+  document.getElementById('art-fav-cb').checked=a.favorit||false;
+  const preview=document.getElementById('art-foto-preview');
+  if(a.foto_url){preview.src=a.foto_url;preview.style.display='block';}else{preview.style.display='none';}
+  document.getElementById('art-modal-title').textContent='Artikel bearbeiten';
+  document.getElementById('art-save-btn').textContent='Speichern';
+  document.getElementById('art-save-btn').onclick=()=>updateArtikel(id);
+  document.getElementById('mo-art').classList.add('open');
+}
+
+function getArtikelPayload() {
+  return {
+    bezeichnung: document.getElementById('art-bez').value.trim(),
+    nummer: document.getElementById('art-nr').value.trim(),
+    beschreibung: document.getElementById('art-beschr').value,
+    kategorie: document.getElementById('art-kat').value,
+    einheit: document.getElementById('art-einheit').value,
+    preis: parseFloat(document.getElementById('art-preis').value)||0,
+    bestand: parseInt(document.getElementById('art-bestand').value)||0,
+    bestand_min: parseInt(document.getElementById('art-bestand-min').value)||0,
+    barcode: document.getElementById('art-barcode').value,
+    lieferant: document.getElementById('art-lieferant').value,
+    notiz: document.getElementById('art-notiz').value,
+    aktiv: document.getElementById('art-aktiv-cb').checked,
+    favorit: document.getElementById('art-fav-cb').checked,
+  };
+}
+
+async function saveArtikel() {
+  const p = getArtikelPayload();
+  if(!p.bezeichnung) { toast('Bezeichnung ist Pflicht'); return; }
+  const saved = await dbSave('artikel', p);
+  if(saved) {
+    artikel.push({...p, _dbId:saved.id});
+    filterArtikel(); updArtikelStats();
+    closeMo('mo-art');
+    toast('Artikel erstellt ✓');
+  }
+}
+
+async function updateArtikel(id) {
+  const p = getArtikelPayload();
+  if(!p.bezeichnung) { toast('Bezeichnung ist Pflicht'); return; }
+  await dbUpdate('artikel', id, p);
+  const idx = artikel.findIndex(a=>a._dbId===id);
+  if(idx>=0) artikel[idx]={...artikel[idx],...p};
+  filterArtikel(); updArtikelStats();
+  closeMo('mo-art');
+  toast('Gespeichert ✓');
+}
+
+async function delArtikel(id) {
+  if(!confirm('Artikel löschen?')) return;
+  await sb.from('artikel').delete().eq('id',id);
+  artikel=artikel.filter(a=>a._dbId!==id);
+  filterArtikel(); updArtikelStats();
+  toast('Gelöscht');
+}
+
+async function uploadArtikelFoto(input) {
+  const file=input.files[0]; if(!file) return;
+  const mid=_S?.working_mandant_id||_S?.mandant_id;
+  if(!mid){toast('Bitte Gemeinde auswählen');return;}
+  toast('Foto wird hochgeladen...');
+  try {
+    const path=mid+'/artikel/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const {data,error}=await sb.storage.from('dokumente').upload(path,file,{upsert:true,contentType:file.type});
+    if(!error&&data){
+      const {data:urlData}=sb.storage.from('dokumente').getPublicUrl(path);
+      const url=urlData?.publicUrl||'';
+      if(url){
+        document.getElementById('art-foto-url').value=url;
+        const preview=document.getElementById('art-foto-preview');
+        preview.src=url; preview.style.display='block';
+        toast('Foto hochgeladen ✓');
+      }
+    } else { toast('Foto-Upload fehlgeschlagen: '+(error?.message||'')); }
+  } catch(e) { toast('Fehler: '+e.message); }
+  input.value='';
 }
 </script>
 
@@ -4013,6 +4604,177 @@ async function delDok(id) {
     <div class="mfoot">
       <button class="tbtn tbtn-ghost" onclick="closeMo('mo-nrech')">Abbrechen</button>
       <button class="tbtn tbtn-navy" id="nrech-save-btn" onclick="saveRechnung()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: NEUER EINSATZ -->
+<div class="mo" id="mo-ne">
+  <div class="modal" style="max-width:500px">
+    <div class="mh"><div class="mt2">🙋 Einsatz planen</div><div class="mx" onclick="closeMo('mo-ne')">✕</div></div>
+    <div class="mb2">
+      <div class="fgg"><label class="fl">Bereich *</label>
+        <select class="fs" id="ne-bereich"><option value="">— wählen —</option></select>
+      </div>
+      <div class="fgg"><label class="fl">Freiwillige/r *</label>
+        <select class="fs" id="ne-mitglied"><option value="">— wählen —</option></select>
+      </div>
+      <div class="fgg"><label class="fl">Datum *</label><input type="date" class="fs" id="ne-datum"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fgg"><label class="fl">Von</label><input type="time" class="fs" id="ne-von"></div>
+        <div class="fgg"><label class="fl">Bis</label><input type="time" class="fs" id="ne-bis"></div>
+      </div>
+      <div class="fgg"><label class="fl">Status</label>
+        <select class="fs" id="ne-status">
+          <option value="angefragt">Angefragt</option>
+          <option value="bestaetigt">Bestätigt</option>
+        </select>
+      </div>
+      <div class="fgg"><label class="fl">Notiz</label><input type="text" class="fs" id="ne-notiz" placeholder="Interne Notiz..."></div>
+    </div>
+    <div class="mfoot">
+      <button class="tbtn tbtn-ghost" onclick="closeMo('mo-ne')">Abbrechen</button>
+      <button class="tbtn tbtn-navy" onclick="saveEinsatz()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NEUER DIENST-BEREICH -->
+<div class="mo" id="mo-nb">
+  <div class="modal" style="max-width:420px">
+    <div class="mh"><div class="mt2">➕ Neuer Dienst-Bereich</div><div class="mx" onclick="closeMo('mo-nb')">✕</div></div>
+    <div class="mb2">
+      <div class="fgg"><label class="fl">Name *</label><input type="text" class="fs" id="nb-name" placeholder="z.B. Sicherheitsdienst"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fgg"><label class="fl">Icon (Emoji)</label><input type="text" class="fs" id="nb-icon" placeholder="🙋" maxlength="2"></div>
+        <div class="fgg"><label class="fl">Farbe</label><input type="color" class="fs" id="nb-farbe" value="#1A3560" style="height:42px;padding:4px"></div>
+      </div>
+      <div class="fgg"><label class="fl">Beschreibung</label><input type="text" class="fs" id="nb-beschr" placeholder="Kurze Beschreibung..."></div>
+    </div>
+    <div class="mfoot">
+      <button class="tbtn tbtn-ghost" onclick="closeMo('mo-nb')">Abbrechen</button>
+      <button class="tbtn tbtn-navy" onclick="saveBereich()">Erstellen</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EVENT ANMELDUNGEN ÜBERSICHT -->
+<div class="mo" id="mo-anm" style="z-index:900">
+  <div class="modal" style="max-width:800px;width:95vw">
+    <div class="mh">
+      <div>
+        <div class="mt2" id="anm-ev-title">Anmeldungen</div>
+        <div style="font-size:12px;color:#9CA3AF;margin-top:2px" id="anm-ev-stats"></div>
+        <div style="font-size:11px;color:#C8941A;font-weight:500" id="anm-ev-cap"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="tbtn tbtn-navy" onclick="openNAnmeldung(activeEventForAnm)" style="font-size:12px">+ Anmeldung</button>
+        <div class="mx" onclick="closeMo('mo-anm')">✕</div>
+      </div>
+    </div>
+    <div class="mb2">
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Name</th><th>E-Mail</th><th>Telefon</th><th style="width:60px">Pers.</th><th>Status</th><th style="width:180px">Aktionen</th></tr></thead>
+          <tbody id="anm-tbody"><tr><td colspan="6" class="aempty">Lädt...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="tbtn tbtn-ghost" onclick="closeMo('mo-anm')">Schliessen</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NEUE ANMELDUNG -->
+<div class="mo" id="mo-na" style="z-index:950">
+  <div class="modal" style="max-width:500px">
+    <div class="mh"><div class="mt2">📋 Neue Anmeldung</div><div class="mx" onclick="closeMo('mo-na')">✕</div></div>
+    <div class="mb2">
+      <div class="fgg"><label class="fl">Mitglied (optional)</label>
+        <select class="fs" id="na-mitglied"><option value="">— Ohne Mitgliedskonto —</option></select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fgg"><label class="fl">Vorname *</label><input type="text" class="fs" id="na-vn" placeholder="Vorname"></div>
+        <div class="fgg"><label class="fl">Nachname *</label><input type="text" class="fs" id="na-nn" placeholder="Nachname"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fgg"><label class="fl">E-Mail</label><input type="email" class="fs" id="na-email" placeholder="email@beispiel.ch"></div>
+        <div class="fgg"><label class="fl">Telefon</label><input type="tel" class="fs" id="na-tel" placeholder="+41 ..."></div>
+      </div>
+      <div class="fgg"><label class="fl">Anzahl Personen</label><input type="number" class="fs" id="na-anzahl" value="1" min="1" max="20"></div>
+      <div class="fgg"><label class="fl">Notiz</label><input type="text" class="fs" id="na-notiz" placeholder="Besondere Wünsche, Anmerkungen..."></div>
+    </div>
+    <div class="mfoot">
+      <button class="tbtn tbtn-ghost" onclick="closeMo('mo-na')">Abbrechen</button>
+      <button class="tbtn tbtn-navy" onclick="saveAnmeldung()">Anmelden</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: ARTIKEL -->
+<div class="mo" id="mo-art">
+  <div class="modal" style="max-width:640px;width:95vw">
+    <div class="mh"><div class="mt2" id="art-modal-title">Neuer Artikel</div><div class="mx" onclick="closeMo('mo-art')">✕</div></div>
+    <div class="mb2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <!-- Left column -->
+      <div>
+        <div class="fgg"><label class="fl">Bezeichnung *</label><input type="text" class="fs" id="art-bez" placeholder="Artikelbezeichnung"></div>
+        <div class="fgg"><label class="fl">Artikelnummer</label><input type="text" class="fs" id="art-nr" placeholder="z.B. ART-001"></div>
+        <div class="fgg"><label class="fl">Beschreibung</label><textarea class="fs" id="art-beschr" rows="2" style="resize:vertical" placeholder="Kurze Beschreibung..."></textarea></div>
+        <div class="fgg"><label class="fl">Kategorie</label>
+          <select class="fs" id="art-kat">
+            <option value="sonstiges">Sonstiges</option>
+            <option value="material">Material</option>
+            <option value="lebensmittel">Lebensmittel</option>
+            <option value="technik">Technik</option>
+            <option value="moebel">Möbel</option>
+            <option value="verbrauch">Verbrauchsmaterial</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="fgg"><label class="fl">Einheit</label>
+            <select class="fs" id="art-einheit">
+              <option>Stück</option><option>kg</option><option>g</option>
+              <option>Liter</option><option>ml</option><option>Meter</option>
+              <option>m²</option><option>Packung</option><option>Box</option>
+              <option>Palette</option><option>Stunden</option>
+            </select>
+          </div>
+          <div class="fgg"><label class="fl">Preis (CHF)</label><input type="number" class="fs" id="art-preis" placeholder="0.00" step="0.01"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="fgg"><label class="fl">Bestand</label><input type="number" class="fs" id="art-bestand" placeholder="0"></div>
+          <div class="fgg"><label class="fl">Mindestbestand</label><input type="number" class="fs" id="art-bestand-min" placeholder="0"></div>
+        </div>
+        <div class="fgg"><label class="fl">Barcode / EAN</label><input type="text" class="fs" id="art-barcode" placeholder="z.B. 7612345678901"></div>
+        <div class="fgg"><label class="fl">Lieferant</label><input type="text" class="fs" id="art-lieferant" placeholder="Lieferantenname"></div>
+        <div class="fgg"><label class="fl">Notiz</label><input type="text" class="fs" id="art-notiz" placeholder="Interne Notiz..."></div>
+        <div style="display:flex;gap:16px;margin-top:10px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="art-aktiv-cb" checked> Aktiv</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="art-fav-cb"> ⭐ Favorit</label>
+        </div>
+      </div>
+      <!-- Right column: Foto -->
+      <div>
+        <div class="fgg"><label class="fl">Foto</label>
+          <div style="border:2px dashed #E5E7EB;border-radius:10px;padding:20px;text-align:center;background:#F9FAFB">
+            <img id="art-foto-preview" style="display:none;max-width:100%;max-height:200px;border-radius:8px;margin-bottom:12px;object-fit:cover">
+            <div style="font-size:13px;color:#9CA3AF;margin-bottom:12px">Foto hochladen oder URL eingeben</div>
+            <label class="tbtn tbtn-ghost" style="cursor:pointer;display:inline-block">
+              📷 Foto wählen
+              <input type="file" accept="image/*" style="display:none" onchange="uploadArtikelFoto(this)">
+            </label>
+          </div>
+        </div>
+        <div class="fgg" style="margin-top:8px"><label class="fl">Foto URL (alternativ)</label><input type="url" class="fs" id="art-foto-url" placeholder="https://..." oninput="const p=document.getElementById('art-foto-preview');if(this.value){p.src=this.value;p.style.display='block';}else{p.style.display='none';}"></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="tbtn tbtn-ghost" onclick="closeMo('mo-art')">Abbrechen</button>
+      <button class="tbtn tbtn-navy" id="art-save-btn" onclick="saveArtikel()">Erstellen</button>
     </div>
   </div>
 </div>
