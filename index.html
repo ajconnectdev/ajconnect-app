@@ -708,7 +708,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
             </div>
           </div>
         </div>
-        <div class="page" id="pg-volunteer" style="display:none">
+        <div class="page" id="pg-volunteer">
   <div class="topbar">
     <div class="topbar-title">Freiwillige & Dienstplan</div>
     <div class="topbar-right" style="display:flex;gap:8px">
@@ -829,7 +829,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
     </div>
   </div>
 </div>
-        <div class="page" id="pg-artikel" style="display:none">
+        <div class="page" id="pg-artikel">
   <div class="topbar">
     <div class="topbar-title">Artikel</div>
     <div class="topbar-right" style="display:flex;gap:8px">
@@ -2744,7 +2744,7 @@ function navTo(p,el2){
   document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
   const pg=document.getElementById('pg-'+p);if(pg)pg.classList.add('on');
   if(el2)el2.classList.add('active');
-  const titles={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',kreditoren:'Kreditoren',dokumente:'Dokumente',einrichtung:'Einrichtung'};
+  const titles={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',volunteer:'Freiwillige',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',artikel:'Artikel',kreditoren:'Kreditoren',dokumente:'Dokumente',einrichtung:'Einrichtung'};
   document.getElementById('tb-title').textContent=titles[p]||p;
   const isM=p==='mitglieder';
   document.getElementById('vt-wrap').style.display=isM?'block':'none';
@@ -2756,11 +2756,6 @@ function navTo(p,el2){
   if(p==='gottesdienste'){rndrGD();}
   if(p==='worship'){rndrWorship();}
   if(p==='events'){rndrEvents();}
-  if(p==='volunteer'){
-    const mid3=_S?.working_mandant_id||_S?.mandant_id;
-    if(!mid3){toast('Bitte zuerst Gemeinde wählen (Arbeiten als)');return;}
-    if(!_volLoaded){loadVolunteer();}else{filterEinsaetze();rndrBereiche();}
-  }
   if(p==='spenden'){if(!spenden.length)loadSpenden();else filterSpenden();}
   if(p==='kreditoren'){if(!kreditoren.length)loadKreditoren();else{rndrKreditoren();filterRechnungen();}}
   if(p==='dokumente'){if(!_dokLoaded){loadDokumente();}else filterDok();}
