@@ -738,9 +738,134 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
             </div>
           </div>
         </div>
-        <div class="page" id="pg-spenden"><div class="soon"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2z"/></svg><h3>Twint & Spenden</h3><p>Kommt bald.</p></div></div>
-        <div class="page" id="pg-kreditoren"><div class="soon"><svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg><h3>Kreditoren</h3><p>Kommt bald.</p></div></div>
-        <div class="page" id="pg-dokumente"><div class="soon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg><h3>Dokumente (DMS)</h3><p>Kommt bald.</p></div></div>
+        <div class="page" id="pg-spenden">
+  <div class="topbar">
+    <div class="topbar-title">Twint & Spenden</div>
+    <div class="topbar-right">
+      <button class="tbtn tbtn-navy" onclick="openNS()">+ Neue Spende</button>
+    </div>
+  </div>
+  <!-- Stats -->
+  <div class="sgrid4" style="margin-bottom:16px">
+    <div class="scard"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></div><div><div class="sn" id="sp-total">CHF 0</div><div class="sl">Dieses Jahr</div></div></div>
+    <div class="scard"><div class="sico" style="background:#DBEAFE"><svg viewBox="0 0 24 24" style="fill:#2563EB"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2z"/></svg></div><div><div class="sn" id="sp-monat">CHF 0</div><div class="sl">Diesen Monat</div></div></div>
+    <div class="scard"><div class="sico" style="background:#EDE9FE"><svg viewBox="0 0 24 24" style="fill:#7C3AED"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg></div><div><div class="sn" id="sp-spender">0</div><div class="sl">Spender</div></div></div>
+    <div class="scard"><div class="sico" style="background:#FEF3C7"><svg viewBox="0 0 24 24" style="fill:#D97706"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div><div><div class="sn" id="sp-avg">CHF 0</div><div class="sl">Ø pro Spende</div></div></div>
+  </div>
+  <!-- Filter + Table -->
+  <div class="tcard">
+    <div class="tcardh">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select class="afs" id="sp-filter-weg" onchange="filterSpenden()" style="min-width:130px">
+          <option value="">Alle Zahlungswege</option>
+          <option value="twint">Twint</option>
+          <option value="bar">Bar</option>
+          <option value="ueberweisung">Überweisung</option>
+          <option value="karte">Karte</option>
+        </select>
+        <select class="afs" id="sp-filter-zweck" onchange="filterSpenden()" style="min-width:160px">
+          <option value="">Alle Zwecke</option>
+          <option value="Gemeinde allgemein">Gemeinde allgemein</option>
+          <option value="Mission">Mission</option>
+          <option value="Bauprojekt">Bauprojekt</option>
+          <option value="Jugend">Jugend</option>
+          <option value="Diakonie">Diakonie</option>
+        </select>
+        <input type="month" id="sp-filter-monat" class="afs" onchange="filterSpenden()" style="min-width:140px">
+      </div>
+      <button class="tbtn tbtn-ghost" onclick="exportSpenden()">Export CSV</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Datum</th><th>Mitglied</th><th>Betrag</th><th>Zahlungsweg</th><th>Zweck</th><th>Notiz</th><th style="width:80px"></th></tr></thead>
+        <tbody id="sp-tbody"><tr><td colspan="7" class="aempty">Lädt...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+        <div class="page" id="pg-kreditoren">
+  <div class="topbar">
+    <div class="topbar-title" id="kred-title">Kreditoren</div>
+    <div class="topbar-right">
+      <div id="kred-main-btns">
+        <button class="tbtn tbtn-ghost" onclick="showKredView('rechnungen')" id="btn-rechnungen">Rechnungen</button>
+        <button class="tbtn tbtn-navy" onclick="openNKred()">+ Kreditor</button>
+        <button class="tbtn tbtn-gold" onclick="openNRechnung()" style="margin-left:4px">+ Rechnung</button>
+      </div>
+    </div>
+  </div>
+  <!-- Stats -->
+  <div class="sgrid4" style="margin-bottom:16px">
+    <div class="scard"><div class="sico" style="background:#FEE2E2"><svg viewBox="0 0 24 24" style="fill:#DC2626"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg></div><div><div class="sn" id="kr-offen">CHF 0</div><div class="sl">Offene Rechnungen</div></div></div>
+    <div class="scard"><div class="sico" style="background:#FEF3C7"><svg viewBox="0 0 24 24" style="fill:#D97706"><path d="M13 2.05V2c-5.01.5-9 4.86-9 10s3.99 9.5 9 10v-.05c5-.49 9-4.85 9-9.95S18 2.54 13 2.05z"/></svg></div><div><div class="sn" id="kr-faellig">0</div><div class="sl">Fällig diese Woche</div></div></div>
+    <div class="scard"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><div><div class="sn" id="kr-bezahlt">CHF 0</div><div class="sl">Bezahlt (lfd. Monat)</div></div></div>
+    <div class="scard"><div class="sico" style="background:#DBEAFE"><svg viewBox="0 0 24 24" style="fill:#2563EB"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg></div><div><div class="sn" id="kr-count">0</div><div class="sl">Kreditoren</div></div></div>
+  </div>
+  <!-- Kreditoren List -->
+  <div id="kred-view-kreditoren">
+    <div class="tcard">
+      <div class="tcardh"><span style="font-weight:600;color:#1A3560">Alle Kreditoren</span></div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Name</th><th>Kategorie</th><th>E-Mail</th><th>IBAN</th><th>Status</th><th style="width:100px"></th></tr></thead>
+          <tbody id="kred-tbody"><tr><td colspan="6" class="aempty">Lädt...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <!-- Rechnungen List -->
+  <div id="kred-view-rechnungen" style="display:none">
+    <div class="tcard">
+      <div class="tcardh">
+        <span style="font-weight:600;color:#1A3560">Rechnungen</span>
+        <select class="afs" id="rech-filter-status" onchange="filterRechnungen()">
+          <option value="">Alle Status</option>
+          <option value="offen">Offen</option>
+          <option value="bezahlt">Bezahlt</option>
+          <option value="storniert">Storniert</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Datum</th><th>Fällig</th><th>Kreditor</th><th>Beschreibung</th><th>Betrag</th><th>Status</th><th style="width:120px"></th></tr></thead>
+          <tbody id="rech-tbody"><tr><td colspan="7" class="aempty">Lädt...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+        <div class="page" id="pg-dokumente">
+  <div class="topbar">
+    <div class="topbar-title">Dokumente</div>
+    <div class="topbar-right">
+      <input type="text" placeholder="Suchen..." id="dok-srch" class="srch" oninput="filterDok()" style="width:200px;margin-right:8px">
+      <label class="tbtn tbtn-navy" style="cursor:pointer">
+        + Dokument hochladen
+        <input type="file" id="dok-upload" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" style="display:none" onchange="uploadDok(this)">
+      </label>
+    </div>
+  </div>
+  <!-- Stats -->
+  <div class="sgrid4" style="margin-bottom:16px">
+    <div class="scard"><div class="sico" style="background:#EFF6FF"><svg viewBox="0 0 24 24" style="fill:#2563EB"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg></div><div><div class="sn" id="dok-count">0</div><div class="sl">Dokumente</div></div></div>
+    <div class="scard"><div class="sico" style="background:#FEF3C7"><svg viewBox="0 0 24 24" style="fill:#D97706"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg></div><div><div class="sn" id="dok-size">0 MB</div><div class="sl">Gespeichert</div></div></div>
+    <div class="scard"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg></div><div><div class="sn" id="dok-protokolle">0</div><div class="sl">Protokolle</div></div></div>
+    <div class="scard"><div class="sico" style="background:#EDE9FE"><svg viewBox="0 0 24 24" style="fill:#7C3AED"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg></div><div><div class="sn" id="dok-vertraege">0</div><div class="sl">Verträge</div></div></div>
+  </div>
+  <!-- Filter tabs -->
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="ftab on" onclick="setDokFilter('alle',this)">Alle</button>
+    <button class="ftab" onclick="setDokFilter('protokoll',this)">Protokolle</button>
+    <button class="ftab" onclick="setDokFilter('vertrag',this)">Verträge</button>
+    <button class="ftab" onclick="setDokFilter('rechnung',this)">Rechnungen</button>
+    <button class="ftab" onclick="setDokFilter('bild',this)">Bilder</button>
+    <button class="ftab" onclick="setDokFilter('sonstiges',this)">Sonstiges</button>
+  </div>
+  <!-- Document Grid -->
+  <div id="dok-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px">
+    <div style="text-align:center;color:#9CA3AF;padding:40px;grid-column:1/-1">Noch keine Dokumente — jetzt hochladen</div>
+  </div>
+</div>
         <div class="page" id="pg-einrichtung">
           <div style="display:flex;flex-direction:column;gap:16px;padding:4px">
             <div style="font-size:20px;font-weight:600;color:#1A3560">Einrichtung & Konfiguration</div>
@@ -1301,6 +1426,10 @@ async function loadAllData() {
   } catch(e) {
     console.warn('loadAllData error:', e);
   }
+  // Load financial + document modules
+  try {
+    await Promise.all([loadSpenden(), loadKreditoren(), loadDokumente()]);
+  } catch(e) { console.warn('Financial modules load error:', e); }
   if(loader) loader.style.display='none';
 }
 
@@ -2576,6 +2705,9 @@ function navTo(p,el2){
   if(p==='gottesdienste'){rndrGD();}
   if(p==='worship'){rndrWorship();}
   if(p==='events'){rndrEvents();}
+  if(p==='spenden'){if(!spenden.length)loadSpenden();else filterSpenden();}
+  if(p==='kreditoren'){if(!kreditoren.length)loadKreditoren();else{rndrKreditoren();filterRechnungen();}}
+  if(p==='dokumente'){if(!dokumente.length)loadDokumente();else filterDok();}
 }
 
 
@@ -2967,6 +3099,435 @@ function renderAM() {
     </tr>`;
   }).join('');
 }
+
+// ══════════════════════════════════════════════════════════
+// SPENDEN MODULE
+// ══════════════════════════════════════════════════════════
+let spenden = [], spendenFilt = [], activeSp = null;
+
+async function loadSpenden() {
+  const data = await dbLoad('spenden', 'datum');
+  spenden = data.map(s => ({...s, _dbId: s.id}));
+  filterSpenden();
+  updSpendenStats();
+}
+
+function updSpendenStats() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const thisYear = spenden.filter(s => new Date(s.datum).getFullYear() === year);
+  const thisMonth = spenden.filter(s => {
+    const d = new Date(s.datum);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+  const total = thisYear.reduce((a,s) => a + parseFloat(s.betrag||0), 0);
+  const mo = thisMonth.reduce((a,s) => a + parseFloat(s.betrag||0), 0);
+  const spender = new Set(spenden.filter(s=>s.mitglied_id).map(s=>s.mitglied_id)).size;
+  const avg = spenden.length ? total/spenden.length : 0;
+  const fmt = v => 'CHF ' + v.toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const set = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  set('sp-total', fmt(total));
+  set('sp-monat', fmt(mo));
+  set('sp-spender', spender);
+  set('sp-avg', fmt(avg));
+}
+
+function filterSpenden() {
+  const weg = document.getElementById('sp-filter-weg')?.value || '';
+  const zweck = document.getElementById('sp-filter-zweck')?.value || '';
+  const monat = document.getElementById('sp-filter-monat')?.value || '';
+  spendenFilt = spenden.filter(s => {
+    if(weg && s.zahlungsweg !== weg) return false;
+    if(zweck && s.zweck !== zweck) return false;
+    if(monat && !s.datum?.startsWith(monat)) return false;
+    return true;
+  });
+  rndrSpenden();
+}
+
+function rndrSpenden() {
+  const tb = document.getElementById('sp-tbody');
+  if(!tb) return;
+  if(!spendenFilt.length) { tb.innerHTML='<tr><td colspan="7" class="aempty">Keine Spenden gefunden</td></tr>'; return; }
+  const zwB2 = w => ({twint:'<span style="background:#E0F2FE;color:#0369A1;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">TWINT</span>',bar:'<span style="background:#DCFCE7;color:#16A34A;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">Bar</span>',ueberweisung:'<span style="background:#EDE9FE;color:#7C3AED;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">Überweisung</span>',karte:'<span style="background:#FEF3C7;color:#D97706;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">Karte</span>'}[w]||w);
+  tb.innerHTML = spendenFilt.sort((a,b)=>b.datum?.localeCompare(a.datum)).map(s => {
+    const m = members.find(x => x.id === s.mitglied_id || x._dbId === s.mitglied_id);
+    const name = m ? m.vorname+' '+m.nachname : s.mitglied_name||'Anonym';
+    const betrag = 'CHF '+parseFloat(s.betrag||0).toLocaleString('de-CH',{minimumFractionDigits:2});
+    return `<tr>
+      <td style="color:#6B7280;font-size:13px">${fD(s.datum)}</td>
+      <td><div style="font-weight:500;color:#1A3560;font-size:13px">${name}</div></td>
+      <td style="font-weight:600;color:#16A34A">${betrag}</td>
+      <td>${zwB2(s.zahlungsweg)}</td>
+      <td style="font-size:12px;color:#6B7280">${s.zweck||'—'}</td>
+      <td style="font-size:12px;color:#9CA3AF">${s.notiz||''}</td>
+      <td style="display:flex;gap:4px">
+        <button class="aaction-btn" onclick="editSp('${s._dbId}')">Bearbeiten</button>
+        <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="delSp('${s._dbId}')">Löschen</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openNS() {
+  refreshSel();
+  ['ns-betrag','ns-notiz'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('ns-datum').value = new Date().toISOString().split('T')[0];
+  document.getElementById('ns-weg').value = 'twint';
+  document.getElementById('ns-zweck').value = 'Gemeinde allgemein';
+  document.getElementById('ns-mitglied').value = '';
+  document.getElementById('mo-ns').classList.add('open');
+}
+
+async function saveSpende() {
+  const betrag = parseFloat(document.getElementById('ns-betrag').value);
+  if(!betrag || betrag <= 0) { toast('Betrag ist Pflicht'); return; }
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid) { toast('Bitte Gemeinde auswählen'); return; }
+  const mitglied_id = document.getElementById('ns-mitglied').value || null;
+  const m = mitglied_id ? members.find(x=>x.id==mitglied_id||x._dbId==mitglied_id) : null;
+  const payload = {
+    datum: document.getElementById('ns-datum').value,
+    betrag,
+    zahlungsweg: document.getElementById('ns-weg').value,
+    zweck: document.getElementById('ns-zweck').value,
+    notiz: document.getElementById('ns-notiz').value,
+    mitglied_id: m?._dbId || mitglied_id || null,
+    mitglied_name: m ? m.vorname+' '+m.nachname : ''
+  };
+  const saved = await dbSave('spenden', payload);
+  if(saved) {
+    spenden.push({...payload, _dbId: saved.id, id: saved.id});
+    filterSpenden(); updSpendenStats();
+    closeMo('mo-ns');
+    toast('Spende gespeichert ✓');
+  }
+}
+
+async function delSp(id) {
+  if(!confirm('Spende löschen?')) return;
+  const {error} = await sb.from('spenden').delete().eq('id', id);
+  if(error){toast('Fehler: '+error.message);return;}
+  spenden = spenden.filter(s => s._dbId !== id);
+  filterSpenden(); updSpendenStats();
+  toast('Gelöscht ✓');
+}
+
+function editSp(id) {
+  const s = spenden.find(x => x._dbId === id);
+  if(!s) return;
+  refreshSel();
+  document.getElementById('ns-datum').value = s.datum||'';
+  document.getElementById('ns-betrag').value = s.betrag||'';
+  document.getElementById('ns-weg').value = s.zahlungsweg||'twint';
+  document.getElementById('ns-zweck').value = s.zweck||'';
+  document.getElementById('ns-notiz').value = s.notiz||'';
+  document.getElementById('ns-mitglied').value = s.mitglied_id||'';
+  // Switch save button to update
+  const btn = document.getElementById('ns-save-btn');
+  if(btn) { btn.textContent='Aktualisieren'; btn.onclick=()=>updateSp(id); }
+  document.getElementById('mo-ns').classList.add('open');
+}
+
+async function updateSp(id) {
+  const betrag = parseFloat(document.getElementById('ns-betrag').value);
+  if(!betrag||betrag<=0){toast('Betrag Pflicht');return;}
+  const mitglied_id = document.getElementById('ns-mitglied').value||null;
+  const m = mitglied_id ? members.find(x=>x.id==mitglied_id||x._dbId==mitglied_id) : null;
+  const payload = {
+    datum: document.getElementById('ns-datum').value,
+    betrag, zahlungsweg: document.getElementById('ns-weg').value,
+    zweck: document.getElementById('ns-zweck').value,
+    notiz: document.getElementById('ns-notiz').value,
+    mitglied_id: m?._dbId||mitglied_id||null,
+    mitglied_name: m?m.vorname+' '+m.nachname:''
+  };
+  await dbUpdate('spenden', id, payload);
+  const idx = spenden.findIndex(s=>s._dbId===id);
+  if(idx>=0) spenden[idx]={...spenden[idx],...payload};
+  filterSpenden(); updSpendenStats();
+  closeMo('mo-ns');
+  const btn=document.getElementById('ns-save-btn');
+  if(btn){btn.textContent='Speichern';btn.onclick=saveSpende;}
+  toast('Aktualisiert ✓');
+}
+
+function exportSpenden() {
+  const BOM='﻿';
+  const rows=[['Datum','Mitglied','Betrag CHF','Zahlungsweg','Zweck','Notiz']];
+  spendenFilt.forEach(s=>{
+    const m=members.find(x=>x.id===s.mitglied_id||x._dbId===s.mitglied_id);
+    rows.push([s.datum,m?m.vorname+' '+m.nachname:s.mitglied_name||'Anonym',s.betrag,s.zahlungsweg,s.zweck,s.notiz]);
+  });
+  const csv=BOM+rows.map(r=>r.map(v=>'"'+String(v||'')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='Spenden_AJConnect.csv';a.click();
+  toast('Exportiert ✓');
+}
+
+// ══════════════════════════════════════════════════════════
+// KREDITOREN MODULE
+// ══════════════════════════════════════════════════════════
+let kreditoren = [], rechnungen = [], kredView = 'kreditoren';
+
+async function loadKreditoren() {
+  const [kd, rd] = await Promise.all([dbLoad('kreditoren','name'), dbLoad('rechnungen','datum')]);
+  kreditoren = kd.map(k=>({...k,_dbId:k.id}));
+  rechnungen = rd.map(r=>({...r,_dbId:r.id}));
+  rndrKreditoren(); rndrRechnungen(); updKredStats();
+}
+
+function updKredStats() {
+  const now = new Date(); const month = now.getMonth(); const year = now.getFullYear();
+  const offen = rechnungen.filter(r=>r.status==='offen').reduce((a,r)=>a+parseFloat(r.betrag||0),0);
+  const bezahlt = rechnungen.filter(r=>{
+    if(r.status!=='bezahlt'||!r.bezahlt_am) return false;
+    const d=new Date(r.bezahlt_am);
+    return d.getFullYear()===year && d.getMonth()===month;
+  }).reduce((a,r)=>a+parseFloat(r.betrag||0),0);
+  const nextWeek = new Date(); nextWeek.setDate(nextWeek.getDate()+7);
+  const faellig = rechnungen.filter(r=>r.status==='offen'&&r.faellig&&new Date(r.faellig)<=nextWeek).length;
+  const fmt = v=>'CHF '+v.toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('kr-offen',fmt(offen)); set('kr-faellig',faellig); set('kr-bezahlt',fmt(bezahlt)); set('kr-count',kreditoren.length);
+}
+
+function showKredView(view) {
+  kredView = view;
+  document.getElementById('kred-view-kreditoren').style.display = view==='kreditoren'?'block':'none';
+  document.getElementById('kred-view-rechnungen').style.display = view==='rechnungen'?'block':'none';
+  document.getElementById('kred-title').textContent = view==='kreditoren' ? 'Kreditoren' : 'Rechnungen';
+  const btnR = document.getElementById('btn-rechnungen');
+  if(btnR) { btnR.textContent = view==='kreditoren' ? 'Rechnungen' : '← Kreditoren'; btnR.onclick = ()=>showKredView(view==='kreditoren'?'rechnungen':'kreditoren'); }
+}
+
+function rndrKreditoren() {
+  const tb=document.getElementById('kred-tbody'); if(!tb) return;
+  if(!kreditoren.length){tb.innerHTML='<tr><td colspan="6" class="aempty">Noch keine Kreditoren — jetzt hinzufügen</td></tr>';return;}
+  const katBadge = k=>({miete:'#DBEAFE/#2563EB',technik:'#EDE9FE/#7C3AED',catering:'#DCFCE7/#16A34A',reinigung:'#FEF3C7/#D97706'}[k]||'#F3F4F6/#6B7280');
+  tb.innerHTML = kreditoren.map(k=>{
+    const [bg,col]=katBadge(k.kategorie).split('/');
+    const rechn = rechnungen.filter(r=>r.kreditor_id===k._dbId);
+    const offenBetrag = rechn.filter(r=>r.status==='offen').reduce((a,r)=>a+parseFloat(r.betrag||0),0);
+    return `<tr>
+      <td><div style="font-weight:500;color:#1A3560">${k.name}</div><div style="font-size:11px;color:#9CA3AF">${k.adresse||''}</div></td>
+      <td><span style="background:${bg};color:${col};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">${k.kategorie}</span></td>
+      <td style="font-size:12px;color:#6B7280">${k.email||'—'}</td>
+      <td style="font-size:12px;color:#9CA3AF;font-family:monospace">${k.iban||'—'}</td>
+      <td>${k.aktiv?'<span style="color:#16A34A;font-size:11px;font-weight:600">● Aktiv</span>':'<span style="color:#9CA3AF;font-size:11px">○ Inaktiv</span>'}</td>
+      <td style="display:flex;gap:4px">
+        ${offenBetrag>0?`<span style="font-size:11px;color:#DC2626;font-weight:600">CHF ${offenBetrag.toFixed(2)} offen</span>`:''}
+        <button class="aaction-btn" onclick="editKred('${k._dbId}')">Bearbeiten</button>
+        <button class="aaction-btn" style="background:#DBEAFE;color:#2563EB;border-color:#93c5fd" onclick="openNRechnung('${k._dbId}')">+ Rechnung</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterRechnungen() {
+  const status = document.getElementById('rech-filter-status')?.value||'';
+  const filtered = rechnungen.filter(r=>!status||r.status===status);
+  const tb=document.getElementById('rech-tbody'); if(!tb) return;
+  if(!filtered.length){tb.innerHTML='<tr><td colspan="7" class="aempty">Keine Rechnungen</td></tr>';return;}
+  const statusBadge=s=>({offen:'background:#FEE2E2;color:#DC2626',bezahlt:'background:#DCFCE7;color:#16A34A',storniert:'background:#F3F4F6;color:#9CA3AF'}[s]||'');
+  tb.innerHTML = filtered.sort((a,b)=>b.datum?.localeCompare(a.datum)).map(r=>{
+    const k=kreditoren.find(x=>x._dbId===r.kreditor_id);
+    const isUeberfaellig = r.status==='offen'&&r.faellig&&new Date(r.faellig)<new Date();
+    return `<tr style="${isUeberfaellig?'background:#FFF5F5':''}">
+      <td style="font-size:12px;color:#6B7280">${fD(r.datum)}</td>
+      <td style="font-size:12px;${isUeberfaellig?'color:#DC2626;font-weight:600':'color:#6B7280'}">${fD(r.faellig)||'—'}${isUeberfaellig?' ⚠':''}</td>
+      <td style="font-weight:500;color:#1A3560">${k?.name||'—'}</td>
+      <td style="font-size:12px;color:#6B7280">${r.beschreibung||'—'}</td>
+      <td style="font-weight:600;color:#1A3560">CHF ${parseFloat(r.betrag||0).toFixed(2)}</td>
+      <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;${statusBadge(r.status)}">${r.status}</span></td>
+      <td style="display:flex;gap:4px">
+        ${r.status==='offen'?`<button class="aaction-btn" style="background:#DCFCE7;color:#16A34A;border-color:#86efac" onclick="markBezahlt('${r._dbId}')">Bezahlt</button>`:''}
+        <button class="aaction-btn" onclick="editRechnung('${r._dbId}')">Bearbeiten</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function rndrRechnungen() { filterRechnungen(); }
+
+function openNKred() {
+  ['nkred-name','nkred-email','nkred-tel','nkred-adresse','nkred-iban','nkred-notiz'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('nkred-kat').value='sonstiges';
+  document.getElementById('mo-nkred').classList.add('open');
+}
+
+async function saveKreditor() {
+  const name=document.getElementById('nkred-name').value.trim();
+  if(!name){toast('Name Pflicht');return;}
+  const payload={name,email:document.getElementById('nkred-email').value,telefon:document.getElementById('nkred-tel').value,adresse:document.getElementById('nkred-adresse').value,iban:document.getElementById('nkred-iban').value,kategorie:document.getElementById('nkred-kat').value,notiz:document.getElementById('nkred-notiz').value,aktiv:true};
+  const saved=await dbSave('kreditoren',payload);
+  if(saved){kreditoren.push({...payload,_dbId:saved.id});rndrKreditoren();updKredStats();closeMo('mo-nkred');toast('Kreditor gespeichert ✓');}
+}
+
+function editKred(id) {
+  const k=kreditoren.find(x=>x._dbId===id); if(!k) return;
+  document.getElementById('nkred-name').value=k.name||'';
+  document.getElementById('nkred-email').value=k.email||'';
+  document.getElementById('nkred-tel').value=k.telefon||'';
+  document.getElementById('nkred-adresse').value=k.adresse||'';
+  document.getElementById('nkred-iban').value=k.iban||'';
+  document.getElementById('nkred-kat').value=k.kategorie||'sonstiges';
+  document.getElementById('nkred-notiz').value=k.notiz||'';
+  const btn=document.getElementById('nkred-save-btn');
+  if(btn){btn.textContent='Aktualisieren';btn.onclick=async()=>{
+    const payload={name:document.getElementById('nkred-name').value,email:document.getElementById('nkred-email').value,telefon:document.getElementById('nkred-tel').value,adresse:document.getElementById('nkred-adresse').value,iban:document.getElementById('nkred-iban').value,kategorie:document.getElementById('nkred-kat').value,notiz:document.getElementById('nkred-notiz').value};
+    await dbUpdate('kreditoren',id,payload);
+    const idx=kreditoren.findIndex(x=>x._dbId===id);if(idx>=0)kreditoren[idx]={...kreditoren[idx],...payload};
+    rndrKreditoren();updKredStats();closeMo('mo-nkred');btn.textContent='Speichern';btn.onclick=saveKreditor;toast('Aktualisiert ✓');
+  };}
+  document.getElementById('mo-nkred').classList.add('open');
+}
+
+function openNRechnung(kredId='') {
+  ['nrech-num','nrech-beschr','nrech-betrag'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('nrech-datum').value=new Date().toISOString().split('T')[0];
+  const faellig=new Date();faellig.setDate(faellig.getDate()+30);
+  document.getElementById('nrech-faellig').value=faellig.toISOString().split('T')[0];
+  document.getElementById('nrech-status').value='offen';
+  // Populate kreditor dropdown
+  const sel=document.getElementById('nrech-kreditor');
+  if(sel){sel.innerHTML='<option value="">— Kreditor wählen —</option>'+kreditoren.map(k=>`<option value="${k._dbId}">${k.name}</option>`).join('');if(kredId)sel.value=kredId;}
+  document.getElementById('mo-nrech').classList.add('open');
+}
+
+async function saveRechnung() {
+  const betrag=parseFloat(document.getElementById('nrech-betrag').value);
+  if(!betrag||betrag<=0){toast('Betrag Pflicht');return;}
+  const kreditor_id=document.getElementById('nrech-kreditor').value;
+  if(!kreditor_id){toast('Kreditor wählen');return;}
+  const payload={kreditor_id,nummer:document.getElementById('nrech-num').value,datum:document.getElementById('nrech-datum').value,faellig:document.getElementById('nrech-faellig').value,betrag,beschreibung:document.getElementById('nrech-beschr').value,status:'offen'};
+  const saved=await dbSave('rechnungen',payload);
+  if(saved){rechnungen.push({...payload,_dbId:saved.id});filterRechnungen();updKredStats();closeMo('mo-nrech');toast('Rechnung gespeichert ✓');}
+}
+
+function editRechnung(id) {
+  const r=rechnungen.find(x=>x._dbId===id);if(!r)return;
+  const sel=document.getElementById('nrech-kreditor');
+  if(sel){sel.innerHTML='<option value="">— Kreditor wählen —</option>'+kreditoren.map(k=>`<option value="${k._dbId}">${k.name}</option>`).join('');sel.value=r.kreditor_id||'';}
+  document.getElementById('nrech-num').value=r.nummer||'';
+  document.getElementById('nrech-datum').value=r.datum||'';
+  document.getElementById('nrech-faellig').value=r.faellig||'';
+  document.getElementById('nrech-betrag').value=r.betrag||'';
+  document.getElementById('nrech-beschr').value=r.beschreibung||'';
+  document.getElementById('nrech-status').value=r.status||'offen';
+  const btn=document.getElementById('nrech-save-btn');
+  if(btn){btn.textContent='Aktualisieren';btn.onclick=async()=>{
+    const payload={kreditor_id:document.getElementById('nrech-kreditor').value,nummer:document.getElementById('nrech-num').value,datum:document.getElementById('nrech-datum').value,faellig:document.getElementById('nrech-faellig').value,betrag:parseFloat(document.getElementById('nrech-betrag').value),beschreibung:document.getElementById('nrech-beschr').value,status:document.getElementById('nrech-status').value};
+    await dbUpdate('rechnungen',id,payload);
+    const idx=rechnungen.findIndex(x=>x._dbId===id);if(idx>=0)rechnungen[idx]={...rechnungen[idx],...payload};
+    filterRechnungen();updKredStats();closeMo('mo-nrech');btn.textContent='Speichern';btn.onclick=saveRechnung;toast('Aktualisiert ✓');
+  };}
+  document.getElementById('mo-nrech').classList.add('open');
+}
+
+async function markBezahlt(id) {
+  const today=new Date().toISOString().split('T')[0];
+  await dbUpdate('rechnungen',id,{status:'bezahlt',bezahlt_am:today});
+  const idx=rechnungen.findIndex(x=>x._dbId===id);
+  if(idx>=0) rechnungen[idx]={...rechnungen[idx],status:'bezahlt',bezahlt_am:today};
+  filterRechnungen();updKredStats();toast('Als bezahlt markiert ✓');
+}
+
+// ══════════════════════════════════════════════════════════
+// DOKUMENTE MODULE
+// ══════════════════════════════════════════════════════════
+let dokumente=[], dokFilter='alle', dokFilt=[];
+
+async function loadDokumente() {
+  const data=await dbLoad('dokumente','created_at');
+  dokumente=data.map(d=>({...d,_dbId:d.id}));
+  filterDok();updDokStats();
+}
+
+function updDokStats() {
+  const total=dokumente.length;
+  const proto=dokumente.filter(d=>d.typ==='protokoll').length;
+  const vert=dokumente.filter(d=>d.typ==='vertrag').length;
+  const size=dokumente.reduce((a,d)=>a+(d.datei_groesse||0),0);
+  const sizeMB=(size/1024/1024).toFixed(1);
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('dok-count',total); set('dok-size',sizeMB+' MB'); set('dok-protokolle',proto); set('dok-vertraege',vert);
+}
+
+function setDokFilter(f,el) {
+  dokFilter=f;
+  document.querySelectorAll('#pg-dokumente .ftab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  filterDok();
+}
+
+function filterDok() {
+  const q=(document.getElementById('dok-srch')?.value||'').toLowerCase();
+  dokFilt=dokumente.filter(d=>{
+    if(dokFilter!=='alle'&&d.typ!==dokFilter)return false;
+    if(q&&!(d.name?.toLowerCase().includes(q)||d.beschreibung?.toLowerCase().includes(q)))return false;
+    return true;
+  });
+  rndrDok();
+}
+
+function rndrDok() {
+  const grid=document.getElementById('dok-grid'); if(!grid) return;
+  if(!dokFilt.length){grid.innerHTML='<div style="text-align:center;color:#9CA3AF;padding:40px;grid-column:1/-1">Keine Dokumente gefunden</div>';return;}
+  const icons={protokoll:'📋',vertrag:'📄',rechnung:'💰',bild:'🖼',sonstiges:'📁'};
+  const colors={protokoll:'#DBEAFE',vertrag:'#EDE9FE',rechnung:'#DCFCE7',bild:'#FEF3C7',sonstiges:'#F3F4F6'};
+  grid.innerHTML=dokFilt.sort((a,b)=>b.created_at?.localeCompare(a.created_at)).map(d=>`
+    <div style="background:white;border:1px solid #E5E7EB;border-radius:12px;padding:16px;transition:all .2s;cursor:pointer" 
+         onmouseover="this.style.borderColor='#C8941A'" onmouseout="this.style.borderColor='#E5E7EB'">
+      <div style="width:44px;height:44px;border-radius:10px;background:${colors[d.typ]||'#F3F4F6'};display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px">${icons[d.typ]||'📁'}</div>
+      <div style="font-size:13px;font-weight:600;color:#1A3560;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name}</div>
+      <div style="font-size:11px;color:#9CA3AF;margin-bottom:10px">${d.typ} · ${new Date(d.created_at).toLocaleDateString('de-CH')}</div>
+      ${d.beschreibung?`<div style="font-size:11px;color:#6B7280;margin-bottom:10px">${d.beschreibung}</div>`:''}
+      <div style="display:flex;gap:6px">
+        ${d.datei_url?`<a href="${d.datei_url}" target="_blank" class="aaction-btn" style="text-decoration:none">Öffnen</a>`:''}
+        <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="delDok('${d._dbId}')">Löschen</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function uploadDok(input) {
+  const files=Array.from(input.files);
+  if(!files.length) return;
+  const mid=_S?.working_mandant_id||_S?.mandant_id;
+  if(!mid){toast('Bitte Gemeinde auswählen');return;}
+  toast('Wird hochgeladen...');
+  for(const file of files) {
+    const typ=file.type.includes('image')?'bild':file.name.includes('protokoll')?'protokoll':file.name.includes('vertrag')?'vertrag':'sonstiges';
+    // Upload to Supabase Storage
+    const path=`${mid}/${Date.now()}_${file.name}`;
+    let url='';
+    try {
+      const {data:upData,error:upErr}=await sb.storage.from('dokumente').upload(path,file,{upsert:true});
+      if(!upErr&&upData){
+        const {data:urlData}=sb.storage.from('dokumente').getPublicUrl(path);
+        url=urlData?.publicUrl||'';
+      }
+    } catch(storageErr) {
+      console.warn('Storage upload failed (bucket may not exist):', storageErr);
+      // Continue without URL - document metadata is still saved
+    }
+    const payload={name:file.name,typ,datei_url:url,datei_name:file.name,datei_groesse:file.size,beschreibung:''};
+    const saved=await dbSave('dokumente',payload);
+    if(saved){dokumente.push({...payload,_dbId:saved.id,created_at:new Date().toISOString()});}
+  }
+  filterDok();updDokStats();
+  input.value='';
+  toast(files.length+' Dokument(e) hochgeladen ✓');
+}
+
+async function delDok(id) {
+  if(!confirm('Dokument löschen?')) return;
+  const {error}=await sb.from('dokumente').delete().eq('id',id);
+  if(error){toast('Fehler: '+error.message);return;}
+  dokumente=dokumente.filter(d=>d._dbId!==id);
+  filterDok();updDokStats();toast('Gelöscht ✓');
+}
 </script>
 
 <!-- KONTAKT MODAL -->
@@ -3349,6 +3910,110 @@ function renderAM() {
       </div>
     </div>
     <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-impexp')">Schliessen</button></div>
+  </div>
+</div>
+
+
+<!-- MODAL: NEUE SPENDE -->
+<div class="mo" id="mo-ns">
+  <div class="modal" style="max-width:500px">
+    <div class="mh"><div class="mt2">💰 Neue Spende erfassen</div><div class="mx" onclick="closeMo('mo-ns')">✕</div></div>
+    <div class="mb2">
+      <div class="fgg"><label class="fl">Datum *</label><input type="date" class="fs" id="ns-datum"></div>
+      <div class="fgg"><label class="fl">Betrag (CHF) *</label><input type="number" class="fs" id="ns-betrag" placeholder="0.00" step="0.01" min="0"></div>
+      <div class="fgg"><label class="fl">Zahlungsweg</label>
+        <select class="fs" id="ns-weg">
+          <option value="twint">Twint</option>
+          <option value="bar">Bar</option>
+          <option value="ueberweisung">Überweisung</option>
+          <option value="karte">Karte</option>
+        </select>
+      </div>
+      <div class="fgg"><label class="fl">Zweck</label>
+        <select class="fs" id="ns-zweck">
+          <option>Gemeinde allgemein</option>
+          <option>Mission</option>
+          <option>Bauprojekt</option>
+          <option>Jugend</option>
+          <option>Diakonie</option>
+          <option>Sonstiges</option>
+        </select>
+      </div>
+      <div class="fgg"><label class="fl">Mitglied (optional)</label>
+        <select class="fs" id="ns-mitglied">
+          <option value="">— Anonym —</option>
+        </select>
+      </div>
+      <div class="fgg"><label class="fl">Notiz</label><input type="text" class="fs" id="ns-notiz" placeholder="Interne Notiz..."></div>
+    </div>
+    <div class="mfoot">
+      <button class="tbtn tbtn-ghost" onclick="closeMo('mo-ns')">Abbrechen</button>
+      <button class="tbtn tbtn-navy" id="ns-save-btn" onclick="saveSpende()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NEUER KREDITOR -->
+<div class="mo" id="mo-nkred">
+  <div class="modal" style="max-width:520px">
+    <div class="mh"><div class="mt2">🏢 Kreditor erfassen</div><div class="mx" onclick="closeMo('mo-nkred')">✕</div></div>
+    <div class="mb2">
+      <div class="fgg"><label class="fl">Name *</label><input type="text" class="fs" id="nkred-name" placeholder="Firmenname"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fgg"><label class="fl">E-Mail</label><input type="email" class="fs" id="nkred-email" placeholder="kontakt@firma.ch"></div>
+        <div class="fgg"><label class="fl">Telefon</label><input type="text" class="fs" id="nkred-tel" placeholder="+41 ..."></div>
+      </div>
+      <div class="fgg"><label class="fl">Adresse</label><input type="text" class="fs" id="nkred-adresse" placeholder="Strasse, PLZ Ort"></div>
+      <div class="fgg"><label class="fl">IBAN</label><input type="text" class="fs" id="nkred-iban" placeholder="CH56 0483 5012 3456 7800 9"></div>
+      <div class="fgg"><label class="fl">Kategorie</label>
+        <select class="fs" id="nkred-kat">
+          <option value="sonstiges">Sonstiges</option>
+          <option value="miete">Miete</option>
+          <option value="technik">Technik</option>
+          <option value="catering">Catering</option>
+          <option value="reinigung">Reinigung</option>
+          <option value="musik">Musik</option>
+          <option value="versicherung">Versicherung</option>
+        </select>
+      </div>
+      <div class="fgg"><label class="fl">Notiz</label><input type="text" class="fs" id="nkred-notiz" placeholder="Interne Notiz..."></div>
+    </div>
+    <div class="mfoot">
+      <button class="tbtn tbtn-ghost" onclick="closeMo('mo-nkred')">Abbrechen</button>
+      <button class="tbtn tbtn-navy" id="nkred-save-btn" onclick="saveKreditor()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NEUE RECHNUNG -->
+<div class="mo" id="mo-nrech">
+  <div class="modal" style="max-width:520px">
+    <div class="mh"><div class="mt2">📄 Rechnung erfassen</div><div class="mx" onclick="closeMo('mo-nrech')">✕</div></div>
+    <div class="mb2">
+      <div class="fgg"><label class="fl">Kreditor *</label>
+        <select class="fs" id="nrech-kreditor"><option value="">— wählen —</option></select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fgg"><label class="fl">Rechnungsnummer</label><input type="text" class="fs" id="nrech-num" placeholder="RE-2026-001"></div>
+        <div class="fgg"><label class="fl">Betrag (CHF) *</label><input type="number" class="fs" id="nrech-betrag" placeholder="0.00" step="0.01"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fgg"><label class="fl">Rechnungsdatum</label><input type="date" class="fs" id="nrech-datum"></div>
+        <div class="fgg"><label class="fl">Fällig am</label><input type="date" class="fs" id="nrech-faellig"></div>
+      </div>
+      <div class="fgg"><label class="fl">Beschreibung</label><input type="text" class="fs" id="nrech-beschr" placeholder="Wofür ist diese Rechnung?"></div>
+      <div class="fgg"><label class="fl">Status</label>
+        <select class="fs" id="nrech-status">
+          <option value="offen">Offen</option>
+          <option value="bezahlt">Bezahlt</option>
+          <option value="storniert">Storniert</option>
+        </select>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="tbtn tbtn-ghost" onclick="closeMo('mo-nrech')">Abbrechen</button>
+      <button class="tbtn tbtn-navy" id="nrech-save-btn" onclick="saveRechnung()">Speichern</button>
+    </div>
   </div>
 </div>
 
