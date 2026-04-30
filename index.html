@@ -3836,8 +3836,7 @@ function exportEinsaetze() {
     const m=members.find(x=>x._dbId===e.mitglied_id||x.id===e.mitglied_id);
     rows.push([e.datum,b?.name||'',m?m.vorname+' '+m.nachname:'',e.zeit_von,e.zeit_bis,e.status,e.notiz]);
   });
-  const csv=BOM+rows.map(r=>r.map(v=>'"'+String(v||'')+'"').join(',')).join('
-');
+  const csv=BOM+rows.map(r=>r.map(v=>'"'+String(v||'')+'"').join(',')).join('\n');
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='Dienstplan_AJConnect.csv';a.click();
   toast('Exportiert ✓');
 }
