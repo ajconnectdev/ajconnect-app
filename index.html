@@ -1511,6 +1511,11 @@ async function loadAllData() {
   try {
     await Promise.all([loadSpenden(), loadKreditoren(), loadDokumente()]);
   } catch(e) { console.warn('Financial modules load error:', e); }
+  // Load other modules in background (non-blocking)
+  setTimeout(async () => {
+    try { await loadArtikel(); } catch(e) { console.warn('loadArtikel:', e); }
+    try { await loadVolunteer(); } catch(e) { console.warn('loadVolunteer:', e); }
+  }, 500);
   if(loader) loader.style.display='none';
 }
 
@@ -2751,12 +2756,24 @@ function navTo(p,el2){
   if(p==='gottesdienste'){rndrGD();}
   if(p==='worship'){rndrWorship();}
   if(p==='events'){rndrEvents();}
-  if(p==='volunteer'){if(!_volLoaded){loadVolunteer();}else{filterEinsaetze();rndrBereiche();}}
+  if(p==='volunteer'){
+    const mid3=_S?.working_mandant_id||_S?.mandant_id;
+    if(!mid3){toast('Bitte zuerst Gemeinde wählen (Arbeiten als)');return;}
+    if(!_volLoaded){loadVolunteer();}else{filterEinsaetze();rndrBereiche();}
+  }
   if(p==='spenden'){if(!spenden.length)loadSpenden();else filterSpenden();}
   if(p==='kreditoren'){if(!kreditoren.length)loadKreditoren();else{rndrKreditoren();filterRechnungen();}}
   if(p==='dokumente'){if(!_dokLoaded){loadDokumente();}else filterDok();}
-  if(p==='artikel'){if(!_artikelLoaded){loadArtikel();}else{filterArtikel();}}
-  if(p==='volunteer'){if(!_volLoaded){loadVolunteer();}else{filterEinsaetze();rndrBereiche();}}
+  if(p==='artikel'){
+    const mid2=_S?.working_mandant_id||_S?.mandant_id;
+    if(!mid2){toast('Bitte zuerst Gemeinde wählen (Arbeiten als)');return;}
+    if(!_artikelLoaded){loadArtikel();}else{filterArtikel();}
+  }
+  if(p==='volunteer'){
+    const mid3=_S?.working_mandant_id||_S?.mandant_id;
+    if(!mid3){toast('Bitte zuerst Gemeinde wählen (Arbeiten als)');return;}
+    if(!_volLoaded){loadVolunteer();}else{filterEinsaetze();rndrBereiche();}
+  }
 }
 
 
