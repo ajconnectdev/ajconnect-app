@@ -2751,12 +2751,12 @@ function navTo(p,el2){
   if(p==='gottesdienste'){rndrGD();}
   if(p==='worship'){rndrWorship();}
   if(p==='events'){rndrEvents();}
-  if(p==='volunteer'){if(!dienstBereiche.length)loadVolunteer();else{filterEinsaetze();rndrBereiche();}}
+  if(p==='volunteer'){if(!_volLoaded){loadVolunteer();}else{filterEinsaetze();rndrBereiche();}}
   if(p==='spenden'){if(!spenden.length)loadSpenden();else filterSpenden();}
   if(p==='kreditoren'){if(!kreditoren.length)loadKreditoren();else{rndrKreditoren();filterRechnungen();}}
-  if(p==='dokumente'){if(!dokumente.length)loadDokumente();else filterDok();}
-  if(p==='artikel'){if(!artikel.length)loadArtikel();else{filterArtikel();}}
-  if(p==='volunteer'){if(!dienstBereiche.length)loadVolunteer();else{filterEinsaetze();rndrBereiche();}}
+  if(p==='dokumente'){if(!_dokLoaded){loadDokumente();}else filterDok();}
+  if(p==='artikel'){if(!_artikelLoaded){loadArtikel();}else{filterArtikel();}}
+  if(p==='volunteer'){if(!_volLoaded){loadVolunteer();}else{filterEinsaetze();rndrBereiche();}}
 }
 
 
@@ -3494,14 +3494,16 @@ async function markBezahlt(id) {
 // ══════════════════════════════════════════════════════════
 // DOKUMENTE MODULE
 // ══════════════════════════════════════════════════════════
-let dokumente=[], dokFilter='alle', dokFilt=[];
+let dokumente=[], dokFilter='alle', dokFilt=[], _dokLoaded=false;
 
 async function loadDokumente() {
+  _dokLoaded = true;
   try {
     const data = await dbLoad('dokumente', 'created_at');
     dokumente = data.map(d => ({...d, _dbId: d.id}));
+    console.log('Dokumente loaded:', dokumente.length);
   } catch(e) {
-    console.warn('loadDokumente error:', e);
+    console.warn('loadDokumente error:', e.message);
     dokumente = [];
   }
   filterDok();
@@ -3608,7 +3610,15 @@ async function uploadDok(input) {
   const files = Array.from(input.files);
   if(!files.length) return;
   const mid = _S?.working_mandant_id || _S?.mandant_id;
-  if(!mid) { toast('Bitte Gemeinde auswählen (Arbeiten als)'); return; }
+  if(!mid) { toast('Bitte zuerst Gemeinde unter "Arbeiten als" auswählen!'); return; }
+  
+  // Test DB connection first
+  const testSave = await sb.from('dokumente').select('id').limit(1);
+  if(testSave.error) {
+    toast('✗ Dokumente-Tabelle fehlt! SQL setup_prio1_3.sql ausführen.');
+    console.error('Dokumente table error:', testSave.error);
+    return;
+  }
   
   let uploaded = 0, failed = 0;
   toast('⏳ ' + files.length + ' Datei(en) werden hochgeladen...');
@@ -3652,11 +3662,13 @@ async function uploadDok(input) {
     };
     
     const saved = await dbSave('dokumente', payload);
-    if(saved) {
+    if(saved && saved.id) {
       dokumente.push({...payload, _dbId: saved.id, id: saved.id, created_at: new Date().toISOString()});
       uploaded++;
+      console.log('Saved doc:', saved.id, file.name);
     } else {
       failed++;
+      console.error('dbSave failed for:', file.name, '- mid:', mid);
     }
   }
   
@@ -3703,13 +3715,22 @@ function svEmail(id, email) {
 // ══════════════════════════════════════════════════════════
 // VOLUNTEER / FREIWILLIGE MODULE
 // ══════════════════════════════════════════════════════════
-let dienstBereiche=[], einsaetze=[], einsaetzeFilt=[];
+let dienstBereiche=[], einsaetze=[], einsaetzeFilt=[], _volLoaded=false;
 
 async function loadVolunteer() {
-  const [b,e] = await Promise.all([dbLoad('dienst_bereiche','name'), dbLoad('dienst_einsaetze','datum')]);
-  dienstBereiche = b.map(x=>({...x,_dbId:x.id}));
-  einsaetze = e.map(x=>({...x,_dbId:x.id}));
-  if(!dienstBereiche.length) initDefaultBereiche();
+  _volLoaded = true;
+  try {
+    const [b,e] = await Promise.all([
+      dbLoad('dienst_bereiche','name'),
+      dbLoad('dienst_einsaetze','datum')
+    ]);
+    dienstBereiche = b.map(x=>({...x,_dbId:x.id}));
+    einsaetze = e.map(x=>({...x,_dbId:x.id}));
+    if(!dienstBereiche.length) await initDefaultBereiche();
+  } catch(e) {
+    console.warn('loadVolunteer error (SQL noch nicht ausgeführt?):', e);
+    dienstBereiche=[]; einsaetze=[];
+  }
   filterEinsaetze(); updVolStats(); rndrBereiche();
 }
 
@@ -4000,14 +4021,19 @@ function toggleVolView() {
 // ══════════════════════════════════════════════════════════
 // ARTIKEL MODULE (wie Business Central)
 // ══════════════════════════════════════════════════════════
-let artikel=[], artikelFilt=[];
+let artikel=[], artikelFilt=[], _artikelLoaded=false;
 
 async function loadArtikel() {
+  _artikelLoaded = true;
   try {
     const data = await dbLoad('artikel','bezeichnung');
     artikel = data.map(a=>({...a,_dbId:a.id}));
-  } catch(e) { artikel=[]; }
-  filterArtikel(); updArtikelStats();
+  } catch(e) {
+    console.warn('loadArtikel error (Tabelle fehlt?):', e);
+    artikel=[];
+  }
+  filterArtikel();
+  updArtikelStats();
 }
 
 function updArtikelStats() {
