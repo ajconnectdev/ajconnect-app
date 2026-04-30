@@ -3526,34 +3526,83 @@ function filterDok() {
 }
 
 function rndrDok() {
-  const grid=document.getElementById('dok-grid'); if(!grid) return;
-  if(!dokFilt.length){grid.innerHTML='<div style="text-align:center;color:#9CA3AF;padding:40px;grid-column:1/-1">Keine Dokumente gefunden</div>';return;}
-  const icons={protokoll:'📋',vertrag:'📄',rechnung:'💰',bild:'🖼',sonstiges:'📁'};
-  const colors={protokoll:'#DBEAFE',vertrag:'#EDE9FE',rechnung:'#DCFCE7',bild:'#FEF3C7',sonstiges:'#F3F4F6'};
-  const fmtSize = b => b > 1048576 ? (b/1048576).toFixed(1)+' MB' : b > 1024 ? (b/1024).toFixed(0)+' KB' : b+' B';
-  grid.innerHTML = dokFilt.sort((a,b) => (b.created_at||'').localeCompare(a.created_at||'')).map(d => {
+  const grid = document.getElementById('dok-grid');
+  if(!grid) return;
+  if(!dokFilt.length) {
+    grid.innerHTML = '<div style="text-align:center;color:#9CA3AF;padding:40px;grid-column:1/-1">Keine Dokumente gefunden</div>';
+    return;
+  }
+  const icons = {protokoll:'📋', vertrag:'📄', rechnung:'💰', bild:'🖼', sonstiges:'📁'};
+  const colors = {protokoll:'#DBEAFE', vertrag:'#EDE9FE', rechnung:'#DCFCE7', bild:'#FEF3C7', sonstiges:'#F3F4F6'};
+  const fmtSize = b => b > 1048576 ? (b/1048576).toFixed(1)+' MB' : b > 1024 ? Math.round(b/1024)+' KB' : b+' B';
+  grid.innerHTML = '';
+  dokFilt.sort((a,b) => (b.created_at||'').localeCompare(a.created_at||'')).forEach(d => {
     const icon = icons[d.typ] || '📁';
-    const color = colors[d.typ] || '#F3F4F6';
+    const bg = colors[d.typ] || '#F3F4F6';
     const date = d.created_at ? new Date(d.created_at).toLocaleDateString('de-CH') : '—';
     const size = d.datei_groesse ? fmtSize(d.datei_groesse) : '';
-    const openBtn = d.datei_url
-      ? `<a href="${d.datei_url}" target="_blank" rel="noopener" class="aaction-btn" style="text-decoration:none;flex:1;text-align:center">📂 Öffnen</a>`
-      : `<button class="aaction-btn" style="flex:1;opacity:.5;cursor:not-allowed" title="Kein Storage-Link verfügbar">📂 Öffnen</button>`;
-    return \`<div style="background:white;border:1px solid #E5E7EB;border-radius:12px;padding:16px;transition:all .2s" 
-         onmouseover="this.style.borderColor='#C8941A';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'" 
-         onmouseout="this.style.borderColor='#E5E7EB';this.style.boxShadow='none'">
-      <div style="width:44px;height:44px;border-radius:10px;background:\${color};display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px">\${icon}</div>
-      <div style="font-size:13px;font-weight:600;color:#1A3560;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="\${d.name}">\${d.name}</div>
-      <div style="font-size:11px;color:#9CA3AF;margin-bottom:4px">\${d.typ}\${size?' · '+size:''}</div>
-      <div style="font-size:10px;color:#9CA3AF;margin-bottom:10px">\${date}</div>
-      \${d.beschreibung ? \`<div style="font-size:11px;color:#6B7280;margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">\${d.beschreibung}</div>\` : ''}
-      <div style="display:flex;gap:6px">
-        \${openBtn}
-        <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="event.stopPropagation();delDok('\${d._dbId}')">🗑</button>
-      </div>
-    </div>\`;
-  }).join('');
+    const card = document.createElement('div');
+    card.style.cssText = 'background:white;border:1px solid #E5E7EB;border-radius:12px;padding:16px;transition:all .2s';
+    card.onmouseover = function(){ this.style.borderColor='#C8941A'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'; };
+    card.onmouseout = function(){ this.style.borderColor='#E5E7EB'; this.style.boxShadow='none'; };
+    // Icon
+    const ico = document.createElement('div');
+    ico.style.cssText = 'width:44px;height:44px;border-radius:10px;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px';
+    ico.textContent = icon;
+    // Name
+    const name = document.createElement('div');
+    name.style.cssText = 'font-size:13px;font-weight:600;color:#1A3560;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    name.title = d.name;
+    name.textContent = d.name;
+    // Meta
+    const meta = document.createElement('div');
+    meta.style.cssText = 'font-size:11px;color:#9CA3AF;margin-bottom:4px';
+    meta.textContent = d.typ + (size ? ' · '+size : '');
+    // Date
+    const dt = document.createElement('div');
+    dt.style.cssText = 'font-size:10px;color:#9CA3AF;margin-bottom:10px';
+    dt.textContent = date;
+    // Buttons row
+    const btns = document.createElement('div');
+    btns.style.cssText = 'display:flex;gap:6px';
+    if(d.datei_url) {
+      const a = document.createElement('a');
+      a.href = d.datei_url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.className = 'aaction-btn';
+      a.style.cssText = 'text-decoration:none;flex:1;text-align:center';
+      a.textContent = '📂 Öffnen';
+      btns.appendChild(a);
+    } else {
+      const noBtn = document.createElement('button');
+      noBtn.className = 'aaction-btn';
+      noBtn.style.cssText = 'flex:1;opacity:.45;cursor:not-allowed';
+      noBtn.title = 'Kein Datei-Link (Storage Bucket prüfen)';
+      noBtn.textContent = '📂 Öffnen';
+      btns.appendChild(noBtn);
+    }
+    const delBtn = document.createElement('button');
+    delBtn.className = 'aaction-btn';
+    delBtn.style.cssText = 'background:#FEE2E2;color:#DC2626;border-color:#fca5a5';
+    delBtn.textContent = '🗑';
+    delBtn.onclick = function(e){ e.stopPropagation(); delDok(d._dbId); };
+    btns.appendChild(delBtn);
+    card.appendChild(ico);
+    card.appendChild(name);
+    card.appendChild(meta);
+    card.appendChild(dt);
+    if(d.beschreibung) {
+      const desc = document.createElement('div');
+      desc.style.cssText = 'font-size:11px;color:#6B7280;margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+      desc.textContent = d.beschreibung;
+      card.appendChild(desc);
+    }
+    card.appendChild(btns);
+    grid.appendChild(card);
+  });
 }
+
 
 async function uploadDok(input) {
   const files = Array.from(input.files);
