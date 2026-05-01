@@ -109,12 +109,12 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 .app-wrap{display:flex;height:100vh;overflow:hidden}
 .sidebar{width:240px;background:#0F1F3D;display:flex;flex-direction:column;flex-shrink:0;height:100vh;overflow-y:auto;scrollbar-width:none}
 .sidebar::-webkit-scrollbar{display:none}
-.sb-logo{padding:16px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px}
-.sb-mark{width:36px;height:36px;background:#C8941A;border-radius:8px;position:relative;flex-shrink:0}
-.sb-mark::before{content:'';position:absolute;left:50%;top:7px;transform:translateX(-50%);width:4px;height:22px;background:white;border-radius:2px}
-.sb-mark::after{content:'';position:absolute;top:14px;left:7px;width:22px;height:4px;background:white;border-radius:2px}
-.sb-appname{font-family:Georgia,serif;font-size:15px;color:white;font-weight:600;line-height:1.1}
-.sb-slogan{font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:0.8px;text-transform:uppercase;margin-top:1px}
+.sb-logo{padding:14px 16px;border-bottom:1px solid rgba(200,148,26,0.2);display:flex;align-items:center;gap:12px;background:rgba(0,0,0,0.15)}
+.sb-mark{width:28px;height:42px;position:relative;flex-shrink:0}.sb-divider{width:1px;height:32px;background:rgba(255,255,255,0.12);flex-shrink:0}
+.sb-mark::before{content:'';position:absolute;left:50%;top:0;transform:translateX(-50%);width:5px;height:42px;background:#C8941A;border-radius:2px}
+.sb-mark::after{content:'';position:absolute;top:13px;left:0;width:28px;height:5px;background:#C8941A;border-radius:2px}
+.sb-appname{font-size:15px;color:#FFFFFF;font-weight:700;line-height:1.1;letter-spacing:-0.2px}
+.sb-slogan{font-size:8px;color:#C8941A;letter-spacing:2px;text-transform:uppercase;margin-top:3px;font-weight:600}
 .sb-gem{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.07)}
 .sb-gemlbl{font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
 .sb-gemname{font-size:13px;color:white;font-weight:500}
@@ -317,6 +317,37 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 .soon h3{font-size:17px;font-weight:500;color:#6B7280}
 .toast{position:fixed;bottom:24px;right:24px;background:#1A3560;color:white;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(8px);transition:all 0.3s;pointer-events:none}
 .toast.show{opacity:1;transform:translateY(0)}
+.lang-toggle-app{display:flex;border:1px solid rgba(255,255,255,0.15);border-radius:6px;overflow:hidden}
+.lang-btn-app{background:transparent;border:none;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;font-family:inherit;transition:all .2s;letter-spacing:0.5px}
+.lang-btn-app.active{background:#C8941A;color:#0D1F3C}
+.lang-btn-app:hover:not(.active){color:white;background:rgba(255,255,255,0.08)}
+
+/* KI ASSISTENT */
+.ki-fab{position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#1A3560,#C8941A);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.4);z-index:1000;transition:transform .2s}
+.ki-fab:hover{transform:scale(1.1)}
+.ki-fab svg{width:24px;height:24px;fill:white}
+.ki-window{position:fixed;bottom:88px;right:24px;width:380px;max-height:520px;background:#1A3560;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.5);z-index:1000;display:none;flex-direction:column;overflow:hidden;border:1px solid rgba(200,148,26,0.3)}
+.ki-window.open{display:flex}
+.ki-header{background:#0D1F3C;padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(200,148,26,0.2)}
+.ki-header-icon{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#C8941A,#E8B84B);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ki-header-title{font-size:14px;font-weight:600;color:white}
+.ki-header-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px}
+.ki-close{margin-left:auto;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;padding:0 4px}
+.ki-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;max-height:360px}
+.ki-msg{max-width:85%;padding:10px 13px;border-radius:12px;font-size:13px;line-height:1.5}
+.ki-msg.user{background:#C8941A;color:#0D1F3C;align-self:flex-end;border-radius:12px 12px 2px 12px;font-weight:500}
+.ki-msg.ai{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.9);align-self:flex-start;border-radius:12px 12px 12px 2px}
+.ki-msg.loading{opacity:.6}
+.ki-input-row{padding:12px;border-top:1px solid rgba(255,255,255,0.08);display:flex;gap:8px}
+.ki-input{flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 12px;color:white;font-size:13px;font-family:inherit;outline:none;resize:none}
+.ki-input::placeholder{color:rgba(255,255,255,0.3)}
+.ki-input:focus{border-color:rgba(200,148,26,0.5)}
+.ki-send{background:#C8941A;border:none;border-radius:8px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s}
+.ki-send:hover{background:#E8B84B}
+.ki-send svg{width:16px;height:16px;fill:#0D1F3C}
+.ki-suggestions{padding:0 12px 12px;display:flex;flex-wrap:wrap;gap:6px}
+.ki-sug{background:rgba(200,148,26,0.15);border:1px solid rgba(200,148,26,0.3);color:#C8941A;font-size:11px;padding:4px 10px;border-radius:12px;cursor:pointer;font-family:inherit;transition:background .2s}
+.ki-sug:hover{background:rgba(200,148,26,0.3)}
 </style>
 </head>
 <body>
@@ -493,7 +524,8 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
     <div class="sidebar">
       <div class="sb-logo">
         <div class="sb-mark"></div>
-        <div><div class="sb-appname">AJ Connect</div><div class="sb-slogan">Connect. Organize. Grow.</div></div>
+        <div class="sb-divider"></div>
+        <div><div class="sb-appname">AJ Connect</div><div class="sb-slogan">CONNECT. ORGANIZE. GROW.</div></div>
       </div>
       <div class="sb-gem">
         <div class="sb-gemlbl">Gemeinde</div>
@@ -551,6 +583,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
           </div>
           <button id="btn-exp" class="tbtn tbtn-ghost" style="display:none" onclick="exportCSV()">Export</button>
           <button id="btn-new" class="tbtn tbtn-navy" style="display:none" onclick="openNM()">+ Neues Mitglied</button>
+          <div class="lang-toggle-app"><button class="lang-btn-app active" id="app-btn-de" onclick="setAppLang('de')">DE</button><button class="lang-btn-app" id="app-btn-en" onclick="setAppLang('en')">EN</button></div>
           <div class="date-chip" id="date-chip"></div>
         </div>
       </div>
@@ -1636,7 +1669,8 @@ function initAppUI() {
   mFilt = [...members]; updStats();
   // Reset to dashboard
   navTo('dashboard', document.querySelector('.sb-item'));
-}
+
+  setTimeout(initAppLang, 100);}
 
 // ═══════════════════════════════════════════
 // ADMIN FUNCTIONS
@@ -4205,6 +4239,212 @@ async function uploadArtikelFoto(input) {
   } catch(e) { toast('Fehler: '+e.message); }
   input.value='';
 }
+
+// ══════════════════════════════════════════════════════════
+// APP LANGUAGE SWITCHER (DE / EN)
+// ══════════════════════════════════════════════════════════
+let _appLang = localStorage.getItem('aj-app-lang') || 'de';
+
+const APP_T = {
+  // Sidebar sections
+  'Übersicht':'Overview','Gemeinde':'Church','Gottesdienst':'Services',
+  'Finanzen':'Finance','Verwaltung':'Admin',
+  // Sidebar items
+  'Dashboard':'Dashboard','Mitglieder':'Members','Kontakte':'Contacts',
+  'Small Groups':'Small Groups','Gottesdienste':'Services',
+  'Freiwillige':'Volunteers','Worship':'Worship',
+  'Veranstaltungen':'Events','Twint & Spenden':'Donations',
+  'Artikel':'Articles','Kreditoren':'Creditors',
+  'Dokumente':'Documents','Einrichtung':'Settings',
+  // Buttons
+  'Speichern':'Save','Abbrechen':'Cancel','Löschen':'Delete',
+  'Bearbeiten':'Edit','Schliessen':'Close','Exportieren':'Export',
+  'Anlegen':'Create','Aktualisieren':'Update','Zurück':'Back',
+  // Status
+  'Aktiv':'Active','Inaktiv':'Inactive','Besucher':'Visitor',
+  'Geplant':'Planned','Durchgeführt':'Completed',
+  'Offen':'Open','Bezahlt':'Paid','Angefragt':'Requested',
+  'Bestätigt':'Confirmed','Abgelehnt':'Declined',
+  'Storniert':'Cancelled','Erschienen':'Attended',
+  // Common fields
+  'Vorname':'First name','Nachname':'Last name',
+  'E-Mail':'Email','Telefon':'Phone','Adresse':'Address',
+  'Notiz':'Note','Datum':'Date','Betrag':'Amount',
+  'Status':'Status','Rolle':'Role','Name':'Name',
+  'Beschreibung':'Description','Kategorie':'Category',
+  'Einheit':'Unit','Preis':'Price','Bestand':'Stock',
+  // Page titles
+  'Freiwillige & Dienstplan':'Volunteers & Schedule',
+  'Twint & Spenden':'Donations & Twint',
+};
+
+function setAppLang(lang) {
+  _appLang = lang;
+  localStorage.setItem('aj-app-lang', lang);
+  // Toggle buttons
+  document.getElementById('app-btn-de')?.classList.toggle('active', lang==='de');
+  document.getElementById('app-btn-en')?.classList.toggle('active', lang==='en');
+  // Translate sidebar sections
+  document.querySelectorAll('.sb-sec').forEach(el => {
+    if(!el.dataset.de) el.dataset.de = el.textContent.trim();
+    el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
+  });
+  // Translate sidebar items (text node = last child)
+  document.querySelectorAll('.sb-item').forEach(el => {
+    const nodes = [...el.childNodes].filter(n=>n.nodeType===3&&n.textContent.trim());
+    if(nodes.length) {
+      const n = nodes[nodes.length-1];
+      if(!el.dataset.de) el.dataset.de = n.textContent.trim();
+      n.textContent = (lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de);
+    }
+  });
+  // Translate topbar title
+  const tt = document.getElementById('tb-title');
+  if(tt) {
+    if(!tt.dataset.de) tt.dataset.de = tt.textContent.trim();
+    tt.textContent = lang==='en' ? (APP_T[tt.dataset.de]||tt.dataset.de) : tt.dataset.de;
+  }
+  // Translate all [data-de] elements
+  document.querySelectorAll('[data-de]').forEach(el => {
+    if(el.children.length===0) {
+      el.textContent = lang==='en' ? (el.dataset.en||el.dataset.de) : el.dataset.de;
+    }
+  });
+}
+
+function initAppLang() {
+  if(_appLang !== 'de') setAppLang(_appLang);
+}
+
+// ══════════════════════════════════════════════════════════
+// KI-ASSISTENT — Powered by Claude (claude-sonnet-4-20250514)
+// ══════════════════════════════════════════════════════════
+let _kiOpen = false;
+let _kiHistory = [];
+
+function toggleKI() {
+  _kiOpen = !_kiOpen;
+  const win = document.getElementById('ki-window');
+  if(win) win.classList.toggle('open', _kiOpen);
+  if(_kiOpen) document.getElementById('ki-input')?.focus();
+}
+
+function buildKIContext() {
+  // Build a context summary of current church data for the AI
+  const mandant = _S?.mandant_name || 'Unbekannte Gemeinde';
+  const memberCount = members.length;
+  const activeMembers = members.filter(m=>m.status==='aktiv').length;
+  const kontakteCount = kontakte.length;
+  const gruppen = sgData.map(g=>g.name).join(', ') || 'keine';
+  const upcomingEvents = events.filter(e=>{
+    const d = new Date(e.datum);
+    return d >= new Date() && e.status !== 'abgesagt';
+  }).slice(0,3).map(e=>`${e.name} (${e.datum})`).join(', ') || 'keine';
+  const recentSpenden = spenden.slice(0,5).map(s=>`CHF ${s.betrag} via ${s.zahlungsweg} am ${s.datum}`).join('; ') || 'keine';
+  const totalSpenden = spenden.reduce((a,s)=>a+parseFloat(s.betrag||0),0);
+  const nextGD = gottesdienste.filter(g=>new Date(g.datum)>=new Date()).sort((a,b)=>a.datum.localeCompare(b.datum))[0];
+  const offeneRechnungen = rechnungen.filter(r=>r.status==='offen').length;
+  const artikelCount = artikel.length;
+  const volBereiche = dienstBereiche.map(b=>b.name).join(', ') || 'keine';
+  const thisWeekEinsaetze = einsaetze.filter(e=>{
+    const d = new Date(e.datum), now = new Date();
+    const ws = new Date(now); ws.setDate(now.getDate()-now.getDay());
+    const we = new Date(ws); we.setDate(ws.getDate()+7);
+    return d>=ws && d<we;
+  });
+  
+  return `Du bist ein hilfreicher KI-Assistent für AJ Connect, die Kirchenanwendung von ${mandant}.
+
+AKTUELLE GEMEINDE-DATEN:
+- Gemeinde: ${mandant}
+- Mitglieder: ${memberCount} total, ${activeMembers} aktiv, ${members.filter(m=>m.status==='besucher').length} Besucher
+- Kontakte/Interessenten: ${kontakteCount}
+- Small Groups: ${sgData.length} Gruppen (${gruppen})
+- Nächster Gottesdienst: ${nextGD ? nextGD.titel+' am '+nextGD.datum+' um '+nextGD.zeit : 'keiner geplant'}
+- Bevorstehende Events: ${upcomingEvents}
+- Spenden gesamt: CHF ${totalSpenden.toFixed(2)}, letzte: ${recentSpenden}
+- Offene Rechnungen: ${offeneRechnungen}
+- Freiwillige Bereiche: ${volBereiche}
+- Einsätze diese Woche: ${thisWeekEinsaetze.length}
+- Artikel im Inventar: ${artikelCount}
+
+Antworte auf Deutsch, präzise und hilfreich. Nutze die obigen Daten um konkrete Antworten zu geben.
+Wenn du nach einer Liste fragst, formatiere sie übersichtlich.
+Halte Antworten unter 200 Wörtern ausser der Nutzer fragt nach Details.`;
+}
+
+function kiAddMessage(text, role) {
+  const msgs = document.getElementById('ki-messages');
+  if(!msgs) return;
+  const div = document.createElement('div');
+  div.className = 'ki-msg ' + role;
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  // Hide suggestions after first user message
+  if(role === 'user') {
+    const sugs = document.getElementById('ki-sugs');
+    if(sugs) sugs.style.display='none';
+  }
+  return div;
+}
+
+async function kiSend() {
+  const input = document.getElementById('ki-input');
+  if(!input) return;
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  input.style.height = 'auto';
+  await kiAsk(text);
+}
+
+async function kiAsk(question) {
+  // Add user message
+  kiAddMessage(question, 'user');
+  _kiHistory.push({role:'user', content: question});
+  
+  // Add loading indicator
+  const loadingDiv = kiAddMessage('...', 'ai loading');
+  
+  try {
+    const context = buildKIContext();
+    const messages = [
+      {role:'user', content: context + '\n\nErste Frage: Bestätige kurz dass du die Daten geladen hast.'},
+      {role:'assistant', content: 'Verstanden! Ich habe die aktuellen Gemeindedaten geladen und bin bereit, dir zu helfen.'},
+      ..._kiHistory.slice(-8) // last 8 messages for context
+    ];
+    
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: context,
+        messages: _kiHistory.slice(-10)
+      })
+    });
+    
+    const data = await response.json();
+    
+    if(data.error) {
+      loadingDiv.textContent = 'Fehler: ' + (data.error.message || 'Unbekannter Fehler');
+      loadingDiv.classList.remove('loading');
+      return;
+    }
+    
+    const aiText = data.content?.[0]?.text || 'Keine Antwort erhalten.';
+    loadingDiv.textContent = aiText;
+    loadingDiv.classList.remove('loading');
+    _kiHistory.push({role:'assistant', content: aiText});
+    
+  } catch(e) {
+    loadingDiv.textContent = 'Verbindungsfehler. Bitte prüfe deine Internetverbindung.';
+    loadingDiv.classList.remove('loading');
+    console.error('KI error:', e);
+  }
+}
 </script>
 
 <!-- KONTAKT MODAL -->
@@ -4862,6 +5102,39 @@ async function uploadArtikelFoto(input) {
       <button class="tbtn tbtn-ghost" onclick="closeMo('mo-art')">Abbrechen</button>
       <button class="tbtn tbtn-navy" id="art-save-btn" onclick="saveArtikel()">Erstellen</button>
     </div>
+  </div>
+</div>
+
+
+<!-- KI ASSISTENT -->
+<button class="ki-fab" onclick="toggleKI()" title="KI-Assistent">
+  <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+</button>
+<div class="ki-window" id="ki-window">
+  <div class="ki-header">
+    <div class="ki-header-icon">✦</div>
+    <div>
+      <div class="ki-header-title">KI-Assistent</div>
+      <div class="ki-header-sub">Powered by Claude · AJ Connect</div>
+    </div>
+    <button class="ki-close" onclick="toggleKI()">✕</button>
+  </div>
+  <div class="ki-messages" id="ki-messages">
+    <div class="ki-msg ai">Hallo! Ich bin dein KI-Assistent für AJ Connect. Ich kann dir Fragen über deine Gemeindedaten beantworten — z.B. über Mitglieder, Events, Spenden oder den Dienstplan. Was möchtest du wissen?</div>
+  </div>
+  <div class="ki-suggestions" id="ki-sugs">
+    <button class="ki-sug" onclick="kiAsk('Wie viele aktive Mitglieder haben wir?')">Aktive Mitglieder?</button>
+    <button class="ki-sug" onclick="kiAsk('Welche Events sind geplant?')">Geplante Events?</button>
+    <button class="ki-sug" onclick="kiAsk('Was sind die letzten Spenden?')">Letzte Spenden?</button>
+    <button class="ki-sug" onclick="kiAsk('Wer ist diese Woche im Dienst?')">Dienstplan?</button>
+  </div>
+  <div class="ki-input-row">
+    <textarea class="ki-input" id="ki-input" rows="1" placeholder="Frage stellen..." 
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();kiSend()}"
+      oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
+    <button class="ki-send" onclick="kiSend()">
+      <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+    </button>
   </div>
 </div>
 
