@@ -317,10 +317,10 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 .soon h3{font-size:17px;font-weight:500;color:#6B7280}
 .toast{position:fixed;bottom:24px;right:24px;background:#1A3560;color:white;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(8px);transition:all 0.3s;pointer-events:none}
 .toast.show{opacity:1;transform:translateY(0)}
-.lang-toggle-app{display:flex;border:1px solid rgba(255,255,255,0.15);border-radius:6px;overflow:hidden}
-.lang-btn-app{background:transparent;border:none;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;font-family:inherit;transition:all .2s;letter-spacing:0.5px}
-.lang-btn-app.active{background:#C8941A;color:#0D1F3C}
-.lang-btn-app:hover:not(.active){color:white;background:rgba(255,255,255,0.08)}
+.lang-toggle-app{display:flex;border:1px solid #E5E7EB;border-radius:6px;overflow:hidden}
+.lang-btn-app{background:#F3F4F6;border:none;color:#6B7280;font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;font-family:inherit;transition:all .2s;letter-spacing:0.5px}
+.lang-btn-app.active{background:#1A3560;color:white}
+.lang-btn-app:hover:not(.active){color:#1A3560;background:#E5E7EB}
 
 /* KI ASSISTENT */
 .ki-fab{position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#1A3560,#C8941A);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.4);z-index:1000;transition:transform .2s}
@@ -4417,7 +4417,10 @@ async function kiAsk(question) {
     
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
