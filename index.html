@@ -1909,10 +1909,9 @@ async function saveAU() {
   const rolle = document.getElementById('au-rolle').value;
   if (!email || !mid) { toast('E-Mail und Gemeinde sind Pflicht'); return; }
   const existing = _AU.find(u => u.email?.toLowerCase() === email && u.id);
-  if (existing) { toast('⚠ Benutzer existiert bereits'); return; }
-  btn.disabled = true; btn.textContent = 'Wird eingeladen...';
+  if (existing) { toast('Benutzer existiert bereits'); return; }
+  btn.disabled = true; btn.textContent = 'Wird eingeladen...'; 
   try {
-    // STEP 1: Edge Function erstellt User + Profil (mit service_role)
     const { data: { session } } = await sb.auth.getSession();
     const res = await fetch(
       'https://gpmwlkqwdfxkenyebjmj.supabase.co/functions/v1/invite-user',
@@ -1932,18 +1931,11 @@ async function saveAU() {
       btn.disabled = false; btn.textContent = 'Anlegen';
       return;
     }
-
-    // STEP 2: E-Mail direkt aus App senden (funktioniert mit anon key + custom SMTP)
-    const { error: emailErr } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://app.ajconnect.ch'
-    });
-    if (emailErr) {
-      console.error('E-Mail Fehler:', emailErr.message);
-      toast('✓ Benutzer erstellt — E-Mail fehlgeschlagen: ' + emailErr.message);
+    if (result.warning) {
+      toast('Benutzer erstellt — E-Mail: ' + result.warning);
     } else {
-      toast('✓ Einladungs-E-Mail gesendet an ' + email);
+      toast('Einladungs-E-Mail gesendet an ' + email);
     }
-
     const newUser = { id: result.user_id, email, name, mandant_id: mid, rolle, aktiv: true };
     _AU.push(newUser);
     document.getElementById('amo-u').classList.remove('open');
