@@ -1396,6 +1396,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 // ═══════════════════════════════════════════
 const SB_URL = 'https://gpmwlkqwdfxkenyebjmj.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwbXdsa3F3ZGZ4a2VueWViam1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTM1NTcsImV4cCI6MjA5MTAyOTU1N30.7d6aHR79PuRi_K7D8ikIGMxojKApIVBYE6yaW6UId8w';
+const SUPABASE_ANON_KEY = SB_KEY; // Alias für Edge Function Aufrufe
 const sb = supabase.createClient(SB_URL, SB_KEY);
 let _S = null; // Session data
 
@@ -1898,7 +1899,7 @@ async function saveAM() {
 
 async function saveAU() {
   const btn = document.getElementById('au-save-btn');
-  if(btn.disabled) return;
+  if (btn.disabled) return;
   const email = document.getElementById('au-email').value.trim().toLowerCase();
   const name = document.getElementById('au-name').value.trim();
   const mandantRow = document.getElementById('au-mandant-row');
@@ -1908,57 +1909,47 @@ async function saveAU() {
   const rolle = document.getElementById('au-rolle').value;
   if (!email || !mid) { toast('E-Mail und Gemeinde sind Pflicht'); return; }
   const existing = _AU.find(u => u.email?.toLowerCase() === email && u.id);
-  if(existing) { toast('⚠ Benutzer existiert bereits'); return; }
-  btn.disabled = true; btn.textContent = 'Wird erstellt...';
+  if (existing) { toast('⚠ Benutzer existiert bereits'); return; }
+  btn.disabled = true; btn.textContent = 'Wird eingeladen...';
   try {
-    // STEP 1: signUp with temp password — creates auth user
-    const tempPw = crypto.randomUUID() + 'Aa1!';
-    const {data: authData, error: authErr} = await sb.auth.signUp({
-      email, password: tempPw,
-      options: { data: { name, rolle, mandant_id: mid }, emailRedirectTo: window.location.origin }
-    });
-    let authUserId = authData?.user?.id;
-
-    if(authErr && authErr.message.includes('already registered')) {
-      // User exists in auth but maybe not in profiles - just reset password
-      await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
-      toast('Passwort-Reset E-Mail gesendet an ' + email);
-      btn.disabled=false; btn.textContent='Anlegen';
-      document.getElementById('amo-u').classList.remove('open');
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(
+      'https://gpmwlkqwdfxkenyebjmj.supabase.co/functions/v1/invite-user',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ email, name, rolle, mandant_id: mid })
+      }
+    );
+    const result = await res.json();
+    if (!res.ok || result.error) {
+      toast('Fehler: ' + (result.error ?? 'Unbekannt'));
+      btn.disabled = false; btn.textContent = 'Anlegen';
       return;
     }
-    if(authErr) { toast('Auth-Fehler: ' + authErr.message); btn.disabled=false; btn.textContent='Anlegen'; return; }
-    if(!authUserId) { toast('Fehler: Keine User-ID'); btn.disabled=false; btn.textContent='Anlegen'; return; }
-
-    // STEP 2: Create profile
-    const {error: pErr} = await sb.from('profiles').upsert({
-      id: authUserId, email, name, mandant_id: mid, rolle, aktiv: true
-    });
-    if(pErr) { toast('Profil-Fehler: ' + pErr.message); btn.disabled=false; btn.textContent='Anlegen'; return; }
-
-    // STEP 3: Send password reset email — user clicks link, sets own password
-    // This is more reliable than OTP because it works with custom SMTP too
-    const {error: resetErr} = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '?setup=1'
-    });
-
-    const newUser = {id: authUserId, email, name, mandant_id: mid, rolle, aktiv: true};
-    _AU.push(newUser);
+    if (result.mode === 'reset') {
+      toast('ℹ Benutzer existiert bereits — Passwort-Reset gesendet an ' + email);
+    } else {
+      const newUser = { id: result.user_id, email, name, mandant_id: mid, rolle, aktiv: true };
+      _AU.push(newUser);
+      toast('✓ Einladungs-E-Mail gesendet an ' + email);
+    }
     document.getElementById('amo-u').classList.remove('open');
     await loadAdminData();
-    if(_activeMandant) {
+    if (_activeMandant) {
       const users = _AU.filter(u => u.mandant_id === _activeMandant.id);
       renderDetailUsers(users);
-      const dm_u=document.getElementById('a-dm-users');if(dm_u)dm_u.textContent=users.length;
-      const dm_a=document.getElementById('a-dm-aktiv');if(dm_a)dm_a.textContent=users.filter(u=>u.aktiv).length;
+      const dm_u = document.getElementById('a-dm-users'); if (dm_u) dm_u.textContent = users.length;
+      const dm_a = document.getElementById('a-dm-aktiv'); if (dm_a) dm_a.textContent = users.filter(u => u.aktiv).length;
     }
-    if(resetErr) {
-      toast('✓ Benutzer erstellt — E-Mail fehlgeschlagen. SMTP in Supabase prüfen!');
-    } else {
-      toast('✓ Einladungs-E-Mail gesendet an ' + email + ' — bitte Passwort setzen.');
-    }
-  } catch(e) { toast('Fehler: ' + e.message); }
-  btn.disabled=false; btn.textContent='Anlegen';
+  } catch (e) {
+    toast('Netzwerkfehler: ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = 'Anlegen';
 }
 
 // showPage handles admin init in the main definition above
