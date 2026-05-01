@@ -355,6 +355,26 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 <!-- LOADER -->
 <div id="loader">
   <div class="lo-mark"></div>
+  <!-- KI-Assistent Einrichtung -->
+  <div class="tcard" style="margin-top:16px">
+    <div class="tcardh"><span style="font-weight:600;color:#1A3560">🤖 KI-Assistent</span></div>
+    <div style="padding:16px 20px">
+      <p style="font-size:14px;color:#6B7280;margin-bottom:16px">
+        Der KI-Assistent verwendet die Claude API von Anthropic. 
+        API-Key erstellen unter <a href="https://console.anthropic.com" target="_blank" style="color:#2563EB">console.anthropic.com</a> → API Keys → Create Key.
+      </p>
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        <div style="flex:1">
+          <label class="fl">Anthropic API Key</label>
+          <input type="password" class="fs" id="ki-api-key-input" placeholder="sk-ant-..." style="font-family:monospace">
+        </div>
+        <button class="tbtn tbtn-navy" onclick="saveKIKey()">Speichern</button>
+        <button class="tbtn tbtn-ghost" onclick="testKIKey()">Testen</button>
+      </div>
+      <div id="ki-key-status" style="margin-top:10px;font-size:13px"></div>
+    </div>
+  </div>
+
   <div class="lo-spin"></div>
   <div class="lo-txt">AJ Connect lädt...</div>
 </div>
@@ -4241,14 +4261,15 @@ async function uploadArtikelFoto(input) {
 }
 
 // ══════════════════════════════════════════════════════════
-// APP LANGUAGE SWITCHER (DE / EN)
+// APP LANGUAGE SWITCHER (DE / EN) — COMPLETE
 // ══════════════════════════════════════════════════════════
 let _appLang = localStorage.getItem('aj-app-lang') || 'de';
 
+// Full translation dictionary DE → EN
 const APP_T = {
   // Sidebar sections
   'Übersicht':'Overview','Gemeinde':'Church','Gottesdienst':'Services',
-  'Finanzen':'Finance','Verwaltung':'Admin',
+  'Finanzen':'Finance','Verwaltung':'Administration',
   // Sidebar items
   'Dashboard':'Dashboard','Mitglieder':'Members','Kontakte':'Contacts',
   'Small Groups':'Small Groups','Gottesdienste':'Services',
@@ -4256,60 +4277,203 @@ const APP_T = {
   'Veranstaltungen':'Events','Twint & Spenden':'Donations',
   'Artikel':'Articles','Kreditoren':'Creditors',
   'Dokumente':'Documents','Einrichtung':'Settings',
+  // Stat labels
+  'Total':'Total','Aktiv':'Active','Besucher':'Visitors','Neu':'New',
+  'Total Kontakte':'Total Contacts','Offen / Interessenten':'Open / Prospects',
+  'Diesen Monat':'This month','Zu Mitglied geworden':'Converted to member',
+  'Gruppen total':'Total groups','Mitglieder total':'Total members',
+  'Nächstes Treffen':'Next meeting','Aktive Gruppen':'Active groups',
+  'Gottesdienste total':'Total services','Ø Besucher':'Avg. attendance',
+  'Nächster GD':'Next service','Lieder gespielt':'Songs played',
+  'Spenden April':'Donations April','Offene Aufgaben':'Open tasks',
+  'Spenden gesamt':'Total donations','Ø pro Spende':'Avg. per donation',
+  'Spender':'Donors','Diesen Monat':'This month',
+  'Offene Rechnungen':'Open invoices','Fällig diese Woche':'Due this week',
+  'Bezahlt (lfd. Monat)':'Paid (current month)','Kreditoren':'Creditors',
+  'Dokumente':'Documents','Gespeichert':'Stored',
+  'Protokolle':'Minutes','Verträge':'Contracts',
+  'Freiwillige total':'Total volunteers','Bestätigt diese Woche':'Confirmed this week',
+  'Angefragt / offen':'Requested / open','Dienst-Bereiche':'Service areas',
+  'Artikel total':'Total articles','Aktiv':'Active','Kategorien':'Categories',
+  'Favoriten':'Favourites',
+  // Table headers
+  'Name':'Name','E-Mail':'Email','Telefon':'Phone','Status':'Status',
+  'Aktionen':'Actions','Rolle':'Role','Erstkontakt':'First contact',
+  'Quelle':'Source','Datum':'Date','Titel / Thema':'Title / Topic',
+  'Prediger':'Speaker','Besucher':'Attendance','Typ':'Type',
+  'Verantwortlich':'Responsible','Anmeldungen':'Registrations',
+  'Fällig':'Due','Kreditor':'Creditor','Beschreibung':'Description',
+  'Betrag':'Amount','Bezahlt am':'Paid on','Zahlungsweg':'Payment method',
+  'Zweck':'Purpose','Notiz':'Note','Bereich':'Area',
+  'Freiwillige/r':'Volunteer','Zeit':'Time','Nummer':'Number',
+  'Bezeichnung':'Name','Einheit':'Unit','Preis':'Price','Bestand':'Stock',
+  'Kategorie':'Category','Nr.':'No.','Foto':'Photo',
+  'Name / E-Mail':'Name / Email','Lizenz':'Licence',
+  'Gemeinde':'Church','DATUM':'DATE','TITEL / THEMA':'TITLE / TOPIC',
+  'PREDIGER':'SPEAKER','BESUCHER':'ATTENDANCE',
+  // Form labels
+  'Anrede':'Salutation','Vorname':'First name','Nachname':'Last name',
+  'Mobil':'Mobile','Geburtsdatum':'Date of birth',
+  'Strasse':'Street','PLZ / Ort':'Postcode / City',
+  'Eingetreten':'Joined','Small Group':'Small Group',
+  'Notizen':'Notes','Bemerkungen':'Remarks',
+  'Vorname *':'First name *','Nachname *':'Last name *','E-Mail *':'Email *',
+  'Nationalität':'Nationality','Sprache':'Language',
+  'Familienstand':'Marital status','Kanton':'Canton',
+  'Name *':'Name *','Leiter':'Leader','Ko-Leiter':'Co-leader',
+  'Tag':'Day','Uhrzeit':'Time','Ort':'Location','Ziel':'Goal',
+  'Bibeltext':'Bible text','Besucherzahl':'Attendance',
+  'Zahlungsweg':'Payment','Betrag (CHF)':'Amount (CHF)',
+  'Mitglied (optional)':'Member (optional)',
+  'Bezeichnung *':'Name *','Artikelnummer':'Article no.',
+  'Mindestbestand':'Min. stock','Barcode / EAN':'Barcode / EAN',
+  'Lieferant':'Supplier','Rechnungsnummer':'Invoice no.',
+  'Rechnungsdatum':'Invoice date','Fällig am':'Due date',
+  'IBAN':'IBAN','Adresse':'Address','Kontakt':'Contact',
   // Buttons
   'Speichern':'Save','Abbrechen':'Cancel','Löschen':'Delete',
-  'Bearbeiten':'Edit','Schliessen':'Close','Exportieren':'Export',
+  'Bearbeiten':'Edit','Schliessen':'Close','Export CSV':'Export CSV',
   'Anlegen':'Create','Aktualisieren':'Update','Zurück':'Back',
-  // Status
-  'Aktiv':'Active','Inaktiv':'Inactive','Besucher':'Visitor',
-  'Geplant':'Planned','Durchgeführt':'Completed',
-  'Offen':'Open','Bezahlt':'Paid','Angefragt':'Requested',
-  'Bestätigt':'Confirmed','Abgelehnt':'Declined',
-  'Storniert':'Cancelled','Erschienen':'Attended',
-  // Common fields
-  'Vorname':'First name','Nachname':'Last name',
-  'E-Mail':'Email','Telefon':'Phone','Adresse':'Address',
-  'Notiz':'Note','Datum':'Date','Betrag':'Amount',
-  'Status':'Status','Rolle':'Role','Name':'Name',
-  'Beschreibung':'Description','Kategorie':'Category',
-  'Einheit':'Unit','Preis':'Price','Bestand':'Stock',
-  // Page titles
+  '+ Neues Mitglied':'+ New member','+ Neuer Kontakt':'+ New contact',
+  '+ Neue Gruppe':'+ New group','+ Neuer GD':'+ New service',
+  '+ Neues Event':'+ New event','+ Neue Spende':'+ New donation',
+  '+ Kreditor':'+ Creditor','+ Rechnung':'+ Invoice',
+  '+ Dokument hochladen':'+ Upload document',
+  '+ Neuer Artikel':'+ New article','+ Einsatz planen':'+ Schedule',
+  '+ Bereich':'+ Area','Rechnungen':'Invoices',
+  'Export':'Export','Bezahlt':'Mark paid',
+  // Status badges
+  'aktiv':'active','inaktiv':'inactive','besucher':'visitor',
+  'geplant':'planned','durchgeführt':'completed','abgesagt':'cancelled',
+  'offen':'open','bezahlt':'paid','storniert':'cancelled',
+  'angefragt':'requested','bestaetigt':'confirmed','abgelehnt':'declined',
+  'angemeldet':'registered','warteliste':'waitlist','erschienen':'attended',
+  // Modal titles
+  'Neues Mitglied':'New member','Kontakt bearbeiten':'Edit contact',
+  'Neue Gruppe':'New group','Neuer Gottesdienst':'New service',
+  'Neue Spende erfassen':'Record donation',
+  'Kreditor erfassen':'Add creditor','Rechnung erfassen':'Add invoice',
+  'Neuer Artikel':'New article','Einsatz planen':'Schedule shift',
+  'Neuer Dienst-Bereich':'New service area','Neue Anmeldung':'New registration',
+  // Page topbar titles (used in navTo titles dict)
   'Freiwillige & Dienstplan':'Volunteers & Schedule',
   'Twint & Spenden':'Donations & Twint',
+  'Mitglieder':'Members','Kontakte':'Contacts',
+  'Veranstaltungen':'Events','Artikel':'Articles',
+  // Misc
+  'Alle':'All','Alle Bereiche':'All areas','Alle Status':'All statuses',
+  'Geplant':'Planned','Vergangen':'Past','Aktive':'Active',
+  'Listenansicht':'List view','Kartenansicht':'Card view',
+  'Wird erstellt...':'Creating...','Lädt...':'Loading...',
+  'Noch keine Daten':'No data yet',
+  'Ja':'Yes','Nein':'No','Pflicht':'Required',
 };
+
+function t(de) {
+  return _appLang === 'en' ? (APP_T[de] || de) : de;
+}
 
 function setAppLang(lang) {
   _appLang = lang;
   localStorage.setItem('aj-app-lang', lang);
-  // Toggle buttons
+
+  // Update toggle buttons
   document.getElementById('app-btn-de')?.classList.toggle('active', lang==='de');
   document.getElementById('app-btn-en')?.classList.toggle('active', lang==='en');
-  // Translate sidebar sections
+
+  // 1. Translate sidebar sections (.sb-sec)
   document.querySelectorAll('.sb-sec').forEach(el => {
     if(!el.dataset.de) el.dataset.de = el.textContent.trim();
     el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
   });
-  // Translate sidebar items (text node = last child)
+
+  // 2. Translate sidebar items (last text node)
   document.querySelectorAll('.sb-item').forEach(el => {
     const nodes = [...el.childNodes].filter(n=>n.nodeType===3&&n.textContent.trim());
     if(nodes.length) {
       const n = nodes[nodes.length-1];
-      if(!el.dataset.de) el.dataset.de = n.textContent.trim();
-      n.textContent = (lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de);
+      const txt = n.textContent.trim();
+      if(!el.dataset.de) el.dataset.de = txt;
+      n.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
     }
   });
-  // Translate topbar title
+
+  // 3. Translate ALL text in stat labels (.sl)
+  document.querySelectorAll('.sl').forEach(el => {
+    if(!el.dataset.de) el.dataset.de = el.textContent.trim();
+    el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
+  });
+
+  // 4. Translate form labels (.fl)
+  document.querySelectorAll('.fl').forEach(el => {
+    if(!el.dataset.de) el.dataset.de = el.textContent.trim();
+    el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
+  });
+
+  // 5. Translate table headers (<th>)
+  document.querySelectorAll('th').forEach(el => {
+    if(!el.dataset.de) el.dataset.de = el.textContent.trim();
+    el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
+  });
+
+  // 6. Translate topbar title
   const tt = document.getElementById('tb-title');
   if(tt) {
     if(!tt.dataset.de) tt.dataset.de = tt.textContent.trim();
     tt.textContent = lang==='en' ? (APP_T[tt.dataset.de]||tt.dataset.de) : tt.dataset.de;
   }
-  // Translate all [data-de] elements
-  document.querySelectorAll('[data-de]').forEach(el => {
-    if(el.children.length===0) {
-      el.textContent = lang==='en' ? (el.dataset.en||el.dataset.de) : el.dataset.de;
+
+  // 7. Translate all buttons (.tbtn) - only those without child elements
+  document.querySelectorAll('.tbtn').forEach(el => {
+    if(el.children.length === 0) {
+      if(!el.dataset.de) el.dataset.de = el.textContent.trim();
+      el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
     }
   });
+
+  // 8. Translate afs (filter selects) option text
+  document.querySelectorAll('.afs option').forEach(el => {
+    if(!el.dataset.de) el.dataset.de = el.textContent.trim();
+    el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
+  });
+
+  // 9. Translate modal headers (.mt2, .mh .mt)
+  document.querySelectorAll('.mt2, .modal .mt').forEach(el => {
+    if(el.children.length === 0) {
+      if(!el.dataset.de) el.dataset.de = el.textContent.trim();
+      el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
+    }
+  });
+
+  // 10. Translate .topbar-title elements
+  document.querySelectorAll('.topbar-title').forEach(el => {
+    if(el.id !== 'tb-title') {
+      if(!el.dataset.de) el.dataset.de = el.textContent.trim();
+      el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
+    }
+  });
+
+  // 11. Translate filter tab buttons (.ftab)
+  document.querySelectorAll('.ftab').forEach(el => {
+    if(!el.dataset.de) el.dataset.de = el.textContent.trim();
+    el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
+  });
+
+  // 12. Translate placeholders
+  document.querySelectorAll('[placeholder]').forEach(el => {
+    if(!el.dataset.dePlaceholder) el.dataset.dePlaceholder = el.placeholder;
+    el.placeholder = lang==='en' ? (APP_T[el.dataset.dePlaceholder]||el.dataset.dePlaceholder) : el.dataset.dePlaceholder;
+  });
+
+  // Update navTo titles dict for future navigation
+  window._navTitlesDe = window._navTitlesDe || {
+    dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',
+    groups:'Small Groups',gottesdienste:'Gottesdienste',
+    volunteer:'Freiwillige & Dienstplan',worship:'Worship',
+    events:'Veranstaltungen',spenden:'Twint & Spenden',
+    artikel:'Artikel',kreditoren:'Kreditoren',
+    dokumente:'Dokumente',einrichtung:'Einrichtung'
+  };
 }
 
 function initAppLang() {
@@ -4415,10 +4579,19 @@ async function kiAsk(question) {
       ..._kiHistory.slice(-8) // last 8 messages for context
     ];
     
+    // API Key: set in Einrichtung or via KI_API_KEY config
+    const apiKey = localStorage.getItem('aj-ki-key') || window.KI_API_KEY || '';
+    if(!apiKey) {
+      loadingDiv.textContent = 'Kein API-Key konfiguriert. Geh zu Einrichtung → KI-Assistent und trage deinen Anthropic API-Key ein.';
+      loadingDiv.classList.remove('loading');
+      return;
+    }
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
@@ -4446,6 +4619,42 @@ async function kiAsk(question) {
     loadingDiv.textContent = 'Verbindungsfehler. Bitte prüfe deine Internetverbindung.';
     loadingDiv.classList.remove('loading');
     console.error('KI error:', e);
+  }
+}
+
+function saveKIKey() {
+  const key = document.getElementById('ki-api-key-input').value.trim();
+  if(!key) { toast('Bitte API-Key eingeben'); return; }
+  if(!key.startsWith('sk-ant-')) { toast('⚠ API-Key sollte mit sk-ant- beginnen'); return; }
+  localStorage.setItem('aj-ki-key', key);
+  document.getElementById('ki-key-status').innerHTML = '<span style="color:#16A34A">✓ API-Key gespeichert</span>';
+  toast('KI API-Key gespeichert ✓');
+}
+
+async function testKIKey() {
+  const key = localStorage.getItem('aj-ki-key') || document.getElementById('ki-api-key-input').value.trim();
+  if(!key) { toast('Kein API-Key vorhanden'); return; }
+  const status = document.getElementById('ki-key-status');
+  status.textContent = 'Teste Verbindung...';
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:10,messages:[{role:'user',content:'Hi'}]})
+    });
+    const d = await r.json();
+    if(d.content) status.innerHTML = '<span style="color:#16A34A">✓ Verbindung erfolgreich! KI-Assistent ist bereit.</span>';
+    else status.innerHTML = '<span style="color:#DC2626">✗ Fehler: ' + (d.error?.message||'Unbekannt') + '</span>';
+  } catch(e) {
+    status.innerHTML = '<span style="color:#DC2626">✗ Verbindungsfehler: ' + e.message + '</span>';
+  }
+}
+
+function initKIKey() {
+  const key = localStorage.getItem('aj-ki-key');
+  if(key) {
+    const inp = document.getElementById('ki-api-key-input');
+    if(inp) { inp.value = key; document.getElementById('ki-key-status').innerHTML = '<span style="color:#16A34A">✓ API-Key geladen</span>'; }
   }
 }
 </script>
