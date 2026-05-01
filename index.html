@@ -1566,9 +1566,9 @@ async function loadAllData() {
     await Promise.all([loadSpenden(), loadKreditoren(), loadDokumente()]);
   } catch(e) { console.warn('Financial modules load error:', e); }
   // Load other modules in background (non-blocking)
-  setTimeout(async () => {
-    try { await loadArtikel(); } catch(e) { console.warn('loadArtikel:', e); }
-    try { await loadVolunteer(); } catch(e) { console.warn('loadVolunteer:', e); }
+  setTimeout(function() {
+    loadArtikel().catch(e=>console.warn('loadArtikel:',e));
+    loadVolunteer().catch(e=>console.warn('loadVolunteer:',e));
   }, 500);
   if(loader) loader.style.display='none';
 }
