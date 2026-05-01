@@ -1593,8 +1593,27 @@ async function loadUserAndShow(user) {
     if (p.rolle === 'superadmin') {
       const adminBtn = document.getElementById('admin-btn-wrap');
       if(adminBtn) adminBtn.style.display = 'block';
-      // Populate mandant selector
-      setTimeout(populateWorkingMandantSel, 500);
+      // Restore previously selected working mandant from localStorage
+      const savedMandant = localStorage.getItem('aj-working-mandant');
+      const savedMandantName = localStorage.getItem('aj-working-mandant-name');
+      if(savedMandant) {
+        _S.working_mandant_id = savedMandant;
+        _S.working_mandant_name = savedMandantName || savedMandant;
+        // Reload data with restored mandant
+        _artikelLoaded = false; _volLoaded = false; _dokLoaded = false;
+        await loadAllData();
+        initAppUI();
+      }
+      // Populate mandant selector and set it to saved value
+      setTimeout(() => {
+        populateWorkingMandantSel();
+        if(savedMandant) {
+          const sel = document.getElementById('working-mandant-sel');
+          if(sel) sel.value = savedMandant;
+          const warn = document.getElementById('no-mandant-warning');
+          if(warn) warn.style.display = 'none';
+        }
+      }, 600);
     }
   } catch(e) {
     showPage('login');
@@ -3024,12 +3043,13 @@ function parseCSVLine(line){
 // ═══════════════════════════════════════════
 // SUPERADMIN: Working-As Mandant Selector
 // ═══════════════════════════════════════════
-async function setWorkingMandant(mandantId) {
+async async function setWorkingMandant(mandantId) {
   if(!_S) return;
   const warn = document.getElementById('no-mandant-warning');
   if(!mandantId) {
     _S.working_mandant_id = null;
     _S.working_mandant_name = null;
+    localStorage.removeItem('aj-working-mandant');
     if(warn) warn.style.display = 'flex';
     toast('⚠ Keine Gemeinde ausgewählt — Daten werden nicht gespeichert');
     return;
@@ -3040,6 +3060,11 @@ async function setWorkingMandant(mandantId) {
   const sel = document.getElementById('working-mandant-sel');
   const opt = sel?.options[sel.selectedIndex];
   _S.working_mandant_name = opt?.textContent || mandantId;
+  // PERSIST to localStorage so it survives page refresh
+  localStorage.setItem('aj-working-mandant', mandantId);
+  localStorage.setItem('aj-working-mandant-name', _S.working_mandant_name);
+  // Reset loaded flags so data reloads for new mandant
+  _artikelLoaded = false; _volLoaded = false; _dokLoaded = false;
   // Reload data for this mandant
   await loadAllData();
   initAppUI();
@@ -4482,7 +4507,7 @@ function initAppLang() {
 }
 
 // ══════════════════════════════════════════════════════════
-// KI-ASSISTENT — Powered by Claude (claude-sonnet-4-20250514)
+// KI-ASSISTENT — Powered by Claude (claude-sonnet-4-5)
 // ══════════════════════════════════════════════════════════
 let _kiOpen = false;
 let _kiHistory = [];
@@ -4596,7 +4621,7 @@ async function kiAsk(question) {
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 1000,
         system: context,
         messages: _kiHistory.slice(-10)
@@ -4653,9 +4678,11 @@ async function testKIKey() {
 
 function initKIKey() {
   const key = localStorage.getItem('aj-ki-key');
-  if(key) {
-    const inp = document.getElementById('ki-api-key-input');
-    if(inp) { inp.value = key; document.getElementById('ki-key-status').innerHTML = '<span style="color:#16A34A">✓ API-Key geladen</span>'; }
+  const inp = document.getElementById('ki-api-key-input');
+  const status = document.getElementById('ki-key-status');
+  if(key && inp) {
+    inp.value = key;
+    if(status) status.innerHTML = '<span style="color:#16A34A">✓ API-Key gespeichert</span>';
   }
 }
 </script>
