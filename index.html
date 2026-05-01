@@ -348,6 +348,26 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 .ki-suggestions{padding:0 12px 12px;display:flex;flex-wrap:wrap;gap:6px}
 .ki-sug{background:rgba(200,148,26,0.15);border:1px solid rgba(200,148,26,0.3);color:#C8941A;font-size:11px;padding:4px 10px;border-radius:12px;cursor:pointer;font-family:inherit;transition:background .2s}
 .ki-sug:hover{background:rgba(200,148,26,0.3)}
+
+/* WELCOME SCREEN */
+#pg-welcome{display:none;min-height:100vh;background:#0D1F3C;align-items:center;justify-content:center;flex-direction:column;position:relative;overflow:hidden}
+.wlc-bg{position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 40%,rgba(200,148,26,0.08) 0%,transparent 60%)}
+.wlc-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(200,148,26,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(200,148,26,0.03) 1px,transparent 1px);background-size:60px 60px}
+.wlc-inner{position:relative;z-index:2;text-align:center;max-width:600px;padding:40px 24px}
+.wlc-cross{position:relative;width:40px;height:60px;margin:0 auto 32px}
+.wlc-cross::before{content:'';position:absolute;left:50%;top:0;transform:translateX(-50%);width:7px;height:60px;background:#C8941A;border-radius:3px}
+.wlc-cross::after{content:'';position:absolute;top:18px;left:0;width:40px;height:7px;background:#C8941A;border-radius:3px}
+.wlc-title{font-size:28px;font-weight:700;color:white;margin-bottom:8px}
+.wlc-subtitle{font-size:15px;color:rgba(255,255,255,0.5);margin-bottom:40px}
+.wlc-verse{font-style:italic;font-size:18px;color:rgba(255,255,255,0.85);line-height:1.6;margin-bottom:8px;font-family:Georgia,serif}
+.wlc-ref{font-size:12px;color:#C8941A;letter-spacing:2px;font-weight:600;margin-bottom:48px}
+.wlc-box{background:rgba(255,255,255,0.05);border:1px solid rgba(200,148,26,0.25);border-radius:14px;padding:28px 32px;margin-bottom:24px}
+.wlc-box-title{font-size:13px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;font-weight:600}
+.wlc-sel{width:100%;padding:12px 16px;border-radius:8px;border:1px solid rgba(200,148,26,0.4);background:#0D1F3C;color:white;font-size:15px;outline:none;cursor:pointer;font-weight:500;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C8941A'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:40px}
+.wlc-sel option{background:#0D1F3C;color:white}
+.wlc-btn{width:100%;padding:14px;background:#C8941A;color:#0D1F3C;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px;font-family:inherit;transition:background .2s}
+.wlc-btn:hover{background:#E8B84B}
+.wlc-btn:disabled{opacity:.4;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -397,6 +417,28 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 </div>
 
 <!-- ADMIN PAGE -->
+
+<!-- WELCOME / MANDANT SELECTION SCREEN -->
+<div id="pg-welcome" style="display:none">
+  <div class="wlc-bg"></div>
+  <div class="wlc-grid"></div>
+  <div class="wlc-inner">
+    <div class="wlc-cross"></div>
+    <div class="wlc-title">Willkommen bei AJ Connect</div>
+    <div class="wlc-subtitle">Verbinden · Organisieren · Wachsen</div>
+    <div class="wlc-verse" id="wlc-verse-text">«Der Herr, unser Gott, sei uns freundlich und fördere das Werk unserer Hände bei uns — ja, das Werk unserer Hände wollst du fördern!»</div>
+    <div class="wlc-ref">Psalm 90:17 · Lutherbibel 2017</div>
+    <div class="wlc-box">
+      <div class="wlc-box-title">Gemeinde auswählen</div>
+      <select class="wlc-sel" id="wlc-mandant-sel">
+        <option value="">— Gemeinde wählen —</option>
+      </select>
+      <button class="wlc-btn" id="wlc-btn" onclick="enterMandant()" disabled>Einloggen →</button>
+    </div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.25)">AJ Connect · info@ajconnect.ch</div>
+  </div>
+</div>
+
 <div id="pg-admin" style="display:none">
   <div class="atop">
     <div class="atmark"></div>
@@ -1361,11 +1403,11 @@ let _S = null; // Session data
 // ═══════════════════════════════════════════
 function showPage(name) {
   document.getElementById('loader').style.display = 'none';
-  ['login','admin','app'].forEach(p => {
+  ['login','admin','app','welcome'].forEach(p => {
     document.getElementById('pg-'+p).style.display = 'none';
   });
   const el = document.getElementById('pg-'+name);
-  if (el) el.style.display = (name === 'login') ? 'flex' : 'block';
+  if (el) el.style.display = (name === 'login' || name === 'welcome') ? 'flex' : 'block';
   if (name === 'admin') {
     if (_S) {
       const au = document.getElementById('a-uname');
@@ -1584,26 +1626,32 @@ async function loadUserAndShow(user) {
     } else {
       _S = { id: user.id, email: user.email, name: p.name||user.email, rolle: p.rolle, mandant_id: null, mandant_name: 'AJ Connect', lizenz: 'professional' };
     }
-    // For superadmin: restore saved working mandant BEFORE loading data
+    // For superadmin: check for saved mandant
     if (p.rolle === 'superadmin') {
       const savedMandant = localStorage.getItem('aj-working-mandant');
       const savedMandantName = localStorage.getItem('aj-working-mandant-name');
       if(savedMandant) {
+        // Restore mandant BEFORE loading data
         _S.working_mandant_id = savedMandant;
         _S.working_mandant_name = savedMandantName || savedMandant;
+        // Load data and go straight to app
+        await loadAllData();
+        initAppUI();
+        showPage('app');
+        const adminBtn = document.getElementById('admin-btn-wrap');
+        if(adminBtn) adminBtn.style.display = 'block';
+        setTimeout(() => { populateWorkingMandantSel(); }, 300);
+      } else {
+        // No saved mandant → show welcome/selection screen
+        showPage('welcome');
+        populateWelcomeMandants();
       }
+      return;
     }
-    // Load data then show app (mandant already set above if superadmin)
+    // Normal user: load data and show app
     await loadAllData();
     initAppUI();
     showPage('app');
-    // Superadmin UI setup
-    if (p.rolle === 'superadmin') {
-      const adminBtn = document.getElementById('admin-btn-wrap');
-      if(adminBtn) adminBtn.style.display = 'block';
-      // Populate mandant selector - restore is handled inside populateWorkingMandantSel
-      setTimeout(() => { populateWorkingMandantSel(); }, 300);
-    }
   } catch(e) {
     showPage('login');
     showErr('Fehler: ' + e.message);
@@ -4767,6 +4815,58 @@ function hasPermission(module) {
   const saved = JSON.parse(localStorage.getItem('aj-perms-' + _S.id) || 'null');
   if(!saved) return true; // no restrictions set = all allowed
   return saved.includes(module);
+}
+
+// ══════════════════════════════════════════════════════════
+// WELCOME SCREEN FUNCTIONS
+// ══════════════════════════════════════════════════════════
+async function populateWelcomeMandants() {
+  const sel = document.getElementById('wlc-mandant-sel');
+  const btn = document.getElementById('wlc-btn');
+  if(!sel) return;
+  try {
+    const {data: mands} = await sb.from('mandanten').select('id,name').eq('aktiv', true).order('name');
+    if(!mands || !mands.length) {
+      sel.innerHTML = '<option value="">Keine Gemeinden vorhanden</option>';
+      return;
+    }
+    sel.innerHTML = '<option value="">— Gemeinde wählen —</option>' +
+      mands.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    sel.onchange = () => { if(btn) btn.disabled = !sel.value; };
+    // Set greeting based on time of day
+    const h = new Date().getHours();
+    const greet = h < 12 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
+    const titleEl = document.getElementById('wlc-verse-text')?.previousElementSibling?.previousElementSibling;
+    // Update subtitle
+    const sub = document.querySelector('.wlc-subtitle');
+    if(sub && _S?.name) sub.textContent = greet + ', ' + _S.name + '!';
+  } catch(e) { console.warn('populateWelcomeMandants:', e); }
+}
+
+async function enterMandant() {
+  const sel = document.getElementById('wlc-mandant-sel');
+  const btn = document.getElementById('wlc-btn');
+  if(!sel || !sel.value) return;
+  if(btn) { btn.disabled = true; btn.textContent = 'Wird geladen...'; }
+  const mandantId = sel.value;
+  const mandantName = sel.options[sel.selectedIndex].textContent;
+  // Set in _S
+  _S.working_mandant_id = mandantId;
+  _S.working_mandant_name = mandantName;
+  // Persist
+  localStorage.setItem('aj-working-mandant', mandantId);
+  localStorage.setItem('aj-working-mandant-name', mandantName);
+  // Reset flags
+  _artikelLoaded = false; _volLoaded = false; _dokLoaded = false;
+  // Load data and enter app
+  await loadAllData();
+  initAppUI();
+  showPage('app');
+  const adminBtn = document.getElementById('admin-btn-wrap');
+  if(adminBtn) adminBtn.style.display = 'block';
+  setTimeout(() => { populateWorkingMandantSel(); }, 300);
+  if(btn) { btn.disabled = false; btn.textContent = 'Einloggen →'; }
+  toast('✓ Arbeite jetzt als: ' + mandantName);
 }
 </script>
 
