@@ -606,6 +606,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
             <select id="working-mandant-sel" onchange="setWorkingMandant(this.value)" style="width:100%;padding:5px 8px;border-radius:6px;border:1px solid rgba(200,148,26,0.4);background:#0D1F3C;color:white;font-size:12px;outline:none;cursor:pointer;font-weight:500">
               <option value="">— Gemeinde wählen —</option>
             </select>
+            <button onclick="switchToWelcome()" style="width:100%;margin-top:6px;padding:4px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:5px;color:rgba(255,255,255,0.4);font-size:10px;cursor:pointer;font-family:inherit;letter-spacing:0.5px">⇄ Gemeinde wechseln</button>
           </div>
           <button style="width:100%;padding:7px;background:rgba(200,148,26,0.15);color:#e8b84b;border:1px solid rgba(200,148,26,0.3);border-radius:7px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:500" onclick="showPage('admin');loadAdminData()">⚙ Admin-Panel</button>
         </div>
@@ -4867,6 +4868,14 @@ async function enterMandant() {
   setTimeout(() => { populateWorkingMandantSel(); }, 300);
   if(btn) { btn.disabled = false; btn.textContent = 'Einloggen →'; }
   toast('✓ Arbeite jetzt als: ' + mandantName);
+}
+
+function switchToWelcome() {
+  localStorage.removeItem('aj-working-mandant');
+  localStorage.removeItem('aj-working-mandant-name');
+  if(_S) { _S.working_mandant_id = null; _S.working_mandant_name = null; }
+  showPage('welcome');
+  populateWelcomeMandants();
 }
 </script>
 
