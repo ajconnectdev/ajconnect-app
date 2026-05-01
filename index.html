@@ -1083,9 +1083,8 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 
             <!-- KI-Assistent -->
             <!-- KI-Assistent Einrichtung -->
-            <div class="tcard" style="margin-top:16px">
-              <div class="tcardh"><span style="font-weight:600;color:#1A3560">🤖 KI-Assistent</span></div>
-              <div style="padding:16px 20px">
+            <div class="card" style="margin-top:14px"><div class="cardh"><div class="cardtitle" style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">🤖</span>KI-Assistent</div></div>
+              <div class="cardbody">
                 <p style="font-size:14px;color:#6B7280;margin-bottom:16px">
                   Der KI-Assistent verwendet die Claude API von Anthropic. 
                   API-Key erstellen unter <a href="https://console.anthropic.com" target="_blank" style="color:#2563EB">console.anthropic.com</a> → API Keys → Create Key.
@@ -1585,35 +1584,34 @@ async function loadUserAndShow(user) {
     } else {
       _S = { id: user.id, email: user.email, name: p.name||user.email, rolle: p.rolle, mandant_id: null, mandant_name: 'AJ Connect', lizenz: 'professional' };
     }
-    // Load data then show app
-    await loadAllData();
-    initAppUI();
-    showPage('app');
-    // Superadmin gets admin button + mandant selector
+    // For superadmin: restore saved working mandant BEFORE loading data
     if (p.rolle === 'superadmin') {
-      const adminBtn = document.getElementById('admin-btn-wrap');
-      if(adminBtn) adminBtn.style.display = 'block';
-      // Restore previously selected working mandant from localStorage
       const savedMandant = localStorage.getItem('aj-working-mandant');
       const savedMandantName = localStorage.getItem('aj-working-mandant-name');
       if(savedMandant) {
         _S.working_mandant_id = savedMandant;
         _S.working_mandant_name = savedMandantName || savedMandant;
-        // Reload data with restored mandant
-        _artikelLoaded = false; _volLoaded = false; _dokLoaded = false;
-        await loadAllData();
-        initAppUI();
       }
-      // Populate mandant selector and set it to saved value
+    }
+    // Load data then show app (mandant already set above if superadmin)
+    await loadAllData();
+    initAppUI();
+    showPage('app');
+    // Superadmin UI setup
+    if (p.rolle === 'superadmin') {
+      const adminBtn = document.getElementById('admin-btn-wrap');
+      if(adminBtn) adminBtn.style.display = 'block';
+      // Populate mandant selector and restore selection
       setTimeout(() => {
         populateWorkingMandantSel();
+        const savedMandant = localStorage.getItem('aj-working-mandant');
         if(savedMandant) {
           const sel = document.getElementById('working-mandant-sel');
           if(sel) sel.value = savedMandant;
           const warn = document.getElementById('no-mandant-warning');
           if(warn) warn.style.display = 'none';
         }
-      }, 600);
+      }, 300);
     }
   } catch(e) {
     showPage('login');
@@ -3152,9 +3150,18 @@ function renderDetailUsers(users) {
       <div style="font-weight:500;color:#1A3560">${u.name||'—'}</div>
       <div style="font-size:11px;color:#9CA3AF">${u.email||''}</div>
     </td>
-    <td><span class="abadge" style="background:#DBEAFE;color:#2563EB">${roleLabels[u.rolle]||u.rolle}</span></td>
+    <td>
+      <select class="afs" style="font-size:11px;padding:3px 6px" onchange="changeUserRole('${u.id}',this.value)" ${u.rolle==='superadmin'?'disabled':''}>
+        <option value="admin" ${u.rolle==='admin'?'selected':''}>Admin</option>
+        <option value="leiter" ${u.rolle==='leiter'?'selected':''}>Leiter</option>
+        <option value="mitarbeiter" ${u.rolle==='mitarbeiter'?'selected':''}>Mitarbeiter</option>
+        <option value="readonly" ${u.rolle==='readonly'?'selected':''}>Nur lesen</option>
+        ${u.rolle==='superadmin'?'<option value="superadmin" selected>Super Admin</option>':''}
+      </select>
+    </td>
     <td><span class="abadge ${u.aktiv?'ab-ok':'ab-wait'}">${u.aktiv?'Aktiv':'Ausstehend'}</span></td>
-    <td style="display:flex;gap:5px">
+    <td style="display:flex;gap:5px;flex-wrap:wrap">
+      <button class="aaction-btn" onclick="openUserPerms('${u.id}','${u.name||u.email}')" title="Berechtigungen">🔒</button>
       <button class="aaction-btn" style="background:${u.aktiv?'#FEE2E2':'#DCFCE7'};color:${u.aktiv?'#DC2626':'#16A34A'};border-color:${u.aktiv?'#fca5a5':'#86efac'}" onclick="toggleAU('${u.id}',${u.aktiv})">${u.aktiv?'Sperren':'Freischalten'}</button>
       ${u.rolle!=='superadmin'?`<button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteAUFromDetail('${u.id}','${u.name||u.email}')">Löschen</button>`:''}
     </td>
@@ -4651,9 +4658,9 @@ async function kiAsk(question) {
 function saveKIKey() {
   const key = document.getElementById('ki-api-key-input').value.trim();
   if(!key) { toast('Bitte API-Key eingeben'); return; }
-  if(!key.startsWith('sk-ant-')) { toast('⚠ API-Key sollte mit sk-ant- beginnen'); return; }
   localStorage.setItem('aj-ki-key', key);
-  document.getElementById('ki-key-status').innerHTML = '<span style="color:#16A34A">✓ API-Key gespeichert</span>';
+  const status = document.getElementById('ki-key-status');
+  if(status) status.innerHTML = '<span style="color:#16A34A">✓ API-Key gespeichert — jetzt testen!</span>';
   toast('KI API-Key gespeichert ✓');
 }
 
@@ -4684,6 +4691,73 @@ function initKIKey() {
     inp.value = key;
     if(status) status.innerHTML = '<span style="color:#16A34A">✓ API-Key gespeichert</span>';
   }
+}
+
+// ══════════════════════════════════════════════════════════
+// USER ROLES & PERMISSIONS
+// ══════════════════════════════════════════════════════════
+async function changeUserRole(userId, newRole) {
+  try {
+    const {error} = await sb.from('profiles').update({rolle: newRole}).eq('id', userId);
+    if(error) { toast('Fehler: ' + error.message); return; }
+    const u = _AU.find(x => x.id === userId);
+    if(u) u.rolle = newRole;
+    toast('Rolle aktualisiert ✓');
+  } catch(e) { toast('Fehler: ' + e.message); }
+}
+
+const MODULE_PERMISSIONS = {
+  mitglieder: 'Mitglieder',
+  kontakte: 'Kontakte',
+  groups: 'Small Groups',
+  gottesdienste: 'Gottesdienste',
+  worship: 'Worship',
+  volunteer: 'Freiwillige',
+  events: 'Events',
+  spenden: 'Spenden',
+  kreditoren: 'Kreditoren',
+  artikel: 'Artikel',
+  dokumente: 'Dokumente',
+  einrichtung: 'Einrichtung',
+};
+
+let _permUserId = null;
+
+function openUserPerms(userId, userName) {
+  _permUserId = userId;
+  document.getElementById('perm-user-name').textContent = userName;
+  // Load saved perms from localStorage (per user)
+  const saved = JSON.parse(localStorage.getItem('aj-perms-' + userId) || 'null');
+  // Render checkboxes
+  const grid = document.getElementById('perm-grid');
+  grid.innerHTML = Object.entries(MODULE_PERMISSIONS).map(([key, label]) => {
+    const checked = !saved || saved.includes(key);
+    return `<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#F9FAFB;border-radius:6px;cursor:pointer;font-size:13px">
+      <input type="checkbox" id="perm-${key}" ${checked?'checked':''} style="width:15px;height:15px;accent-color:#1A3560">
+      ${label}
+    </label>`;
+  }).join('');
+  document.getElementById('mo-perms').classList.add('open');
+}
+
+function saveUserPerms() {
+  if(!_permUserId) return;
+  const allowed = Object.keys(MODULE_PERMISSIONS).filter(key => {
+    const cb = document.getElementById('perm-' + key);
+    return cb && cb.checked;
+  });
+  localStorage.setItem('aj-perms-' + _permUserId, JSON.stringify(allowed));
+  closeMo('mo-perms');
+  toast('Berechtigungen gespeichert ✓');
+}
+
+// Check if current user has permission for a module
+function hasPermission(module) {
+  if(!_S) return false;
+  if(_S.rolle === 'superadmin' || _S.rolle === 'admin') return true;
+  const saved = JSON.parse(localStorage.getItem('aj-perms-' + _S.id) || 'null');
+  if(!saved) return true; // no restrictions set = all allowed
+  return saved.includes(module);
 }
 </script>
 
@@ -5375,6 +5449,28 @@ function initKIKey() {
     <button class="ki-send" onclick="kiSend()">
       <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
     </button>
+  </div>
+</div>
+
+
+<!-- MODAL: BERECHTIGUNGEN -->
+<div class="mo" id="mo-perms">
+  <div class="modal" style="max-width:480px">
+    <div class="mh">
+      <div>
+        <div class="mt2">🔒 Berechtigungen</div>
+        <div style="font-size:12px;color:#9CA3AF;margin-top:2px">Benutzer: <span id="perm-user-name"></span></div>
+      </div>
+      <div class="mx" onclick="closeMo('mo-perms')">✕</div>
+    </div>
+    <div class="mb2">
+      <p style="font-size:13px;color:#6B7280;margin-bottom:14px">Wähle welche Module dieser Benutzer sehen darf. Deaktivierte Module werden in der Sidebar ausgeblendet.</p>
+      <div id="perm-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+    </div>
+    <div class="mfoot">
+      <button class="tbtn tbtn-ghost" onclick="closeMo('mo-perms')">Abbrechen</button>
+      <button class="tbtn tbtn-navy" onclick="saveUserPerms()">Speichern</button>
+    </div>
   </div>
 </div>
 
