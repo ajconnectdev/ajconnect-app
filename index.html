@@ -353,29 +353,9 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 <body>
 
 <!-- LOADER -->
-<div id="loader">
+<div id="loader" style="display:none">
   <div class="lo-mark"></div>
-  <!-- KI-Assistent Einrichtung -->
-  <div class="tcard" style="margin-top:16px">
-    <div class="tcardh"><span style="font-weight:600;color:#1A3560">🤖 KI-Assistent</span></div>
-    <div style="padding:16px 20px">
-      <p style="font-size:14px;color:#6B7280;margin-bottom:16px">
-        Der KI-Assistent verwendet die Claude API von Anthropic. 
-        API-Key erstellen unter <a href="https://console.anthropic.com" target="_blank" style="color:#2563EB">console.anthropic.com</a> → API Keys → Create Key.
-      </p>
-      <div style="display:flex;gap:10px;align-items:flex-end">
-        <div style="flex:1">
-          <label class="fl">Anthropic API Key</label>
-          <input type="password" class="fs" id="ki-api-key-input" placeholder="sk-ant-..." style="font-family:monospace">
-        </div>
-        <button class="tbtn tbtn-navy" onclick="saveKIKey()">Speichern</button>
-        <button class="tbtn tbtn-ghost" onclick="testKIKey()">Testen</button>
-      </div>
-      <div id="ki-key-status" style="margin-top:10px;font-size:13px"></div>
-    </div>
-  </div>
-
-  <div class="lo-spin"></div>
+<div class="lo-spin"></div>
   <div class="lo-txt">AJ Connect lädt...</div>
 </div>
 
@@ -1100,6 +1080,27 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
               </div>
             </div>
           </div>
+
+            <!-- KI-Assistent -->
+            <!-- KI-Assistent Einrichtung -->
+            <div class="tcard" style="margin-top:16px">
+              <div class="tcardh"><span style="font-weight:600;color:#1A3560">🤖 KI-Assistent</span></div>
+              <div style="padding:16px 20px">
+                <p style="font-size:14px;color:#6B7280;margin-bottom:16px">
+                  Der KI-Assistent verwendet die Claude API von Anthropic. 
+                  API-Key erstellen unter <a href="https://console.anthropic.com" target="_blank" style="color:#2563EB">console.anthropic.com</a> → API Keys → Create Key.
+                </p>
+                <div style="display:flex;gap:10px;align-items:flex-end">
+                  <div style="flex:1">
+                    <label class="fl">Anthropic API Key</label>
+                    <input type="password" class="fs" id="ki-api-key-input" placeholder="sk-ant-..." style="font-family:monospace">
+                  </div>
+                  <button class="tbtn tbtn-navy" onclick="saveKIKey()">Speichern</button>
+                  <button class="tbtn tbtn-ghost" onclick="testKIKey()">Testen</button>
+                </div>
+                <div id="ki-key-status" style="margin-top:10px;font-size:13px"></div>
+              </div>
+</div>
         </div>
       </div>
     </div>
