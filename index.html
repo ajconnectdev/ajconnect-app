@@ -561,7 +561,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
         <div id="admin-btn-wrap" style="display:none;padding:4px 6px">
           <div id="working-as-wrap" style="margin-bottom:6px">
             <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.5px">Arbeiten als:</div>
-            <select id="working-mandant-sel" onchange="setWorkingMandant(this.value)" style="width:100%;padding:5px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:white;font-size:11px;outline:none;cursor:pointer">
+            <select id="working-mandant-sel" onchange="setWorkingMandant(this.value)" style="width:100%;padding:5px 8px;border-radius:6px;border:1px solid rgba(200,148,26,0.4);background:#0D1F3C;color:white;font-size:12px;outline:none;cursor:pointer;font-weight:500">
               <option value="">— Gemeinde wählen —</option>
             </select>
           </div>
@@ -1481,12 +1481,15 @@ async function loadAllData() {
       }));
       mIdSeq = members.length + 1;
     } else if(!_S?.mandant_id) {
-      // Superadmin preview: no demo data
+      // Superadmin with no working mandant: show nothing
+      members = [];
+    } else if(!(_S?.working_mandant_id || _S?.mandant_id)) {
+      // No mandant selected at all: show nothing
       members = [];
     } else {
-      // Empty DB for this mandant: show demo data so UI isn't blank
-      members = DEMO_MEMBERS.map(m=>({...m,_dbId:null}));
-      mIdSeq = DEMO_MEMBERS.length + 1;
+      // Empty DB for this mandant: show empty (no fake demo data)
+      members = [];
+      mIdSeq = 1;
     }
     if(kont.length > 0) {
       kontakte = kont.map(k => ({
@@ -1499,9 +1502,8 @@ async function loadAllData() {
         mitgliedGeworden: k.mitglied_geworden||false,
         color: COLORS[Math.floor(Math.random()*COLORS.length)]
       }));
-    } else if(_S?.mandant_id) {
-      // Empty DB - show demo kontakte
-      kontakte = DEMO_KONTAKTE.map(k=>({...k,_dbId:null}));
+    } else {
+      kontakte = [];
     }
     if(sg.length > 0) {
       gruppen = sg.map(g => ({id: g.id, name: g.name, leiter: g.leiter||'', tag: g.tag||''}));
@@ -1513,10 +1515,8 @@ async function loadAllData() {
         desc: g.beschreibung||'',
         proto: Array.isArray(g.protokolle) ? g.protokolle : []
       }));
-    } else if(_S?.mandant_id) {
-      // Empty DB - show demo SGs
-      sgData = DEMO_SGDATA.map(s=>({...s,_dbId:null}));
-      gruppen = DEMO_SGDATA.map(s=>({id:s.id,name:s.name,leiter:s.leiter,tag:s.tag}));
+    } else {
+      sgData = []; gruppen = [];
     }
     if(godi.length > 0) {
       gottesdienste = godi.map(g => ({
@@ -1601,17 +1601,8 @@ async function loadUserAndShow(user) {
     if (p.rolle === 'superadmin') {
       const adminBtn = document.getElementById('admin-btn-wrap');
       if(adminBtn) adminBtn.style.display = 'block';
-      // Populate mandant selector and restore selection
-      setTimeout(() => {
-        populateWorkingMandantSel();
-        const savedMandant = localStorage.getItem('aj-working-mandant');
-        if(savedMandant) {
-          const sel = document.getElementById('working-mandant-sel');
-          if(sel) sel.value = savedMandant;
-          const warn = document.getElementById('no-mandant-warning');
-          if(warn) warn.style.display = 'none';
-        }
-      }, 300);
+      // Populate mandant selector - restore is handled inside populateWorkingMandantSel
+      setTimeout(() => { populateWorkingMandantSel(); }, 300);
     }
   } catch(e) {
     showPage('login');
@@ -2823,6 +2814,17 @@ function navTo(p,el2){
   document.getElementById('btn-exp').style.display=isM?'inline-flex':'none';
   document.getElementById('btn-new').style.display=isM?'inline-flex':'none';
   if(isM){updStats();rndrTbl();}
+  // Block navigation if superadmin has no mandant
+  if(p==='dashboard'||p==='mitglieder'||p==='kontakte'||p==='groups'||
+     p==='gottesdienste'||p==='worship'||p==='events'||p==='spenden'||
+     p==='kreditoren'||p==='dokumente'||p==='artikel'||p==='volunteer') {
+    const mid = _S?.working_mandant_id||_S?.mandant_id;
+    if(!mid && _S?.rolle==='superadmin') {
+      // Show mandant selection prompt in main area
+      const pg = document.getElementById('pg-'+p);
+      if(pg) pg.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:16px;text-align:center"><div style="font-size:48px">🏛</div><div style="font-size:20px;font-weight:600;color:#1A3560">Bitte zuerst eine Gemeinde auswählen</div><div style="font-size:14px;color:#6B7280">Wähle links unter \"Arbeiten als\" eine Gemeinde aus, um fortzufahren.</div></div>';
+    }
+  }
   if(p==='kontakte'){kFilt=[...kontakte];filterKontakte();}
   if(p==='groups'){rndrSGGrid();}
   if(p==='gottesdienste'){rndrGD();}
@@ -3071,19 +3073,26 @@ async function setWorkingMandant(mandantId) {
 
 async function populateWorkingMandantSel() {
   if(!_S || _S.rolle !== 'superadmin') return;
-  // Load all mandanten
   const {data: mands} = await sb.from('mandanten').select('id,name').eq('aktiv', true).order('name');
   if(!mands) return;
   const sel = document.getElementById('working-mandant-sel');
   if(!sel) return;
   sel.innerHTML = '<option value="">— Gemeinde wählen —</option>' + 
     mands.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-  // Auto-select if only one
-  if(mands.length === 1) {
+  // Restore saved mandant AFTER options are populated
+  const saved = localStorage.getItem('aj-working-mandant');
+  if(saved && mands.find(m => m.id === saved)) {
+    sel.value = saved;
+    const warn = document.getElementById('no-mandant-warning');
+    if(warn) warn.style.display = 'none';
+    // Update sidebar display
+    const gemName = document.getElementById('sb-gname');
+    const savedName = localStorage.getItem('aj-working-mandant-name');
+    if(gemName && savedName) gemName.textContent = savedName;
+  } else if(mands.length === 1) {
     sel.value = mands[0].id;
     await setWorkingMandant(mands[0].id);
-  } else {
-    // Show warning - no mandant selected yet
+  } else if(!saved) {
     const warn = document.getElementById('no-mandant-warning');
     if(warn) warn.style.display = 'flex';
   }
