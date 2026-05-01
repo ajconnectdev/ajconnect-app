@@ -2910,20 +2910,24 @@ function saveGemeindeDaten(){
 }
 
 async function deleteAU(id, name) {
-  if (!confirm('Benutzer "' + name + '" wirklich löschen?\nDiese Aktion kann nicht rückgängig gemacht werden.')) return;
-  // Show loading state
-  toast('Wird gelöscht...');
+  if (!confirm('Benutzer "' + name + ' wirklich loeschen?')) return;
+  toast('Wird geloescht...');
   const {error} = await sb.from('profiles').delete().eq('id', id);
   if (error) { toast('Fehler: ' + error.message); return; }
-  // Remove from local array immediately for instant UI feedback
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    await fetch('https://gpmwlkqwdfxkenyebjmj.supabase.co/functions/v1/invite-user', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ user_id: id })
+    });
+  } catch(e) { console.warn('Auth-Delete fehlgeschlagen:', e.message); }
   _AU = _AU.filter(u => u.id !== id);
-  // Re-render with current filter
   const currentFilter = document.getElementById('user-mandant-filter')?.value || '';
   renderAU(currentFilter);
-  // Update stats
   document.getElementById('as-u').textContent = _AU.length;
   document.getElementById('as-p').textContent = _AU.filter(x=>!x.aktiv).length;
-  toast('Benutzer gelöscht ✓');
+  toast('Benutzer geloescht');
 }
 
 // ═══════════════════════════════════════════
@@ -3235,9 +3239,18 @@ async function sendPasswordReset(email) {
 }
 
 async function deleteAUFromDetail(id, name) {
-  if(!confirm('Benutzer "' + name + '" löschen?')) return;
+  if(!confirm('Benutzer "' + name + ' loeschen?')) return;
+  toast('Wird geloescht...');
   const {error} = await sb.from('profiles').delete().eq('id', id);
   if(error) { toast('Fehler: '+error.message); return; }
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    await fetch('https://gpmwlkqwdfxkenyebjmj.supabase.co/functions/v1/invite-user', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ user_id: id })
+    });
+  } catch(e) { console.warn('Auth-Delete fehlgeschlagen:', e.message); }
   _AU = _AU.filter(u => u.id !== id);
   if(_activeMandant) {
     const users = _AU.filter(u => u.mandant_id === _activeMandant.id);
@@ -3246,7 +3259,7 @@ async function deleteAUFromDetail(id, name) {
     document.getElementById('a-dm-aktiv').textContent = users.filter(u=>u.aktiv).length;
     document.getElementById('a-dm-pend').textContent = users.filter(u=>!u.aktiv).length;
   }
-  toast('Benutzer gelöscht ✓');
+  toast('Benutzer geloescht');
 }
 
 function openAUMoForDetail() {
