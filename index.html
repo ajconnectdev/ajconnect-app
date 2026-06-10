@@ -1527,7 +1527,7 @@ async function dbSave(table, payload) {
   if(!mid) { toast('Bitte zuerst eine Gemeinde auswählen (Admin-Panel → Zur App)'); return null; }
   try {
     const {data, error} = await sb.from(table).insert({...payload, mandant_id: mid}).select().single();
-    if(error) { toast('Speicherfehler: '+error.message); return null; }
+    if(error) { console.error('dbSave error on',table,error); toast('Speicherfehler: '+error.message); return null; }
     return data;
   } catch(e) { toast('Fehler: '+e.message); return null; }
 }
@@ -1791,7 +1791,7 @@ document.addEventListener('keydown', e => {
 function initAppUI() {
   if (!_S) return;
   const el = id => document.getElementById(id);
-  if (el('sb-gname')) el('sb-gname').textContent = _S.mandant_name;
+  if (el('sb-gname')) el('sb-gname').textContent = _S.working_mandant_name || _S.mandant_name;
   if (el('sb-gplan')) el('sb-gplan').textContent = _S.lizenz === 'professional' ? 'Professional' : 'Starter';
   if (el('sb-uname')) el('sb-uname').textContent = _S.name || _S.email;
   if (el('sb-av')) {
@@ -2917,6 +2917,7 @@ function navTo(p,el2){
   document.getElementById('btn-exp').style.display=isM?'inline-flex':'none';
   document.getElementById('btn-new').style.display=isM?'inline-flex':'none';
   if(isM){updStats();rndrTbl();}
+  if(p==='dashboard'){updStats();}
   // Block navigation if superadmin has no mandant
   if(p==='dashboard'||p==='mitglieder'||p==='kontakte'||p==='groups'||
      p==='gottesdienste'||p==='worship'||p==='events'||p==='spenden'||
@@ -2925,9 +2926,22 @@ function navTo(p,el2){
     if(!mid && _S?.rolle==='superadmin') {
       // Show mandant selection prompt in main area
       const pg = document.getElementById('pg-'+p);
-      if(pg) pg.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:16px;text-align:center"><div style="font-size:48px">🏛</div><div style="font-size:20px;font-weight:600;color:#1A3560">Bitte zuerst eine Gemeinde auswählen</div><div style="font-size:14px;color:#6B7280">Wähle links unter \"Arbeiten als\" eine Gemeinde aus, um fortzufahren.</div></div>';
+      if(pg) {
+        let ov = document.getElementById('mandant-overlay');
+        if(!ov) {
+          ov = document.createElement('div');
+          ov.id = 'mandant-overlay';
+          ov.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:16px;text-align:center;background:var(--bg,#F9FAFB);z-index:10;pointer-events:none';
+          ov.innerHTML = '<div style="font-size:48px">⛪</div><div style="font-size:20px;font-weight:600;color:#1A3560">Bitte zuerst eine Gemeinde auswählen</div><div style="font-size:14px;color:#6B7280">Wähle links unter &ldquo;Arbeiten als&rdquo; eine Gemeinde aus.</div>';
+          document.getElementById('pg-app')?.appendChild(ov);
+        }
+        ov.style.display = 'flex';
+      }
     }
   }
+  // Hide mandant overlay when navigating with mandant set
+  const _ov = document.getElementById('mandant-overlay');
+  if(_ov && (_S?.working_mandant_id||_S?.mandant_id)) _ov.style.display='none';
   if(p==='kontakte'){kFilt=[...kontakte];filterKontakte();}
   if(p==='groups'){rndrSGGrid();}
   if(p==='gottesdienste'){rndrGD();}
