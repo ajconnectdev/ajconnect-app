@@ -4,188 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AJ Connect</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-// ══════════════════════════════════════════════════════
-// SELBSTREGISTRIERUNG
-// ══════════════════════════════════════════════════════
-let _regData = {};
-let _regDenom = '';
-let _regStep = 0;
-
-function showRegister() {
-  _regData = {}; _regDenom = ''; _regStep = 0;
-  document.querySelectorAll('.reg-denom-btn').forEach(b=>b.classList.remove('sel'));
-  ['reg-gname','reg-city','reg-vorname','reg-nachname','reg-email','reg-tel','reg-pw1','reg-pw2'].forEach(id=>{
-    const el = document.getElementById(id); if(el) el.value='';
-  });
-  document.getElementById('pw-str').className = 'pw-strength';
-  document.getElementById('reg-err').style.display = 'none';
-  regGoTo(0);
-  document.getElementById('pg-login').style.display = 'none';
-  document.getElementById('pg-register').style.display = 'block';
-}
-
-function showLogin() {
-  document.getElementById('pg-register').style.display = 'none';
-  document.getElementById('pg-setpw').style.display = 'none';
-  document.getElementById('pg-login').style.display = 'flex';
-  document.getElementById('lerr').style.display = 'none';
-  document.getElementById('lok').style.display = 'none';
-}
-
-function regGoTo(step) {
-  _regStep = step;
-  for(let i=0;i<4;i++){
-    const p = document.getElementById('reg-p'+i);
-    const s = document.getElementById('rstep-'+i);
-    if(p) p.className = 'reg-panel' + (i===step?' on':'');
-    if(s) {
-      s.className = 'reg-step';
-      if(i < step) s.className += ' done';
-      if(i === step) s.className += ' active';
-    }
-  }
-  document.getElementById('reg-err').style.display = 'none';
-}
-
-function selDenom(el, val) {
-  document.querySelectorAll('.reg-denom-btn').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel');
-  _regDenom = val;
-}
-
-function checkPwStrength(pw) {
-  const bar = document.getElementById('pw-str');
-  const lbl = document.getElementById('pw-str-label');
-  if(!bar) return;
-  if(pw.length < 6) {
-    bar.className='pw-strength weak'; lbl.textContent='Zu kurz';
-  } else if(pw.length < 10 || !/[A-Z]/.test(pw) || !/[0-9]/.test(pw)) {
-    bar.className='pw-strength medium'; lbl.textContent='Mittel — Grossbuchstaben & Zahlen empfohlen';
-  } else {
-    bar.className='pw-strength strong'; lbl.textContent='Stark ✓';
-  }
-}
-
-function regShowErr(msg) {
-  const el = document.getElementById('reg-err');
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-
-function regStep1() {
-  const gname = document.getElementById('reg-gname').value.trim();
-  const city = document.getElementById('reg-city').value.trim();
-  if(!gname) { regShowErr('Bitte Gemeindenamen eingeben.'); return; }
-  if(!city) { regShowErr('Bitte Stadt/Ort eingeben.'); return; }
-  _regData.gname = gname;
-  _regData.denom = _regDenom || 'andere';
-  _regData.city = city;
-  _regData.land = document.getElementById('reg-land').value;
-  regGoTo(1);
-}
-
-function regStep2() {
-  const vorname = document.getElementById('reg-vorname').value.trim();
-  const nachname = document.getElementById('reg-nachname').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  if(!vorname) { regShowErr('Bitte Vornamen eingeben.'); return; }
-  if(!nachname) { regShowErr('Bitte Nachnamen eingeben.'); return; }
-  if(!email || !email.includes('@')) { regShowErr('Bitte gültige E-Mail eingeben.'); return; }
-  _regData.vorname = vorname;
-  _regData.nachname = nachname;
-  _regData.email = email;
-  _regData.tel = document.getElementById('reg-tel').value.trim();
-  const prev = document.getElementById('reg-email-preview');
-  if(prev) prev.textContent = email;
-  regGoTo(2);
-}
-
-async function doRegister() {
-  const pw1 = document.getElementById('reg-pw1').value;
-  const pw2 = document.getElementById('reg-pw2').value;
-  if(pw1.length < 8) { regShowErr('Passwort muss mindestens 8 Zeichen haben.'); return; }
-  if(pw1 !== pw2) { regShowErr('Passwörter stimmen nicht überein.'); return; }
-
-  const btn = document.getElementById('reg-submit-btn');
-  btn.disabled = true; btn.textContent = '⏳ Wird erstellt...';
-
-  try {
-    // 1. Create Supabase Auth user
-    const { data: authData, error: authErr } = await sb.auth.signUp({
-      email: _regData.email,
-      password: pw1,
-      options: {
-        data: {
-          vorname: _regData.vorname,
-          nachname: _regData.nachname,
-        }
-      }
-    });
-
-    if(authErr) {
-      if(authErr.message.includes('already registered') || authErr.message.includes('already been registered')) {
-        regShowErr('Diese E-Mail ist bereits registriert. Bitte einloggen.');
-      } else {
-        regShowErr('Fehler: ' + authErr.message);
-      }
-      btn.disabled=false; btn.textContent='🚀 Gemeinde erstellen';
-      return;
-    }
-
-    const userId = authData.user?.id;
-    if(!userId) {
-      regShowErr('Registrierung fehlgeschlagen. Bitte erneut versuchen.');
-      btn.disabled=false; btn.textContent='🚀 Gemeinde erstellen';
-      return;
-    }
-
-    // 2. Create mandant (church organization)
-    const { data: mandant, error: mandantErr } = await sb.from('mandanten').insert({
-      name: _regData.gname,
-      email: _regData.email,
-      denomination: _regData.denom,
-      stadt: _regData.city,
-      land: _regData.land,
-      lizenz: 'trial',
-      aktiv: true,
-      trial_end: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]
-    }).select().single();
-
-    if(mandantErr) {
-      console.error('Mandant error:', mandantErr);
-      // Still proceed — profile will be created by trigger or next step
-    }
-
-    const mandantId = mandant?.id;
-
-    // 3. Create profile
-    if(mandantId) {
-      await sb.from('profiles').upsert({
-        id: userId,
-        mandant_id: mandantId,
-        vorname: _regData.vorname,
-        nachname: _regData.nachname,
-        email: _regData.email,
-        telefon: _regData.tel || null,
-        rolle: 'admin',
-        aktiv: true
-      });
-    }
-
-    // 4. Show success
-    const confirmEl = document.getElementById('reg-confirm-email');
-    if(confirmEl) confirmEl.textContent = _regData.email;
-    regGoTo(3);
-
-  } catch(e) {
-    console.error('Registration error:', e);
-    regShowErr('Unerwarteter Fehler. Bitte erneut versuchen.');
-    btn.disabled=false; btn.textContent='🚀 Gemeinde erstellen';
-  }
-}
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0F1F3D;min-height:100vh}
@@ -618,12 +437,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
       <div style="text-align:center;margin-top:12px">
         <span class="llink" onclick="doReset()">Passwort vergessen?</span>
       </div>
-      <div class="lfooter">
-  Noch keinen Zugang?<br>
-  <span class="llink" onclick="showRegister()" style="color:#C8941A;font-weight:600;font-size:14px">
-    ➕ Gemeinde jetzt registrieren
-  </span>
-</div>
+      <div class="lfooter">Fragen? <strong>info@ajconnect.ch</strong></div>
     </div>
     <div class="lbadges">
       <span class="lbadge">🔒 Verschlüsselt</span>
@@ -1745,9 +1559,9 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 </div>
 <div class="amo" id="amo-u">
   <div class="amodal">
-    <div class="amh"><div class="amt">Benutzer anlegen</div><div class="amx" onclick="closeMo('amo-u')">✕</div></div>
+    <div class="amh"><div class="amt">Benutzer einladen</div><div class="amx" onclick="closeMo('amo-u')">✕</div></div>
     <div class="amb">
-      <div class="ainfo">Der Benutzer erhält einen Login-Link per E-Mail. Er klickt darauf und ist sofort eingeloggt – kein Passwort nötig.</div>
+      <div class="ainfo">Der Benutzer erhält eine Einladungs-E-Mail und kann selbst ein Passwort setzen. Er sieht nur die Daten seiner Gemeinde.</div>
       <div class="afg"><label>E-Mail *</label><input class="afi" id="au-email" type="email" placeholder="pastor@gemeinde.ch"></div>
       <div class="afg"><label>Name</label><input class="afi" id="au-name" placeholder="Thomas Müller"></div>
       <div class="afg" id="au-mandant-row"><label>Gemeinde *</label><select class="afs" id="au-mandant"><option value="">— wählen —</option></select></div>
@@ -2322,35 +2136,52 @@ async function saveAU() {
     : document.getElementById('au-mandant').value;
   const rolle = document.getElementById('au-rolle').value;
   if (!email || !mid) { toast('E-Mail und Gemeinde sind Pflicht'); return; }
-  const existing = _AU.find(u => u.email?.toLowerCase() === email && u.id);
-  if (existing) { toast('Benutzer existiert bereits'); return; }
-  btn.disabled = true; btn.textContent = 'Wird eingeladen...'; 
+  const existing = _AU.find(u => u.email?.toLowerCase() === email);
+  if (existing) { toast('Benutzer mit dieser E-Mail existiert bereits'); return; }
+
+  btn.disabled = true; btn.textContent = 'Wird eingeladen...';
+
   try {
-    const { data: { session } } = await sb.auth.getSession();
-    const res = await fetch(
-      'https://gpmwlkqwdfxkenyebjmj.supabase.co/functions/v1/invite-user',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
-          'apikey': SUPABASE_ANON_KEY
-        },
-        body: JSON.stringify({ email, name, rolle, mandant_id: mid })
+    // Step 1: Create auth user via Supabase Admin invite
+    // This sends a magic-link email automatically
+    const { data: inviteData, error: inviteErr } = await sb.auth.admin.inviteUserByEmail(email, {
+      data: { vorname: name.split(' ')[0] || name, nachname: name.split(' ').slice(1).join(' ') || '' }
+    });
+
+    if (inviteErr) {
+      // If user already exists in auth, try to just create profile
+      if (inviteErr.message.includes('already been registered') || inviteErr.message.includes('already registered')) {
+        toast('⚠ E-Mail bereits registriert — Profil wird aktualisiert');
+      } else {
+        toast('Fehler: ' + inviteErr.message);
+        btn.disabled = false; btn.textContent = 'Anlegen';
+        return;
       }
-    );
-    const result = await res.json();
-    if (!res.ok || result.error) {
-      toast('Fehler: ' + (result.error ?? 'Unbekannt'));
-      btn.disabled = false; btn.textContent = 'Anlegen';
-      return;
     }
-    if (result.warning) {
-      toast('Benutzer erstellt — E-Mail: ' + result.warning);
-    } else {
-      toast('Einladungs-E-Mail gesendet an ' + email);
+
+    const userId = inviteData?.user?.id;
+
+    // Step 2: Create profile record
+    const nameParts = name.split(' ');
+    const profilePayload = {
+      mandant_id: mid,
+      email: email,
+      vorname: nameParts[0] || name,
+      nachname: nameParts.slice(1).join(' ') || '',
+      rolle: rolle,
+      aktiv: true
+    };
+    if (userId) profilePayload.id = userId;
+
+    const { error: profileErr } = await sb.from('profiles')
+      .upsert(profilePayload, { onConflict: userId ? 'id' : 'email' });
+
+    if (profileErr) {
+      console.warn('Profile upsert warning:', profileErr);
     }
-    const newUser = { id: result.user_id, email, name, mandant_id: mid, rolle, aktiv: true };
+
+    toast('✅ Einladungs-E-Mail gesendet an ' + email);
+    const newUser = { id: userId || crypto.randomUUID(), email, name, mandant_id: mid, rolle, aktiv: true };
     _AU.push(newUser);
     document.getElementById('amo-u').classList.remove('open');
     await loadAdminData();
@@ -2360,11 +2191,13 @@ async function saveAU() {
       const dm_u = document.getElementById('a-dm-users'); if (dm_u) dm_u.textContent = users.length;
       const dm_a = document.getElementById('a-dm-aktiv'); if (dm_a) dm_a.textContent = users.filter(u => u.aktiv).length;
     }
-  } catch (e) {
-    toast('Netzwerkfehler: ' + e.message);
+  } catch(e) {
+    console.error('saveAU error:', e);
+    toast('Fehler: ' + e.message);
   }
   btn.disabled = false; btn.textContent = 'Anlegen';
 }
+
 
 // showPage handles admin init in the main definition above
 
@@ -5324,6 +5157,188 @@ function switchToWelcome() {
   showPage('welcome');
   populateWelcomeMandants();
 }
+
+// ══════════════════════════════════════════════════════
+// SELBSTREGISTRIERUNG
+// ══════════════════════════════════════════════════════
+let _regData = {};
+let _regDenom = '';
+let _regStep = 0;
+
+function showRegister() {
+  _regData = {}; _regDenom = ''; _regStep = 0;
+  document.querySelectorAll('.reg-denom-btn').forEach(b=>b.classList.remove('sel'));
+  ['reg-gname','reg-city','reg-vorname','reg-nachname','reg-email','reg-tel','reg-pw1','reg-pw2'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('pw-str').className = 'pw-strength';
+  document.getElementById('reg-err').style.display = 'none';
+  regGoTo(0);
+  document.getElementById('pg-login').style.display = 'none';
+  document.getElementById('pg-register').style.display = 'block';
+}
+
+function showLogin() {
+  document.getElementById('pg-register').style.display = 'none';
+  document.getElementById('pg-setpw').style.display = 'none';
+  document.getElementById('pg-login').style.display = 'flex';
+  document.getElementById('lerr').style.display = 'none';
+  document.getElementById('lok').style.display = 'none';
+}
+
+function regGoTo(step) {
+  _regStep = step;
+  for(let i=0;i<4;i++){
+    const p = document.getElementById('reg-p'+i);
+    const s = document.getElementById('rstep-'+i);
+    if(p) p.className = 'reg-panel' + (i===step?' on':'');
+    if(s) {
+      s.className = 'reg-step';
+      if(i < step) s.className += ' done';
+      if(i === step) s.className += ' active';
+    }
+  }
+  document.getElementById('reg-err').style.display = 'none';
+}
+
+function selDenom(el, val) {
+  document.querySelectorAll('.reg-denom-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  _regDenom = val;
+}
+
+function checkPwStrength(pw) {
+  const bar = document.getElementById('pw-str');
+  const lbl = document.getElementById('pw-str-label');
+  if(!bar) return;
+  if(pw.length < 6) {
+    bar.className='pw-strength weak'; lbl.textContent='Zu kurz';
+  } else if(pw.length < 10 || !/[A-Z]/.test(pw) || !/[0-9]/.test(pw)) {
+    bar.className='pw-strength medium'; lbl.textContent='Mittel — Grossbuchstaben & Zahlen empfohlen';
+  } else {
+    bar.className='pw-strength strong'; lbl.textContent='Stark ✓';
+  }
+}
+
+function regShowErr(msg) {
+  const el = document.getElementById('reg-err');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function regStep1() {
+  const gname = document.getElementById('reg-gname').value.trim();
+  const city = document.getElementById('reg-city').value.trim();
+  if(!gname) { regShowErr('Bitte Gemeindenamen eingeben.'); return; }
+  if(!city) { regShowErr('Bitte Stadt/Ort eingeben.'); return; }
+  _regData.gname = gname;
+  _regData.denom = _regDenom || 'andere';
+  _regData.city = city;
+  _regData.land = document.getElementById('reg-land').value;
+  regGoTo(1);
+}
+
+function regStep2() {
+  const vorname = document.getElementById('reg-vorname').value.trim();
+  const nachname = document.getElementById('reg-nachname').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  if(!vorname) { regShowErr('Bitte Vornamen eingeben.'); return; }
+  if(!nachname) { regShowErr('Bitte Nachnamen eingeben.'); return; }
+  if(!email || !email.includes('@')) { regShowErr('Bitte gültige E-Mail eingeben.'); return; }
+  _regData.vorname = vorname;
+  _regData.nachname = nachname;
+  _regData.email = email;
+  _regData.tel = document.getElementById('reg-tel').value.trim();
+  const prev = document.getElementById('reg-email-preview');
+  if(prev) prev.textContent = email;
+  regGoTo(2);
+}
+
+async function doRegister() {
+  const pw1 = document.getElementById('reg-pw1').value;
+  const pw2 = document.getElementById('reg-pw2').value;
+  if(pw1.length < 8) { regShowErr('Passwort muss mindestens 8 Zeichen haben.'); return; }
+  if(pw1 !== pw2) { regShowErr('Passwörter stimmen nicht überein.'); return; }
+
+  const btn = document.getElementById('reg-submit-btn');
+  btn.disabled = true; btn.textContent = '⏳ Wird erstellt...';
+
+  try {
+    // 1. Create Supabase Auth user
+    const { data: authData, error: authErr } = await sb.auth.signUp({
+      email: _regData.email,
+      password: pw1,
+      options: {
+        data: {
+          vorname: _regData.vorname,
+          nachname: _regData.nachname,
+        }
+      }
+    });
+
+    if(authErr) {
+      if(authErr.message.includes('already registered') || authErr.message.includes('already been registered')) {
+        regShowErr('Diese E-Mail ist bereits registriert. Bitte einloggen.');
+      } else {
+        regShowErr('Fehler: ' + authErr.message);
+      }
+      btn.disabled=false; btn.textContent='🚀 Gemeinde erstellen';
+      return;
+    }
+
+    const userId = authData.user?.id;
+    if(!userId) {
+      regShowErr('Registrierung fehlgeschlagen. Bitte erneut versuchen.');
+      btn.disabled=false; btn.textContent='🚀 Gemeinde erstellen';
+      return;
+    }
+
+    // 2. Create mandant (church organization)
+    const { data: mandant, error: mandantErr } = await sb.from('mandanten').insert({
+      name: _regData.gname,
+      email: _regData.email,
+      denomination: _regData.denom,
+      stadt: _regData.city,
+      land: _regData.land,
+      lizenz: 'trial',
+      aktiv: true,
+      trial_end: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]
+    }).select().single();
+
+    if(mandantErr) {
+      console.error('Mandant error:', mandantErr);
+      // Still proceed — profile will be created by trigger or next step
+    }
+
+    const mandantId = mandant?.id;
+
+    // 3. Create profile
+    if(mandantId) {
+      await sb.from('profiles').upsert({
+        id: userId,
+        mandant_id: mandantId,
+        vorname: _regData.vorname,
+        nachname: _regData.nachname,
+        email: _regData.email,
+        telefon: _regData.tel || null,
+        rolle: 'admin',
+        aktiv: true
+      });
+    }
+
+    // 4. Show success
+    const confirmEl = document.getElementById('reg-confirm-email');
+    if(confirmEl) confirmEl.textContent = _regData.email;
+    regGoTo(3);
+
+  } catch(e) {
+    console.error('Registration error:', e);
+    regShowErr('Unerwarteter Fehler. Bitte erneut versuchen.');
+    btn.disabled=false; btn.textContent='🚀 Gemeinde erstellen';
+  }
+}
+
+
 </script>
 
 <!-- KONTAKT MODAL -->
