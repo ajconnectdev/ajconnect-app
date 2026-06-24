@@ -4,7 +4,188 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AJ Connect</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+// ══════════════════════════════════════════════════════
+// SELBSTREGISTRIERUNG
+// ══════════════════════════════════════════════════════
+let _regData = {};
+let _regDenom = '';
+let _regStep = 0;
+
+function showRegister() {
+  _regData = {}; _regDenom = ''; _regStep = 0;
+  document.querySelectorAll('.reg-denom-btn').forEach(b=>b.classList.remove('sel'));
+  ['reg-gname','reg-city','reg-vorname','reg-nachname','reg-email','reg-tel','reg-pw1','reg-pw2'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('pw-str').className = 'pw-strength';
+  document.getElementById('reg-err').style.display = 'none';
+  regGoTo(0);
+  document.getElementById('pg-login').style.display = 'none';
+  document.getElementById('pg-register').style.display = 'block';
+}
+
+function showLogin() {
+  document.getElementById('pg-register').style.display = 'none';
+  document.getElementById('pg-setpw').style.display = 'none';
+  document.getElementById('pg-login').style.display = 'flex';
+  document.getElementById('lerr').style.display = 'none';
+  document.getElementById('lok').style.display = 'none';
+}
+
+function regGoTo(step) {
+  _regStep = step;
+  for(let i=0;i<4;i++){
+    const p = document.getElementById('reg-p'+i);
+    const s = document.getElementById('rstep-'+i);
+    if(p) p.className = 'reg-panel' + (i===step?' on':'');
+    if(s) {
+      s.className = 'reg-step';
+      if(i < step) s.className += ' done';
+      if(i === step) s.className += ' active';
+    }
+  }
+  document.getElementById('reg-err').style.display = 'none';
+}
+
+function selDenom(el, val) {
+  document.querySelectorAll('.reg-denom-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  _regDenom = val;
+}
+
+function checkPwStrength(pw) {
+  const bar = document.getElementById('pw-str');
+  const lbl = document.getElementById('pw-str-label');
+  if(!bar) return;
+  if(pw.length < 6) {
+    bar.className='pw-strength weak'; lbl.textContent='Zu kurz';
+  } else if(pw.length < 10 || !/[A-Z]/.test(pw) || !/[0-9]/.test(pw)) {
+    bar.className='pw-strength medium'; lbl.textContent='Mittel — Grossbuchstaben & Zahlen empfohlen';
+  } else {
+    bar.className='pw-strength strong'; lbl.textContent='Stark ✓';
+  }
+}
+
+function regShowErr(msg) {
+  const el = document.getElementById('reg-err');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function regStep1() {
+  const gname = document.getElementById('reg-gname').value.trim();
+  const city = document.getElementById('reg-city').value.trim();
+  if(!gname) { regShowErr('Bitte Gemeindenamen eingeben.'); return; }
+  if(!city) { regShowErr('Bitte Stadt/Ort eingeben.'); return; }
+  _regData.gname = gname;
+  _regData.denom = _regDenom || 'andere';
+  _regData.city = city;
+  _regData.land = document.getElementById('reg-land').value;
+  regGoTo(1);
+}
+
+function regStep2() {
+  const vorname = document.getElementById('reg-vorname').value.trim();
+  const nachname = document.getElementById('reg-nachname').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  if(!vorname) { regShowErr('Bitte Vornamen eingeben.'); return; }
+  if(!nachname) { regShowErr('Bitte Nachnamen eingeben.'); return; }
+  if(!email || !email.includes('@')) { regShowErr('Bitte gültige E-Mail eingeben.'); return; }
+  _regData.vorname = vorname;
+  _regData.nachname = nachname;
+  _regData.email = email;
+  _regData.tel = document.getElementById('reg-tel').value.trim();
+  const prev = document.getElementById('reg-email-preview');
+  if(prev) prev.textContent = email;
+  regGoTo(2);
+}
+
+async function doRegister() {
+  const pw1 = document.getElementById('reg-pw1').value;
+  const pw2 = document.getElementById('reg-pw2').value;
+  if(pw1.length < 8) { regShowErr('Passwort muss mindestens 8 Zeichen haben.'); return; }
+  if(pw1 !== pw2) { regShowErr('Passwörter stimmen nicht überein.'); return; }
+
+  const btn = document.getElementById('reg-submit-btn');
+  btn.disabled = true; btn.textContent = '⏳ Wird erstellt...';
+
+  try {
+    // 1. Create Supabase Auth user
+    const { data: authData, error: authErr } = await sb.auth.signUp({
+      email: _regData.email,
+      password: pw1,
+      options: {
+        data: {
+          vorname: _regData.vorname,
+          nachname: _regData.nachname,
+        }
+      }
+    });
+
+    if(authErr) {
+      if(authErr.message.includes('already registered') || authErr.message.includes('already been registered')) {
+        regShowErr('Diese E-Mail ist bereits registriert. Bitte einloggen.');
+      } else {
+        regShowErr('Fehler: ' + authErr.message);
+      }
+      btn.disabled=false; btn.textContent='🚀 Gemeinde erstellen';
+      return;
+    }
+
+    const userId = authData.user?.id;
+    if(!userId) {
+      regShowErr('Registrierung fehlgeschlagen. Bitte erneut versuchen.');
+      btn.disabled=false; btn.textContent='🚀 Gemeinde erstellen';
+      return;
+    }
+
+    // 2. Create mandant (church organization)
+    const { data: mandant, error: mandantErr } = await sb.from('mandanten').insert({
+      name: _regData.gname,
+      email: _regData.email,
+      denomination: _regData.denom,
+      stadt: _regData.city,
+      land: _regData.land,
+      lizenz: 'trial',
+      aktiv: true,
+      trial_end: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]
+    }).select().single();
+
+    if(mandantErr) {
+      console.error('Mandant error:', mandantErr);
+      // Still proceed — profile will be created by trigger or next step
+    }
+
+    const mandantId = mandant?.id;
+
+    // 3. Create profile
+    if(mandantId) {
+      await sb.from('profiles').upsert({
+        id: userId,
+        mandant_id: mandantId,
+        vorname: _regData.vorname,
+        nachname: _regData.nachname,
+        email: _regData.email,
+        telefon: _regData.tel || null,
+        rolle: 'admin',
+        aktiv: true
+      });
+    }
+
+    // 4. Show success
+    const confirmEl = document.getElementById('reg-confirm-email');
+    if(confirmEl) confirmEl.textContent = _regData.email;
+    regGoTo(3);
+
+  } catch(e) {
+    console.error('Registration error:', e);
+    regShowErr('Unerwarteter Fehler. Bitte erneut versuchen.');
+    btn.disabled=false; btn.textContent='🚀 Gemeinde erstellen';
+  }
+}
+
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0F1F3D;min-height:100vh}
@@ -371,6 +552,34 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 .wlc-btn{width:100%;padding:14px;background:#C8941A;color:#0D1F3C;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px;font-family:inherit;transition:background .2s}
 .wlc-btn:hover{background:#E8B84B}
 .wlc-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* === REGISTRIERUNG === */
+.reg-steps{display:flex;gap:0;margin-bottom:28px;position:relative;}
+.reg-steps::before{content:'';position:absolute;top:14px;left:12%;right:12%;height:2px;background:#E5E7EB;z-index:0;}
+.reg-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:1;}
+.reg-step-num{width:28px;height:28px;border-radius:50%;background:#E5E7EB;color:#9CA3AF;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .3s;}
+.reg-step.active .reg-step-num{background:#C8941A;color:#fff;}
+.reg-step.done .reg-step-num{background:#16A34A;color:#fff;}
+.reg-step-label{font-size:10px;color:#9CA3AF;text-align:center;font-weight:500;}
+.reg-step.active .reg-step-label{color:#C8941A;}
+.reg-step.done .reg-step-label{color:#16A34A;}
+.reg-panel{display:none;}.reg-panel.on{display:block;}
+.reg-denom-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0;}
+.reg-denom-btn{padding:10px 8px;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff;cursor:pointer;font-size:12px;text-align:center;transition:all .2s;color:#374151;}
+.reg-denom-btn:hover{border-color:#C8941A;background:#FFFBF0;}
+.reg-denom-btn.sel{border-color:#C8941A;background:#FFFBF0;color:#92400E;font-weight:600;}
+.reg-nav{display:flex;gap:8px;margin-top:20px;}
+.reg-nav-back{flex:1;padding:11px;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:500;color:#6B7280;}
+.reg-nav-next{flex:2;padding:11px;border:none;border-radius:10px;background:#0D1F3C;cursor:pointer;font-size:14px;font-weight:600;color:#fff;transition:background .2s;}
+.reg-nav-next:hover{background:#1a3560;}
+.reg-nav-next:disabled{background:#9CA3AF;cursor:not-allowed;}
+.reg-success{text-align:center;padding:20px 0;}
+.reg-success-icon{font-size:56px;margin-bottom:12px;}
+.pw-strength{height:4px;border-radius:2px;margin-top:6px;transition:all .3s;background:#E5E7EB;}
+.pw-strength.weak{background:#EF4444;width:33%;}
+.pw-strength.medium{background:#F59E0B;width:66%;}
+.pw-strength.strong{background:#16A34A;width:100%;}
+
 </style>
 </head>
 <body>
@@ -409,7 +618,12 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
       <div style="text-align:center;margin-top:12px">
         <span class="llink" onclick="doReset()">Passwort vergessen?</span>
       </div>
-      <div class="lfooter">Noch keinen Zugang?<br>Kontaktieren Sie <strong>info@ajconnect.ch</strong></div>
+      <div class="lfooter">
+  Noch keinen Zugang?<br>
+  <span class="llink" onclick="showRegister()" style="color:#C8941A;font-weight:600;font-size:14px">
+    ➕ Gemeinde jetzt registrieren
+  </span>
+</div>
     </div>
     <div class="lbadges">
       <span class="lbadge">🔒 Verschlüsselt</span>
@@ -434,6 +648,143 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
     <button class="lbtn" id="setpw-btn" onclick="doSetPassword()">Passwort speichern</button>
   </div>
 </div>
+
+<!-- REGISTRIERUNG SCREEN -->
+<div id="pg-register" style="display:none">
+  <div style="display:flex;flex-direction:column;align-items:center;width:100%;min-height:100vh;padding:20px 0;background:#0F1F3D">
+    <div class="lcard" style="max-width:460px;width:100%">
+      <!-- Logo -->
+      <div class="llogo">
+        <div class="lmark"></div>
+        <div><div class="lname">AJ Connect</div><div class="lslogan">Connect. Organize. Grow.</div></div>
+      </div>
+      <div class="ltitle" style="font-size:18px">Gemeinde registrieren</div>
+      <div class="lsub">Kostenlos starten — 30 Tage Testphase</div>
+
+      <!-- Step indicator -->
+      <div class="reg-steps" id="reg-steps" style="margin-top:20px">
+        <div class="reg-step active" id="rstep-0"><div class="reg-step-num">1</div><div class="reg-step-label">Gemeinde</div></div>
+        <div class="reg-step" id="rstep-1"><div class="reg-step-num">2</div><div class="reg-step-label">Admin</div></div>
+        <div class="reg-step" id="rstep-2"><div class="reg-step-num">3</div><div class="reg-step-label">Passwort</div></div>
+        <div class="reg-step" id="rstep-3"><div class="reg-step-num">4</div><div class="reg-step-label">Fertig</div></div>
+      </div>
+
+      <div class="lerr" id="reg-err"></div>
+
+      <!-- STEP 1: Gemeinde Info -->
+      <div class="reg-panel on" id="reg-p0">
+        <div class="lfg">
+          <label>Name der Gemeinde *</label>
+          <input type="text" id="reg-gname" placeholder="z.B. Evangelische Gemeinde Zürich" autocomplete="organization">
+        </div>
+        <div class="lfg">
+          <label>Denomination</label>
+          <div class="reg-denom-grid">
+            <div class="reg-denom-btn" onclick="selDenom(this,'evangelisch')">✝️ Evangelisch</div>
+            <div class="reg-denom-btn" onclick="selDenom(this,'freikirchlich')">🕊️ Freikirchlich</div>
+            <div class="reg-denom-btn" onclick="selDenom(this,'reformiert')">📖 Reformiert</div>
+            <div class="reg-denom-btn" onclick="selDenom(this,'katholisch')">⛪ Katholisch</div>
+            <div class="reg-denom-btn" onclick="selDenom(this,'pfingstlich')">🔥 Pfingstlich</div>
+            <div class="reg-denom-btn" onclick="selDenom(this,'andere')">🌿 Andere</div>
+          </div>
+        </div>
+        <div class="lfg">
+          <label>Stadt / Ort *</label>
+          <input type="text" id="reg-city" placeholder="z.B. Zürich, Bern, Genf...">
+        </div>
+        <div class="lfg">
+          <label>Land</label>
+          <select id="reg-land" style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:14px">
+            <option value="CH" selected>🇨🇭 Schweiz</option>
+            <option value="DE">🇩🇪 Deutschland</option>
+            <option value="AT">🇦🇹 Österreich</option>
+          </select>
+        </div>
+        <div class="reg-nav">
+          <button class="reg-nav-back" onclick="showLogin()">← Zurück</button>
+          <button class="reg-nav-next" onclick="regStep1()">Weiter →</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Admin Info -->
+      <div class="reg-panel" id="reg-p1">
+        <div class="lfg">
+          <label>Ihr Vorname *</label>
+          <input type="text" id="reg-vorname" placeholder="Max" autocomplete="given-name">
+        </div>
+        <div class="lfg">
+          <label>Ihr Nachname *</label>
+          <input type="text" id="reg-nachname" placeholder="Müller" autocomplete="family-name">
+        </div>
+        <div class="lfg">
+          <label>E-Mail Adresse *</label>
+          <input type="email" id="reg-email" placeholder="pastor@gemeinde.ch" autocomplete="email">
+        </div>
+        <div class="lfg">
+          <label>Telefon (optional)</label>
+          <input type="tel" id="reg-tel" placeholder="+41 79 123 45 67" autocomplete="tel">
+        </div>
+        <div class="reg-nav">
+          <button class="reg-nav-back" onclick="regGoTo(0)">← Zurück</button>
+          <button class="reg-nav-next" onclick="regStep2()">Weiter →</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Passwort -->
+      <div class="reg-panel" id="reg-p2">
+        <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;color:#166534">
+          ✅ Fast fertig! Wähle ein sicheres Passwort für <strong id="reg-email-preview"></strong>
+        </div>
+        <div class="lfg">
+          <label>Passwort *</label>
+          <input type="password" id="reg-pw1" placeholder="Mindestens 8 Zeichen" oninput="checkPwStrength(this.value)" autocomplete="new-password">
+          <div class="pw-strength" id="pw-str"></div>
+          <div style="font-size:11px;color:#9CA3AF;margin-top:4px" id="pw-str-label">Mindestens 8 Zeichen</div>
+        </div>
+        <div class="lfg">
+          <label>Passwort wiederholen *</label>
+          <input type="password" id="reg-pw2" placeholder="••••••••" autocomplete="new-password">
+        </div>
+        <div style="font-size:12px;color:#6B7280;margin-top:8px;line-height:1.5">
+          Mit der Registrierung akzeptieren Sie unsere <a href="https://ajconnect.ch/datenschutz" target="_blank" style="color:#C8941A">Datenschutzerklärung</a>.
+          Ihre Daten werden ausschliesslich auf Schweizer Servern gespeichert.
+        </div>
+        <div class="reg-nav">
+          <button class="reg-nav-back" onclick="regGoTo(1)">← Zurück</button>
+          <button class="reg-nav-next" id="reg-submit-btn" onclick="doRegister()">🚀 Gemeinde erstellen</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: Erfolg -->
+      <div class="reg-panel" id="reg-p3">
+        <div class="reg-success">
+          <div class="reg-success-icon">🎉</div>
+          <div style="font-size:20px;font-weight:700;color:#0D1F3C;margin-bottom:8px">Willkommen bei AJ Connect!</div>
+          <div style="font-size:14px;color:#6B7280;margin-bottom:20px;line-height:1.6">
+            Ihre Gemeinde wurde erfolgreich registriert.<br>
+            Bitte bestätigen Sie Ihre E-Mail-Adresse — wir haben Ihnen einen Link gesendet.
+          </div>
+          <div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:10px;padding:14px;text-align:left;font-size:13px;color:#92400E;margin-bottom:20px">
+            📧 <strong>Wichtig:</strong> Prüfen Sie Ihr Postfach (<span id="reg-confirm-email"></span>) und klicken Sie den Bestätigungslink.
+          </div>
+          <button class="lbtn" onclick="showLogin()">Zum Login →</button>
+        </div>
+      </div>
+
+      <!-- Back to login -->
+      <div style="text-align:center;margin-top:16px;font-size:13px;color:#9CA3AF">
+        Bereits registriert? <span class="llink" onclick="showLogin()">Anmelden</span>
+      </div>
+    </div>
+    <div class="lbadges">
+      <span class="lbadge">🔒 Verschlüsselt</span>
+      <span class="lbadge">🇨🇭 Server Schweiz</span>
+      <span class="lbadge">✓ DSG-konform</span>
+      <span class="lbadge">30 Tage kostenlos</span>
+    </div>
+  </div>
+</div>
+
 
 <!-- ADMIN PAGE -->
 
@@ -3758,6 +4109,16 @@ function setDokFilter(f,el) {
   document.querySelectorAll('#pg-dokumente .ftab').forEach(t=>t.classList.remove('on'));
   el.classList.add('on');
   filterDok();
+}
+
+function updDokStats() {
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('dok-count', dokumente.length);
+  const totalBytes = dokumente.reduce((s,d)=>s+(d.size||0),0);
+  const mb = totalBytes > 0 ? (totalBytes/1024/1024).toFixed(1)+' MB' : '0 MB';
+  set('dok-size', mb);
+  set('dok-protokolle', dokumente.filter(d=>d.typ==='protokoll').length);
+  set('dok-vertraege', dokumente.filter(d=>d.typ==='vertrag').length);
 }
 
 function filterDok() {
