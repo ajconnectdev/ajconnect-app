@@ -1582,6 +1582,30 @@ const SB_URL = 'https://gpmwlkqwdfxkenyebjmj.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwbXdsa3F3ZGZ4a2VueWViam1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTM1NTcsImV4cCI6MjA5MTAyOTU1N30.7d6aHR79PuRi_K7D8ikIGMxojKApIVBYE6yaW6UId8w';
 const SUPABASE_ANON_KEY = SB_KEY; // Alias für Edge Function Aufrufe
 const sb = supabase.createClient(SB_URL, SB_KEY);
+
+// ── E-Mail Helper: ruft die send-email Edge Function auf (Brevo) ──
+async function sendEmail(type, to, data) {
+  try {
+    const res = await fetch(`${SB_URL}/functions/v1/send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ type, to, data })
+    });
+    const result = await res.json();
+    if (!res.ok || result.error) {
+      console.warn('sendEmail Fehler:', result.error || res.status);
+      return { success: false, error: result.error || 'Unbekannter Fehler' };
+    }
+    return { success: true, messageId: result.messageId };
+  } catch (e) {
+    console.warn('sendEmail Netzwerkfehler:', e.message);
+    return { success: false, error: e.message };
+  }
+}
 let _S = null; // Session data
 
 // ═══════════════════════════════════════════
@@ -2142,46 +2166,31 @@ async function saveAU() {
   btn.disabled = true; btn.textContent = 'Wird eingeladen...';
 
   try {
-    // Step 1: Create auth user via Supabase Admin invite
-    // This sends a magic-link email automatically
-    const { data: inviteData, error: inviteErr } = await sb.auth.admin.inviteUserByEmail(email, {
-      data: { vorname: name.split(' ')[0] || name, nachname: name.split(' ').slice(1).join(' ') || '' }
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${SB_URL}/functions/v1/invite-user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ email, name, rolle, mandant_id: mid })
     });
+    const result = await res.json();
 
-    if (inviteErr) {
-      // If user already exists in auth, try to just create profile
-      if (inviteErr.message.includes('already been registered') || inviteErr.message.includes('already registered')) {
-        toast('⚠ E-Mail bereits registriert — Profil wird aktualisiert');
-      } else {
-        toast('Fehler: ' + inviteErr.message);
-        btn.disabled = false; btn.textContent = 'Anlegen';
-        return;
-      }
+    if (!res.ok || result.error) {
+      toast('Fehler: ' + (result.error || 'Unbekannter Fehler'));
+      btn.disabled = false; btn.textContent = 'Anlegen';
+      return;
     }
 
-    const userId = inviteData?.user?.id;
-
-    // Step 2: Create profile record
-    const nameParts = name.split(' ');
-    const profilePayload = {
-      mandant_id: mid,
-      email: email,
-      vorname: nameParts[0] || name,
-      nachname: nameParts.slice(1).join(' ') || '',
-      rolle: rolle,
-      aktiv: true
-    };
-    if (userId) profilePayload.id = userId;
-
-    const { error: profileErr } = await sb.from('profiles')
-      .upsert(profilePayload, { onConflict: userId ? 'id' : 'email' });
-
-    if (profileErr) {
-      console.warn('Profile upsert warning:', profileErr);
+    if (result.warning) {
+      toast('⚠ ' + result.warning);
+    } else {
+      toast('✅ Einladungs-E-Mail gesendet an ' + email);
     }
 
-    toast('✅ Einladungs-E-Mail gesendet an ' + email);
-    const newUser = { id: userId || crypto.randomUUID(), email, name, mandant_id: mid, rolle, aktiv: true };
+    const newUser = { id: result.user_id || crypto.randomUUID(), email, name, mandant_id: mid, rolle, aktiv: true };
     _AU.push(newUser);
     document.getElementById('amo-u').classList.remove('open');
     await loadAdminData();
@@ -2440,7 +2449,41 @@ function dmsDel(fid){if(!activeId)return;dmsStore[activeId]=(dmsStore[activeId]|
 function dmsDrag(e,on){e.preventDefault();document.getElementById('dms-drop').style.borderColor=on?'#C8941A':'#D1D5DB';}
 function dmsDrop(e){e.preventDefault();document.getElementById('dms-drop').style.borderColor='#D1D5DB';if(!activeId)return;Array.from(e.dataTransfer.files).forEach(file=>{const ext=file.name.split('.').pop()||'dat';const d=new Date();const date=`${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;if(!dmsStore[activeId])dmsStore[activeId]=[];dmsStore[activeId].push({id:dmsSeq++,name:file.name,size:file.size,ext,date});});rndrDms();toast('Hochgeladen');}
 
-function genQuittung(){if(!activeId)return;const m=members.find(x=>x.id===activeId);if(!m)return;const t=m.spenden.filter(s=>s.datum.startsWith('2026')).reduce((s,x)=>s+x.betrag,0);const lines=['SPENDENBESCHEINIGUNG 2026','='.repeat(30),'',`Gemeinde: ${_S?.mandant_name||'Gemeinde'}`,`Ausgestellt: ${new Date().toLocaleDateString('de-CH')}`,``,`Spender/in: ${m.anrede} ${m.vorname} ${m.nachname}`,'','Spenden 2026:',...m.spenden.filter(s=>s.datum.startsWith('2026')).map(s=>`  ${fD(s.datum)}   CHF ${s.betrag}   ${s.zweck}`),``,`GESAMT 2026: CHF ${t.toLocaleString('de-CH')}`];const a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(lines.join('\n'));a.download=`Spendenbescheinigung_${m.nachname}.txt`;a.click();toast('Erstellt');}
+async function genQuittung(){
+  if(!activeId)return;
+  const m=members.find(x=>x.id===activeId);
+  if(!m)return;
+  const jahrSpenden=m.spenden.filter(s=>s.datum.startsWith('2026'));
+  const t=jahrSpenden.reduce((s,x)=>s+x.betrag,0);
+
+  // Fallback: .txt Download (falls kein E-Mail oder Versand fehlschlägt)
+  function downloadTxt(){
+    const lines=['SPENDENBESCHEINIGUNG 2026','='.repeat(30),'',`Gemeinde: ${_S?.mandant_name||'Gemeinde'}`,`Ausgestellt: ${new Date().toLocaleDateString('de-CH')}`,``,`Spender/in: ${m.anrede} ${m.vorname} ${m.nachname}`,'','Spenden 2026:',...jahrSpenden.map(s=>`  ${fD(s.datum)}   CHF ${s.betrag}   ${s.zweck}`),``,`GESAMT 2026: CHF ${t.toLocaleString('de-CH')}`];
+    const a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(lines.join('\n'));a.download=`Spendenbescheinigung_${m.nachname}.txt`;a.click();
+  }
+
+  if(!m.email){
+    toast('Kein E-Mail beim Mitglied hinterlegt — Datei wird heruntergeladen');
+    downloadTxt();
+    return;
+  }
+
+  toast('Sende Spendenbescheinigung...');
+  const result = await sendEmail('spendenbescheinigung', m.email, {
+    name: `${m.anrede} ${m.vorname} ${m.nachname}`,
+    gemeinde: _S?.mandant_name || 'Gemeinde',
+    jahr: '2026',
+    gesamtbetrag: `CHF ${t.toLocaleString('de-CH')}`,
+    spenden: jahrSpenden.map(s => ({ datum: fD(s.datum), betrag: `CHF ${s.betrag}`, zweck: s.zweck }))
+  });
+
+  if(result.success){
+    toast('✅ Spendenbescheinigung an ' + m.email + ' gesendet');
+  } else {
+    toast('⚠ E-Mail-Versand fehlgeschlagen — Datei wird stattdessen heruntergeladen');
+    downloadTxt();
+  }
+}
 
 function openRM(){rndrR();document.getElementById('mo-rollen').classList.add('open');}
 function openGM(){rndrG();document.getElementById('mo-gruppen').classList.add('open');}
