@@ -1187,7 +1187,8 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
           <div class="sgrid4" style="margin-bottom:16px">
             <div class="scard"><div class="sico" style="background:#EFF6FF"><svg viewBox="0 0 24 24" style="fill:#2563EB"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div><div><div class="sn" id="ma-total">0</div><div class="sl">Mitarbeiter total</div></div></div>
             <div class="scard"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><div><div class="sn" id="ma-aktiv">0</div><div class="sl">Aktiv</div></div></div>
-            <div class="scard"><div class="sico" style="background:#FEF3C7"><svg viewBox="0 0 24 24" style="fill:#D97706"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-6V6h1.5v5.5H17V13z"/></svg></div><div><div class="sn" id="ma-abt">0</div><div class="sl">Abteilungen</div></div></div>
+            <div class="scard"><div class="sico" style="background:#FEF3C7"><svg viewBox="0 0 24 24" style="fill:#D97706"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg></div><div><div class="sn" id="ma-pensum">0%</div><div class="sl">Ø Pensum</div></div></div>
+            <div class="scard"><div class="sico" style="background:#FEE2E2"><svg viewBox="0 0 24 24" style="fill:#DC2626"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div><div><div class="sn" id="ma-ablauf">0</div><div class="sl">Zertifikate laufen bald ab</div></div></div>
           </div>
           <div class="tcard">
             <div class="tcardh">
@@ -1197,11 +1198,14 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
                 <option value="aktiv">Aktiv</option>
                 <option value="inaktiv">Inaktiv</option>
               </select>
+              <select class="afs" id="ma-filter-abt" onchange="filterMA()">
+                <option value="">Alle Abteilungen</option>
+              </select>
             </div>
             <div style="overflow-x:auto">
               <table>
-                <thead><tr><th>Name</th><th>Position</th><th>Abteilung</th><th>E-Mail</th><th>Telefon</th><th>Status</th><th style="width:90px"></th></tr></thead>
-                <tbody id="ma-tbody"><tr><td colspan="7" class="aempty">Lädt...</td></tr></tbody>
+                <thead><tr><th>Name</th><th>Position</th><th>Abteilung</th><th>Pensum</th><th>Anstellung</th><th>Status</th><th style="width:36px"></th><th style="width:90px"></th></tr></thead>
+                <tbody id="ma-tbody"><tr><td colspan="8" class="aempty">Lädt...</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -3489,9 +3493,12 @@ function tEditEVP(secId,btn){
 async function deleteEV(){if(!activeEVP||!confirm('Löschen?'))return;const ev=events.find(x=>x.id===activeEVP);if(ev?._dbId)await dbDelete('events',ev._dbId);events=events.filter(x=>x.id!==activeEVP);closeEVP();rndrEvents();toast('Gelöscht');}
 
 // ═══════════════════════════════════════════
-// MITARBEITER (HR)
+// MITARBEITER (HR) — Vollständiges Personalmanagement
 // ═══════════════════════════════════════════
-let mitarbeiter=[], maFilt=[], maLoaded=false, editingMAId=null;
+let mitarbeiter=[], maFilt=[], maLoaded=false, activeMAId=null;
+let absenzen=[], absenzenFilt=[];
+let maDokumente=[];
+let maDokAblaufSet = new Set(); // IDs von Mitarbeitern mit bald ablaufenden/abgelaufenen Dokumenten
 
 async function loadMitarbeiter(){
   const mid = _S?.working_mandant_id || _S?.mandant_id;
@@ -3501,26 +3508,64 @@ async function loadMitarbeiter(){
     id: m.id, _dbId: m.id,
     vorname: m.vorname||'', nachname: m.nachname||'',
     email: m.email||'', telefon: m.telefon||'',
+    geburtsdatum: m.geburtsdatum||'', adresse: m.adresse||'', plz_ort: m.plz_ort||'',
+    personalnummer: m.personalnummer||'',
     position: m.position||'', abteilung: m.abteilung||'',
-    eintritt: m.eintritt||'', status: m.status||'aktiv',
+    anstellungsart: m.anstellungsart||'Fest angestellt',
+    pensum: m.pensum!=null?m.pensum:100,
+    eintritt: m.eintritt||'', austritt: m.austritt||'',
+    vorgesetzter_id: m.vorgesetzter_id||'',
+    ferien_anspruch_tage: m.ferien_anspruch_tage!=null?m.ferien_anspruch_tage:25,
+    profile_id: m.profile_id||null,
+    status: m.status||'aktiv',
     notizen: m.notizen||''
   }));
   maLoaded = true;
   filterMA();
+  checkAblaufendeDokumente();
+}
+
+// Prueft ueber alle Mitarbeiter, ob bald ablaufende/abgelaufene Dokumente vorhanden sind
+async function checkAblaufendeDokumente(){
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid || !mitarbeiter.length) { maDokAblaufSet = new Set(); updMAStats(); return; }
+  const in60Tagen = new Date(); in60Tagen.setDate(in60Tagen.getDate()+60);
+  const grenze = in60Tagen.toISOString().split('T')[0];
+  const {data} = await sb.from('dokumente').select('mitarbeiter_id,ablaufdatum')
+    .eq('mandant_id', mid).not('mitarbeiter_id','is',null).not('ablaufdatum','is',null).lte('ablaufdatum', grenze);
+  maDokAblaufSet = new Set((data||[]).map(d=>d.mitarbeiter_id));
+  updMAStats(); rndrMA();
 }
 
 function updMAStats(){
   const e=id=>document.getElementById(id);
   if(e('ma-total'))e('ma-total').textContent=mitarbeiter.length;
   if(e('ma-aktiv'))e('ma-aktiv').textContent=mitarbeiter.filter(m=>m.status==='aktiv').length;
-  if(e('ma-abt'))e('ma-abt').textContent=new Set(mitarbeiter.map(m=>m.abteilung).filter(Boolean)).size;
+  const aktive = mitarbeiter.filter(m=>m.status==='aktiv');
+  const avgPensum = aktive.length ? Math.round(aktive.reduce((s,m)=>s+(parseFloat(m.pensum)||0),0)/aktive.length) : 0;
+  if(e('ma-pensum'))e('ma-pensum').textContent=avgPensum+'%';
+  if(e('ma-ablauf'))e('ma-ablauf').textContent=maDokAblaufSet.size;
+  const abtSel = e('ma-filter-abt');
+  if(abtSel){
+    const cur = abtSel.value;
+    const abts = [...new Set(mitarbeiter.map(m=>m.abteilung).filter(Boolean))].sort();
+    abtSel.innerHTML = '<option value="">Alle Abteilungen</option>'+abts.map(a=>`<option value="${a}">${a}</option>`).join('');
+    abtSel.value = cur;
+  }
+  const dl = document.getElementById('ma-abt-list');
+  if(dl){
+    const abts = [...new Set(mitarbeiter.map(m=>m.abteilung).filter(Boolean))].sort();
+    dl.innerHTML = abts.map(a=>`<option value="${a}">`).join('');
+  }
 }
 
 function filterMA(){
   const q=(document.getElementById('ma-search')?.value||'').toLowerCase();
   const st=document.getElementById('ma-filter-status')?.value||'';
+  const abt=document.getElementById('ma-filter-abt')?.value||'';
   maFilt = mitarbeiter.filter(m=>{
     if(st && m.status!==st) return false;
+    if(abt && m.abteilung!==abt) return false;
     if(q && !(m.vorname+' '+m.nachname+m.email+m.position+m.abteilung).toLowerCase().includes(q)) return false;
     return true;
   });
@@ -3529,31 +3574,29 @@ function filterMA(){
 
 function rndrMA(){
   const tb=document.getElementById('ma-tbody'); if(!tb) return;
-  if(!maFilt.length){ tb.innerHTML='<tr><td colspan="7" class="aempty">Keine Mitarbeiter gefunden</td></tr>'; return; }
-  tb.innerHTML = maFilt.map(m=>`<tr>
+  if(!maFilt.length){ tb.innerHTML='<tr><td colspan="8" class="aempty">Keine Mitarbeiter gefunden</td></tr>'; return; }
+  tb.innerHTML = maFilt.map(m=>`<tr style="cursor:pointer" onclick="openMAP('${m.id}')">
     <td style="font-weight:500;color:#1A3560">${m.vorname} ${m.nachname}</td>
     <td style="font-size:12px;color:#6B7280">${m.position||'—'}</td>
     <td style="font-size:12px;color:#6B7280">${m.abteilung||'—'}</td>
-    <td style="font-size:12px;color:#6B7280">${m.email||'—'}</td>
-    <td style="font-size:12px;color:#6B7280">${m.telefon||'—'}</td>
+    <td style="font-size:12px;color:#6B7280">${m.pensum}%</td>
+    <td style="font-size:12px;color:#6B7280">${m.anstellungsart||'—'}</td>
     <td><span style="padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500;${m.status==='aktiv'?'background:#DCFCE7;color:#16A34A':'background:#F4F5F7;color:#9CA3AF'}">${m.status==='aktiv'?'Aktiv':'Inaktiv'}</span></td>
-    <td style="display:flex;gap:4px">
-      <button class="aaction-btn" onclick="openNMA('${m.id}')">Bearbeiten</button>
+    <td style="text-align:center">${maDokAblaufSet.has(m.id)?'<span title="Dokument läuft bald ab oder ist abgelaufen" style="color:#DC2626">⚠</span>':''}</td>
+    <td style="display:flex;gap:4px" onclick="event.stopPropagation()">
+      <button class="aaction-btn" onclick="openMAP('${m.id}')">Öffnen</button>
       <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteMA('${m.id}')">Löschen</button>
     </td>
   </tr>`).join('');
 }
 
-function openNMA(id){
-  editingMAId = id || null;
+function openNMA(){
   const e=i=>document.getElementById(i);
-  const m = id ? mitarbeiter.find(x=>x.id===id) : null;
-  e('nma-title').textContent = m ? '👤 Mitarbeiter bearbeiten' : '👤 Neuer Mitarbeiter';
-  e('ma-vorname').value = m?.vorname||''; e('ma-nachname').value = m?.nachname||'';
-  e('ma-email').value = m?.email||''; e('ma-telefon').value = m?.telefon||'';
-  e('ma-position').value = m?.position||''; e('ma-abteilung').value = m?.abteilung||'';
-  e('ma-eintritt').value = m?.eintritt||''; e('ma-status').value = m?.status||'aktiv';
-  e('ma-notizen').value = m?.notizen||'';
+  e('ma-vorname').value=''; e('ma-nachname').value=''; e('ma-email').value=''; e('ma-telefon').value='';
+  e('ma-position').value=''; e('ma-abteilung').value='';
+  e('ma-anstellungsart').value='Fest angestellt'; e('ma-pensum').value='100';
+  e('ma-eintritt').value = new Date().toISOString().split('T')[0];
+  e('ma-status').value='aktiv';
   document.getElementById('mo-nma').classList.add('open');
 }
 
@@ -3565,30 +3608,374 @@ async function saveMA(){
   const mid = _S?.working_mandant_id || _S?.mandant_id;
   if(!mid){ toast('Bitte zuerst Gemeinde wählen'); return; }
   const payload = {
-    mandant_id: mid, vorname, nachname, email,
+    vorname, nachname, email,
     telefon: document.getElementById('ma-telefon').value,
     position: document.getElementById('ma-position').value,
     abteilung: document.getElementById('ma-abteilung').value,
+    anstellungsart: document.getElementById('ma-anstellungsart').value,
+    pensum: parseFloat(document.getElementById('ma-pensum').value)||100,
     eintritt: document.getElementById('ma-eintritt').value || null,
     status: document.getElementById('ma-status').value,
-    notizen: document.getElementById('ma-notizen').value
+    ferien_anspruch_tage: 25
   };
-  if(editingMAId){
-    const m = mitarbeiter.find(x=>x.id===editingMAId);
-    const ok = await dbUpdate('mitarbeiter', m._dbId, payload);
-    if(ok){ Object.assign(m, payload); filterMA(); closeMo('mo-nma'); toast('Gespeichert ✓'); }
-  } else {
-    const saved = await dbSave('mitarbeiter', payload);
-    if(saved){ mitarbeiter.push({...payload, id: saved.id, _dbId: saved.id}); filterMA(); closeMo('mo-nma'); toast('Mitarbeiter angelegt ✓'); }
+  const saved = await dbSave('mitarbeiter', payload);
+  if(saved){
+    mitarbeiter.push({...payload, id: saved.id, _dbId: saved.id, notizen:'', geburtsdatum:'', adresse:'', plz_ort:'', personalnummer:'', austritt:'', vorgesetzter_id:'', profile_id:null});
+    filterMA(); closeMo('mo-nma'); toast('Mitarbeiter angelegt ✓');
   }
 }
 
 async function deleteMA(id){
-  if(!confirm('Mitarbeiter löschen?')) return;
+  if(!confirm('Mitarbeiter unwiderruflich löschen? Ferien/Absenzen und Dokumente bleiben in der Datenbank, aber ohne Zuordnung.')) return;
   const m = mitarbeiter.find(x=>x.id===id);
   if(m?._dbId) await dbDelete('mitarbeiter', m._dbId);
   mitarbeiter = mitarbeiter.filter(x=>x.id!==id);
   filterMA(); toast('Gelöscht');
+}
+
+// ── Detail-Panel ──
+function sTabMA(name, el){
+  document.querySelectorAll('#ma-panel .ktab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('#ma-panel .tpane').forEach(t=>t.classList.remove('on'));
+  if(el) el.classList.add('on');
+  const tp = document.getElementById(name); if(tp) tp.classList.add('on');
+}
+
+async function openMAP(id){
+  const m = mitarbeiter.find(x=>x.id===id); if(!m) return;
+  activeMAId = id;
+  const e=i=>document.getElementById(i);
+  const sv=(i,v)=>{const el=e(i);if(el)el.textContent=v||'—';};
+  const si=(i,v)=>{const el=e(i);if(el)el.value=v||'';};
+
+  e('map-avatar').textContent = (m.vorname[0]||'')+(m.nachname[0]||'');
+  e('map-name').textContent = `${m.vorname} ${m.nachname}`;
+  e('map-sub').textContent = [m.position, m.abteilung].filter(Boolean).join(' · ') || m.email;
+  const sb2=e('map-status-badge'); sb2.textContent = m.status==='aktiv'?'Aktiv':'Inaktiv';
+  sb2.style.cssText = m.status==='aktiv' ? 'background:#DCFCE7;color:#16A34A;padding:2px 9px;border-radius:5px;font-size:11px;font-weight:500' : 'background:#F4F5F7;color:#9CA3AF;padding:2px 9px;border-radius:5px;font-size:11px;font-weight:500';
+  e('map-pensum-badge').textContent = `Pensum ${m.pensum}%`;
+
+  sv('map-vorname',m.vorname); si('map-vorname-i',m.vorname);
+  sv('map-nachname',m.nachname); si('map-nachname-i',m.nachname);
+  sv('map-geburt',fD(m.geburtsdatum)); si('map-geburt-i',m.geburtsdatum);
+  sv('map-adresse',m.adresse); si('map-adresse-i',m.adresse);
+  sv('map-plzort',m.plz_ort); si('map-plzort-i',m.plz_ort);
+  sv('map-telefon',m.telefon); si('map-telefon-i',m.telefon);
+  sv('map-email',m.email); si('map-email-i',m.email);
+  sv('map-personalnr',m.personalnummer); si('map-personalnr-i',m.personalnummer);
+  sv('map-position',m.position); si('map-position-i',m.position);
+  sv('map-abteilung',m.abteilung); si('map-abteilung-i',m.abteilung);
+  sv('map-anstellungsart',m.anstellungsart); si('map-anstellungsart-i',m.anstellungsart);
+  sv('map-pensum',m.pensum+'%'); si('map-pensum-i',m.pensum);
+  sv('map-eintritt',fD(m.eintritt)); si('map-eintritt-i',m.eintritt);
+  sv('map-austritt',fD(m.austritt)); si('map-austritt-i',m.austritt);
+  sv('map-ferienanspruch',m.ferien_anspruch_tage+' Tage'); si('map-ferienanspruch-i',m.ferien_anspruch_tage);
+  sv('map-status',m.status==='aktiv'?'Aktiv':'Inaktiv'); si('map-status-i',m.status);
+  sv('map-notizen',m.notizen); si('map-notizen-i',m.notizen);
+
+  // Vorgesetzter Dropdown
+  const vgSel = e('map-vorgesetzter-i');
+  const andere = mitarbeiter.filter(x=>x.id!==id);
+  vgSel.innerHTML = '<option value="">— Keine/r —</option>'+andere.map(x=>`<option value="${x.id}">${x.vorname} ${x.nachname}</option>`).join('');
+  vgSel.value = m.vorgesetzter_id||'';
+  const vg = mitarbeiter.find(x=>x.id===m.vorgesetzter_id);
+  sv('map-vorgesetzter', vg ? `${vg.vorname} ${vg.nachname}` : '—');
+
+  // Sektionen zuruecksetzen auf Ansicht-Modus
+  document.querySelectorAll('#ma-panel .cs').forEach(s=>s.classList.remove('editing'));
+  document.querySelectorAll('#ma-panel .cse').forEach(b=>{b.textContent='Bearbeiten';b.style.color='';});
+
+  sTabMA('map-stamm', document.querySelector('#ma-panel .ktab'));
+  await loadAbsenzenFuerMA(id);
+  await loadMADokumenteFuerMA(id);
+  await rndrZugang(m);
+
+  document.getElementById('ma-ov').classList.add('open');
+  document.getElementById('ma-panel').classList.add('open');
+}
+
+function closeMAP(){
+  document.getElementById('ma-ov').classList.remove('open');
+  document.getElementById('ma-panel').classList.remove('open');
+  activeMAId = null;
+}
+
+async function deleteMAFromPanel(){
+  if(!activeMAId) return;
+  await deleteMA(activeMAId);
+  closeMAP();
+}
+
+// Generischer Inline-Edit-Speicher fuer die 3 Stammdaten-Sektionen
+const MA_FIELD_MAP = {
+  'map-sec-persoenlich': {'map-vorname':'vorname','map-nachname':'nachname','map-geburt':'geburtsdatum','map-adresse':'adresse','map-plzort':'plz_ort','map-telefon':'telefon','map-email':'email'},
+  'map-sec-anstellung': {'map-personalnr':'personalnummer','map-position':'position','map-abteilung':'abteilung','map-anstellungsart':'anstellungsart','map-pensum':'pensum','map-vorgesetzter':'vorgesetzter_id','map-eintritt':'eintritt','map-austritt':'austritt','map-ferienanspruch':'ferien_anspruch_tage','map-status':'status'},
+  'map-sec-notizen': {'map-notizen':'notizen'}
+};
+
+async function tEditMA(sectionId, btn){
+  const sec = document.getElementById(sectionId);
+  const isEditing = sec.classList.contains('editing');
+  if(isEditing){
+    const m = mitarbeiter.find(x=>x.id===activeMAId);
+    if(m){
+      const map = MA_FIELD_MAP[sectionId] || {};
+      const updatePayload = {};
+      Object.entries(map).forEach(([bid,key])=>{
+        const inp = document.getElementById(bid+'-i');
+        if(!inp) return;
+        let val = inp.value;
+        if(['pensum','ferien_anspruch_tage'].includes(key)) val = parseFloat(val)||0;
+        m[key] = val;
+        updatePayload[key] = val;
+        const t = document.getElementById(bid);
+        if(t){
+          if(key==='geburtsdatum'||key==='eintritt'||key==='austritt') t.textContent = fD(val)||'—';
+          else if(key==='status') t.textContent = val==='aktiv'?'Aktiv':'Inaktiv';
+          else if(key==='pensum') t.textContent = val+'%';
+          else if(key==='ferien_anspruch_tage') t.textContent = val+' Tage';
+          else if(key==='vorgesetzter_id'){ const vg=mitarbeiter.find(x=>x.id===val); t.textContent = vg?`${vg.vorname} ${vg.nachname}`:'—'; }
+          else t.textContent = val || '—';
+        }
+      });
+      if(m._dbId) await dbUpdate('mitarbeiter', m._dbId, updatePayload);
+      // Kopfzeile aktualisieren
+      document.getElementById('map-name').textContent = `${m.vorname} ${m.nachname}`;
+      document.getElementById('map-sub').textContent = [m.position, m.abteilung].filter(Boolean).join(' · ') || m.email;
+      document.getElementById('map-pensum-badge').textContent = `Pensum ${m.pensum}%`;
+      const sb3=document.getElementById('map-status-badge'); sb3.textContent = m.status==='aktiv'?'Aktiv':'Inaktiv';
+      sb3.style.cssText = m.status==='aktiv' ? 'background:#DCFCE7;color:#16A34A;padding:2px 9px;border-radius:5px;font-size:11px;font-weight:500' : 'background:#F4F5F7;color:#9CA3AF;padding:2px 9px;border-radius:5px;font-size:11px;font-weight:500';
+      rndrMA();
+      toast('Gespeichert ✓');
+    }
+    sec.classList.remove('editing'); btn.textContent='Bearbeiten'; btn.style.color='';
+  } else {
+    sec.classList.add('editing'); btn.textContent='Fertig'; btn.style.color='#16A34A';
+  }
+}
+
+// ── Ferien & Absenzen ──
+async function loadAbsenzenFuerMA(mitarbeiterId){
+  const {data} = await sb.from('mitarbeiter_absenzen').select('*').eq('mitarbeiter_id', mitarbeiterId).order('von_datum',{ascending:false});
+  absenzen = (data||[]).map(a=>({...a, _dbId:a.id}));
+  const jahre = [...new Set(absenzen.map(a=>a.von_datum?.slice(0,4)).filter(Boolean))];
+  const curYear = String(new Date().getFullYear());
+  if(!jahre.includes(curYear)) jahre.push(curYear);
+  jahre.sort((a,b)=>b.localeCompare(a));
+  const sel = document.getElementById('abs-filter-jahr');
+  sel.innerHTML = jahre.map(j=>`<option value="${j}">${j}</option>`).join('');
+  sel.value = curYear;
+  rndrAbsenzen();
+}
+
+const ABS_TYP_LABEL = {ferien:'Ferien', krankheit:'Krankheit', unfall:'Unfall', militaer:'Militär/Zivildienst', weiterbildung:'Weiterbildung', unbezahlt:'Unbezahlter Urlaub', sonstiges:'Sonstiges'};
+const ABS_STATUS_CSS = {genehmigt:'background:#DCFCE7;color:#16A34A', beantragt:'background:#FEF3C7;color:#D97706', abgelehnt:'background:#FEE2E2;color:#DC2626'};
+
+function rndrAbsenzen(){
+  const jahr = document.getElementById('abs-filter-jahr')?.value;
+  absenzenFilt = jahr ? absenzen.filter(a=>a.von_datum?.startsWith(jahr)) : absenzen;
+  const tb = document.getElementById('abs-tbody');
+  document.getElementById('map-abs-cnt').textContent = absenzen.length;
+  if(!absenzenFilt.length){ tb.innerHTML='<tr><td colspan="6" class="aempty">Keine Absenzen in diesem Jahr</td></tr>'; }
+  else {
+    tb.innerHTML = absenzenFilt.map(a=>`<tr>
+      <td style="font-size:12px">${fD(a.von_datum)} – ${fD(a.bis_datum)}</td>
+      <td style="font-size:12px">${ABS_TYP_LABEL[a.typ]||a.typ}</td>
+      <td style="font-size:12px;font-weight:600">${a.tage}</td>
+      <td><span style="padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500;${ABS_STATUS_CSS[a.status]||''}">${a.status}</span></td>
+      <td style="font-size:11px;color:#9CA3AF">${a.notiz||''}</td>
+      <td><button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteAbsenz('${a.id}')">Löschen</button></td>
+    </tr>`).join('');
+  }
+  updFerienSaldo();
+}
+
+function updFerienSaldo(){
+  const m = mitarbeiter.find(x=>x.id===activeMAId);
+  if(!m) return;
+  const jahr = document.getElementById('abs-filter-jahr')?.value || String(new Date().getFullYear());
+  const anspruch = parseFloat(m.ferien_anspruch_tage)||0;
+  const bezogen = absenzen.filter(a=>a.typ==='ferien' && a.status==='genehmigt' && a.von_datum?.startsWith(jahr)).reduce((s,a)=>s+parseFloat(a.tage||0),0);
+  const rest = anspruch - bezogen;
+  document.getElementById('fer-anspruch').textContent = anspruch;
+  document.getElementById('fer-bezogen').textContent = bezogen;
+  document.getElementById('fer-rest').textContent = rest;
+  document.getElementById('map-ferien-rest').textContent = rest;
+}
+
+function openNAbsenz(){
+  const e=i=>document.getElementById(i);
+  e('abs-typ').value='ferien'; e('abs-von').value=''; e('abs-bis').value=''; e('abs-tage').value='';
+  e('abs-status').value='genehmigt'; e('abs-notiz').value='';
+  document.getElementById('mo-nabsenz').classList.add('open');
+}
+
+function berechneTage(von, bis){
+  if(!von||!bis) return 0;
+  const d1=new Date(von), d2=new Date(bis);
+  const diff = Math.round((d2-d1)/86400000)+1;
+  return diff > 0 ? diff : 0;
+}
+
+async function saveAbsenz(){
+  if(!activeMAId) return;
+  const von = document.getElementById('abs-von').value;
+  const bis = document.getElementById('abs-bis').value;
+  if(!von||!bis){ toast('Von und Bis sind Pflicht'); return; }
+  const tageInput = document.getElementById('abs-tage').value;
+  const tage = tageInput ? parseFloat(tageInput) : berechneTage(von,bis);
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  const payload = {
+    mandant_id: mid, mitarbeiter_id: activeMAId,
+    typ: document.getElementById('abs-typ').value,
+    von_datum: von, bis_datum: bis, tage,
+    status: document.getElementById('abs-status').value,
+    notiz: document.getElementById('abs-notiz').value
+  };
+  const {data, error} = await sb.from('mitarbeiter_absenzen').insert(payload).select().single();
+  if(error){ toast('Fehler: '+error.message); return; }
+  absenzen.unshift({...data, _dbId:data.id});
+  closeMo('mo-nabsenz');
+  rndrAbsenzen();
+  toast('Absenz erfasst ✓');
+}
+
+async function deleteAbsenz(id){
+  if(!confirm('Absenz löschen?')) return;
+  const {error} = await sb.from('mitarbeiter_absenzen').delete().eq('id', id);
+  if(error){ toast('Fehler: '+error.message); return; }
+  absenzen = absenzen.filter(a=>a.id!==id);
+  rndrAbsenzen();
+  toast('Gelöscht');
+}
+
+// ── Dokumente (CV, Zertifikate, Diplome, Vertraege) ──
+async function loadMADokumenteFuerMA(mitarbeiterId){
+  const {data} = await sb.from('dokumente').select('*').eq('mitarbeiter_id', mitarbeiterId).order('created_at',{ascending:false});
+  maDokumente = data||[];
+  rndrMADok();
+}
+
+const MADOK_TYP_LABEL = {cv:'CV / Lebenslauf', zertifikat:'Zertifikat', diplom:'Diplom', vertrag:'Arbeitsvertrag', fuehrungszeugnis:'Führungszeugnis', sonstiges:'Sonstiges'};
+
+function rndrMADok(){
+  document.getElementById('map-dok-cnt').textContent = maDokumente.length;
+  const list = document.getElementById('madok-list');
+  if(!maDokumente.length){ list.innerHTML = '<div style="text-align:center;padding:20px;color:#9CA3AF;font-size:13px">Noch keine Dokumente hochgeladen</div>'; return; }
+  const heute = new Date().toISOString().split('T')[0];
+  const in60 = new Date(); in60.setDate(in60.getDate()+60);
+  const grenze = in60.toISOString().split('T')[0];
+  list.innerHTML = maDokumente.map(d=>{
+    let ablaufBadge = '';
+    if(d.ablaufdatum){
+      if(d.ablaufdatum < heute) ablaufBadge = `<span style="background:#FEE2E2;color:#DC2626;padding:2px 8px;border-radius:5px;font-size:10.5px;font-weight:500;margin-left:6px">Abgelaufen ${fD(d.ablaufdatum)}</span>`;
+      else if(d.ablaufdatum <= grenze) ablaufBadge = `<span style="background:#FEF3C7;color:#D97706;padding:2px 8px;border-radius:5px;font-size:10.5px;font-weight:500;margin-left:6px">Läuft ab ${fD(d.ablaufdatum)}</span>`;
+      else ablaufBadge = `<span style="color:#9CA3AF;font-size:10.5px;margin-left:6px">Gültig bis ${fD(d.ablaufdatum)}</span>`;
+    }
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #E5E7EB;border-radius:8px">
+      <div style="width:34px;height:34px;border-radius:7px;background:#EFF6FF;color:#2563EB;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${(d.datei_name||'').split('.').pop().slice(0,3).toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:#1A3560">${MADOK_TYP_LABEL[d.typ]||d.typ} ${ablaufBadge}</div>
+        <div style="font-size:11px;color:#9CA3AF;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.datei_name||d.name||''}</div>
+      </div>
+      ${d.datei_url ? `<a href="${d.datei_url}" target="_blank" class="aaction-btn" style="text-decoration:none">Öffnen</a>` : ''}
+      <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteMADok('${d.id}')">Löschen</button>
+    </div>`;
+  }).join('');
+}
+
+async function uploadMADok(file){
+  if(!file || !activeMAId) return;
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid){ toast('Bitte zuerst Gemeinde wählen'); return; }
+  const typ = document.getElementById('madok-typ').value;
+  const ablauf = document.getElementById('madok-ablauf').value || null;
+  toast('Wird hochgeladen...');
+  try {
+    const path = `${mid}/mitarbeiter/${activeMAId}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+    const { error: upErr } = await sb.storage.from('dokumente').upload(path, file, { upsert: true, contentType: file.type });
+    let datei_url = '';
+    if(!upErr){
+      const { data: urlData } = sb.storage.from('dokumente').getPublicUrl(path);
+      datei_url = urlData?.publicUrl || '';
+    } else {
+      toast('Speicher-Fehler: '+upErr.message); return;
+    }
+    const payload = { name: MADOK_TYP_LABEL[typ]||typ, typ, datei_url, datei_name: file.name, datei_groesse: file.size, mitarbeiter_id: activeMAId, ablaufdatum: ablauf };
+    const saved = await dbSave('dokumente', payload);
+    if(saved){
+      maDokumente.unshift(saved);
+      rndrMADok();
+      checkAblaufendeDokumente();
+      document.getElementById('madok-file').value = '';
+      document.getElementById('madok-ablauf').value = '';
+      toast('✅ Dokument hochgeladen');
+    }
+  } catch(e){ toast('Fehler: '+e.message); }
+}
+
+async function deleteMADok(id){
+  if(!confirm('Dokument löschen?')) return;
+  const {error} = await sb.from('dokumente').delete().eq('id', id);
+  if(error){ toast('Fehler: '+error.message); return; }
+  maDokumente = maDokumente.filter(d=>d.id!==id);
+  rndrMADok();
+  checkAblaufendeDokumente();
+  toast('Gelöscht');
+}
+
+// ── Zugang (Verknuepfung zu Benutzer-Login) ──
+async function rndrZugang(m){
+  const el = document.getElementById('map-zugang-content');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:#9CA3AF;font-size:13px">Prüfe Zugang...</div>';
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  const {data} = await sb.from('profiles').select('id,email,rolle,aktiv').eq('mandant_id', mid).eq('email', m.email.toLowerCase()).maybeSingle();
+  if(data){
+    el.innerHTML = `
+      <div style="background:#DCFCE7;border:1px solid #86efac;border-radius:10px;padding:16px">
+        <div style="font-size:14px;font-weight:600;color:#16A34A;margin-bottom:4px">🔑 Hat App-Zugang</div>
+        <div style="font-size:13px;color:#15803d">Rolle: <strong>${data.rolle}</strong> · Status: <strong>${data.aktiv?'Aktiv':'Inaktiv'}</strong></div>
+        <div style="font-size:12px;color:#15803d;margin-top:4px">E-Mail: ${data.email}</div>
+      </div>`;
+  } else {
+    el.innerHTML = `
+      <div style="background:#FEF3C7;border:1px solid #fde68a;border-radius:10px;padding:16px">
+        <div style="font-size:14px;font-weight:600;color:#D97706;margin-bottom:8px">⚠ Kein App-Zugang</div>
+        <div style="font-size:13px;color:#92400e;margin-bottom:12px">Dieser Mitarbeiter hat noch keinen Login für AJ Connect. Über den Button unten kannst du eine Einladung senden.</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select class="fs" id="zugang-rolle" style="max-width:160px">
+            <option value="mitarbeiter">Mitarbeiter</option>
+            <option value="leiter">Leiter</option>
+            <option value="admin">Admin</option>
+          </select>
+          <button class="tbtn tbtn-navy" style="font-size:12px" onclick="inviteMAasUser('${m.id}')">Benutzer-Zugang einladen</button>
+        </div>
+      </div>`;
+  }
+}
+
+async function inviteMAasUser(maId){
+  const m = mitarbeiter.find(x=>x.id===maId);
+  if(!m) return;
+  const rolle = document.getElementById('zugang-rolle')?.value || 'mitarbeiter';
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  const branding = await getGemeindeBranding();
+  toast('Einladung wird gesendet...');
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${SB_URL}/functions/v1/invite-user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({
+        email: m.email, name: `${m.vorname} ${m.nachname}`, rolle, mandant_id: mid,
+        gemeindeName: branding.name, gemeindeAdresse: branding.adresse, logoUrl: branding.logoUrl
+      })
+    });
+    const result = await res.json();
+    if(!res.ok || result.error){ toast('Fehler: '+(result.error||'Unbekannt')); return; }
+    toast('✅ Einladung gesendet an '+m.email);
+    rndrZugang(m);
+  } catch(e){ toast('Fehler: '+e.message); }
 }
 
 // ═══════════════════════════════════════════
@@ -6212,22 +6599,27 @@ async function doRegister() {
 </div>
 
 
-<!-- MODAL: NEUER/BEARBEITEN MITARBEITER -->
+<!-- MODAL: NEUER MITARBEITER (Schnellanlage) -->
 <div class="mo" id="mo-nma">
-  <div class="modal" style="max-width:520px">
-    <div class="mh"><div class="mt2" id="nma-title">👤 Neuer Mitarbeiter</div><div class="mx" onclick="closeMo('mo-nma')">✕</div></div>
+  <div class="modal" style="max-width:560px">
+    <div class="mh"><div class="mt2">👤 Neuer Mitarbeiter</div><div class="mx" onclick="closeMo('mo-nma')">✕</div></div>
     <div class="mb2"><div class="fg2">
       <div class="fgg"><label class="fl">Vorname *</label><input class="fi" id="ma-vorname"></div>
       <div class="fgg"><label class="fl">Nachname *</label><input class="fi" id="ma-nachname"></div>
       <div class="fgg full"><label class="fl">E-Mail *</label><input class="fi" id="ma-email" type="email" placeholder="mitarbeiter@gemeinde.ch"></div>
       <div class="fgg"><label class="fl">Telefon</label><input class="fi" id="ma-telefon" placeholder="+41 79 123 45 67"></div>
       <div class="fgg"><label class="fl">Position</label><input class="fi" id="ma-position" placeholder="z.B. Jugendarbeiter"></div>
-      <div class="fgg"><label class="fl">Abteilung</label><input class="fi" id="ma-abteilung" placeholder="z.B. Jugend, Musik, Verwaltung"></div>
+      <div class="fgg"><label class="fl">Abteilung</label><input class="fi" id="ma-abteilung" list="ma-abt-list" placeholder="z.B. Jugend, Musik, Verwaltung">
+        <datalist id="ma-abt-list"></datalist>
+      </div>
+      <div class="fgg"><label class="fl">Anstellungsart</label><select class="fs" id="ma-anstellungsart">
+        <option>Fest angestellt</option><option>Befristet</option><option>Praktikum</option><option>Freiwillig / Ehrenamt</option><option>Aushilfe</option>
+      </select></div>
+      <div class="fgg"><label class="fl">Pensum (%)</label><input class="fi" id="ma-pensum" type="number" min="0" max="100" value="100"></div>
       <div class="fgg"><label class="fl">Eintrittsdatum</label><input class="fi" id="ma-eintritt" type="date"></div>
       <div class="fgg"><label class="fl">Status</label><select class="fs" id="ma-status"><option value="aktiv">Aktiv</option><option value="inaktiv">Inaktiv</option></select></div>
-      <div class="fgg full"><label class="fl">Notizen</label><textarea class="fta" id="ma-notizen" placeholder="Interne Notizen..."></textarea></div>
     </div></div>
-    <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-nma')">Abbrechen</button><button class="tbtn tbtn-navy" id="nma-save-btn" onclick="saveMA()">Speichern</button></div>
+    <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-nma')">Abbrechen</button><button class="tbtn tbtn-navy" id="nma-save-btn" onclick="saveMA()">Anlegen</button></div>
   </div>
 </div>
 
@@ -6240,6 +6632,138 @@ async function doRegister() {
       <div id="termin-mitarbeiter-list" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto"></div>
     </div>
     <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-termin')">Abbrechen</button><button class="tbtn tbtn-navy" id="termin-send-btn" onclick="sendTerminAnMitarbeiter()">Termin versenden</button></div>
+  </div>
+</div>
+
+<!-- MITARBEITER DETAIL PANEL -->
+<div class="kov" id="ma-ov" onclick="closeMAP()"></div>
+<div class="kpanel" id="ma-panel">
+  <div class="ktop">
+    <div class="kcap">Mitarbeiter</div>
+    <div style="display:flex;gap:6px;margin-left:auto">
+      <div id="ma-panel-del-wrap">
+        <button style="padding:5px 11px;border-radius:7px;font-size:11px;background:#FEE2E2;color:#DC2626;border:1px solid #fca5a5;cursor:pointer;font-family:inherit" onclick="deleteMAFromPanel()">Löschen</button>
+      </div>
+      <div class="kclose" onclick="closeMAP()"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>
+    </div>
+  </div>
+  <div class="khdr">
+    <div style="width:60px;height:60px;border-radius:12px;background:#1A3560;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;font-weight:600;color:white" id="map-avatar">—</div>
+    <div class="kinfo">
+      <div class="kname" id="map-name"></div>
+      <div class="ksub" id="map-sub"></div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <span id="map-status-badge" style="padding:2px 9px;border-radius:5px;font-size:11px;font-weight:500"></span>
+        <span id="map-pensum-badge" style="background:#F4F5F7;color:#6B7280;padding:2px 9px;border-radius:5px;font-size:11px"></span>
+      </div>
+    </div>
+    <div class="kqgrid">
+      <div class="kq"><div class="kqn" id="map-ferien-rest">—</div><div class="kql">Ferientage Rest</div></div>
+    </div>
+  </div>
+  <div class="ktabs">
+    <div class="ktab on" onclick="sTabMA('map-stamm',this)">Stammdaten</div>
+    <div class="ktab" onclick="sTabMA('map-ferien',this)">Ferien & Absenzen<span class="ktab-cnt" id="map-abs-cnt">0</span></div>
+    <div class="ktab" onclick="sTabMA('map-dok',this)">Dokumente<span class="ktab-cnt" id="map-dok-cnt">0</span></div>
+    <div class="ktab" onclick="sTabMA('map-zugang',this)">Zugang</div>
+  </div>
+  <div class="kbody" style="padding:14px 18px">
+
+    <!-- TAB: STAMMDATEN -->
+    <div class="tpane on" id="map-stamm">
+      <div class="cs" id="map-sec-persoenlich">
+        <div class="csh"><div class="cst"><div class="csdot" style="background:#2563EB"></div>Persönliche Daten</div><span class="cse" onclick="tEditMA('map-sec-persoenlich',this)">Bearbeiten</span></div>
+        <div class="csb">
+          <div class="frow"><span class="flbl">Vorname</span><span class="fval"><span class="fvt" id="map-vorname">—</span><input class="fvi" id="map-vorname-i"></span></div>
+          <div class="frow"><span class="flbl">Nachname</span><span class="fval"><span class="fvt" id="map-nachname">—</span><input class="fvi" id="map-nachname-i"></span></div>
+          <div class="frow"><span class="flbl">Geburtsdatum</span><span class="fval"><span class="fvt" id="map-geburt">—</span><input class="fvi" id="map-geburt-i" type="date"></span></div>
+          <div class="frow"><span class="flbl">Adresse</span><span class="fval"><span class="fvt" id="map-adresse">—</span><input class="fvi" id="map-adresse-i"></span></div>
+          <div class="frow"><span class="flbl">PLZ / Ort</span><span class="fval"><span class="fvt" id="map-plzort">—</span><input class="fvi" id="map-plzort-i"></span></div>
+          <div class="frow"><span class="flbl">Telefon</span><span class="fval"><span class="fvt" id="map-telefon">—</span><input class="fvi" id="map-telefon-i"></span></div>
+          <div class="frow"><span class="flbl">E-Mail</span><span class="fval"><span class="fvt" id="map-email">—</span><input class="fvi" id="map-email-i" type="email"></span></div>
+        </div>
+      </div>
+      <div class="cs" id="map-sec-anstellung">
+        <div class="csh"><div class="cst"><div class="csdot" style="background:#16A34A"></div>Anstellung</div><span class="cse" onclick="tEditMA('map-sec-anstellung',this)">Bearbeiten</span></div>
+        <div class="csb">
+          <div class="frow"><span class="flbl">Personalnummer</span><span class="fval"><span class="fvt" id="map-personalnr">—</span><input class="fvi" id="map-personalnr-i"></span></div>
+          <div class="frow"><span class="flbl">Position</span><span class="fval"><span class="fvt" id="map-position">—</span><input class="fvi" id="map-position-i"></span></div>
+          <div class="frow"><span class="flbl">Abteilung</span><span class="fval"><span class="fvt" id="map-abteilung">—</span><input class="fvi" id="map-abteilung-i" list="ma-abt-list"></span></div>
+          <div class="frow"><span class="flbl">Anstellungsart</span><span class="fval"><span class="fvt" id="map-anstellungsart">—</span>
+            <select class="fvs" id="map-anstellungsart-i"><option>Fest angestellt</option><option>Befristet</option><option>Praktikum</option><option>Freiwillig / Ehrenamt</option><option>Aushilfe</option></select>
+          </span></div>
+          <div class="frow"><span class="flbl">Pensum</span><span class="fval"><span class="fvt" id="map-pensum">—</span><input class="fvi" id="map-pensum-i" type="number" min="0" max="100"></span></div>
+          <div class="frow"><span class="flbl">Vorgesetzte/r</span><span class="fval"><span class="fvt" id="map-vorgesetzter">—</span>
+            <select class="fvs" id="map-vorgesetzter-i"><option value="">— Keine/r —</option></select>
+          </span></div>
+          <div class="frow"><span class="flbl">Eintrittsdatum</span><span class="fval"><span class="fvt" id="map-eintritt">—</span><input class="fvi" id="map-eintritt-i" type="date"></span></div>
+          <div class="frow"><span class="flbl">Austrittsdatum</span><span class="fval"><span class="fvt" id="map-austritt">—</span><input class="fvi" id="map-austritt-i" type="date"></span></div>
+          <div class="frow"><span class="flbl">Ferienanspruch/Jahr</span><span class="fval"><span class="fvt" id="map-ferienanspruch">—</span><input class="fvi" id="map-ferienanspruch-i" type="number" min="0" max="60"></span></div>
+          <div class="frow"><span class="flbl">Status</span><span class="fval"><span class="fvt" id="map-status">—</span>
+            <select class="fvs" id="map-status-i"><option value="aktiv">Aktiv</option><option value="inaktiv">Inaktiv</option></select>
+          </span></div>
+        </div>
+      </div>
+      <div class="cs" id="map-sec-notizen">
+        <div class="csh"><div class="cst"><div class="csdot" style="background:#9CA3AF"></div>Notizen</div><span class="cse" onclick="tEditMA('map-sec-notizen',this)">Bearbeiten</span></div>
+        <div class="csb">
+          <div class="frow"><span class="flbl">Notizen</span><span class="fval"><span class="fvt" id="map-notizen">—</span><input class="fvi" id="map-notizen-i"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: FERIEN & ABSENZEN -->
+    <div class="tpane" id="map-ferien">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+        <div style="background:#F4F5F7;border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:700;color:#1A3560" id="fer-anspruch">0</div><div style="font-size:11px;color:#6B7280">Anspruch (Jahr)</div></div>
+        <div style="background:#F4F5F7;border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:700;color:#D97706" id="fer-bezogen">0</div><div style="font-size:11px;color:#6B7280">Bezogen</div></div>
+        <div style="background:#F4F5F7;border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:700;color:#16A34A" id="fer-rest">0</div><div style="font-size:11px;color:#6B7280">Rest</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <select class="afs" id="abs-filter-jahr" onchange="rndrAbsenzen()" style="width:110px"></select>
+        <button class="tbtn tbtn-navy" style="font-size:12px" onclick="openNAbsenz()">+ Neue Absenz</button>
+      </div>
+      <div style="overflow-x:auto"><table><thead><tr><th>Zeitraum</th><th>Typ</th><th>Tage</th><th>Status</th><th>Notiz</th><th style="width:70px"></th></tr></thead><tbody id="abs-tbody"><tr><td colspan="6" class="aempty">Keine Absenzen</td></tr></tbody></table></div>
+    </div>
+
+    <!-- TAB: DOKUMENTE -->
+    <div class="tpane" id="map-dok">
+      <div style="background:#FAFAFA;border:1px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+        <div style="flex:1;min-width:140px"><label class="fl">Dokumenttyp</label><select class="fs" id="madok-typ">
+          <option value="cv">CV / Lebenslauf</option><option value="zertifikat">Zertifikat</option><option value="diplom">Diplom</option><option value="vertrag">Arbeitsvertrag</option><option value="fuehrungszeugnis">Führungszeugnis</option><option value="sonstiges">Sonstiges</option>
+        </select></div>
+        <div style="min-width:150px"><label class="fl">Ablaufdatum (optional)</label><input class="fi" id="madok-ablauf" type="date"></div>
+        <div>
+          <input type="file" id="madok-file" style="display:none" onchange="uploadMADok(this.files[0])">
+          <button class="tbtn tbtn-navy" style="font-size:12px" onclick="document.getElementById('madok-file').click()">📎 Datei hochladen</button>
+        </div>
+      </div>
+      <div id="madok-list" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+
+    <!-- TAB: ZUGANG -->
+    <div class="tpane" id="map-zugang">
+      <div id="map-zugang-content"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: NEUE ABSENZ -->
+<div class="mo" id="mo-nabsenz" style="z-index:900">
+  <div class="modal" style="max-width:440px">
+    <div class="mh"><div class="mt2">🏖 Neue Absenz erfassen</div><div class="mx" onclick="closeMo('mo-nabsenz')">✕</div></div>
+    <div class="mb2">
+      <div class="fgg"><label class="fl">Typ</label><select class="fs" id="abs-typ">
+        <option value="ferien">Ferien</option><option value="krankheit">Krankheit</option><option value="unfall">Unfall</option><option value="militaer">Militär / Zivildienst</option><option value="weiterbildung">Weiterbildung</option><option value="unbezahlt">Unbezahlter Urlaub</option><option value="sonstiges">Sonstiges</option>
+      </select></div>
+      <div class="fgg"><label class="fl">Von *</label><input class="fi" id="abs-von" type="date"></div>
+      <div class="fgg"><label class="fl">Bis *</label><input class="fi" id="abs-bis" type="date"></div>
+      <div class="fgg"><label class="fl">Tage</label><input class="fi" id="abs-tage" type="number" min="0.5" step="0.5"></div>
+      <div class="fgg"><label class="fl">Status</label><select class="fs" id="abs-status"><option value="genehmigt">Genehmigt</option><option value="beantragt">Beantragt</option><option value="abgelehnt">Abgelehnt</option></select></div>
+      <div class="fgg full"><label class="fl">Notiz</label><input class="fi" id="abs-notiz"></div>
+    </div>
+    <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-nabsenz')">Abbrechen</button><button class="tbtn tbtn-navy" onclick="saveAbsenz()">Speichern</button></div>
   </div>
 </div>
 
