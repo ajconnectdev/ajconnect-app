@@ -2483,36 +2483,32 @@ function dmsDrop(e){e.preventDefault();document.getElementById('dms-drop').style
 
 // ── PDF-Erzeugung für Spendenbescheinigung (jsPDF) ──
 // ── Wiederverwendbarer PDF-Footer für ALLE Dokumente: Logo unten links, Adresse/Kontakt unten mittig ──
-async function drawPdfFooter(doc, branding) {
-  const navy = [13, 31, 60];
-  const gold = [200, 148, 26];
-  const pageW = 210, pageH = 297;
-  const footerTop = pageH - 28;
+// Lädt ein Bild und ermittelt seine Originalgrösse (für seitenrichtige Skalierung)
+function loadImageElement(src){
+  return new Promise((resolve,reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
 
-  // Trennlinie
+// ── Wiederverwendbarer PDF-Footer für ALLE Dokumente: Adresse + Kontakt zentriert unten ──
+function drawPdfFooter(doc, branding) {
+  const pageW = 210, pageH = 297;
+  const footerTop = pageH - 22;
+  const centerX = pageW/2;
+
   doc.setDrawColor(230,230,230); doc.setLineWidth(0.3);
   doc.line(20, footerTop, pageW-20, footerTop);
 
-  // Logo unten links (falls vorhanden), sonst kleines Platzhalter-Kreuz
-  if (branding?.logoUrl) {
-    const dataUri = await imageUrlToDataUri(branding.logoUrl);
-    if (dataUri) {
-      try { doc.addImage(dataUri, 20, footerTop+5, 16, 16, undefined, 'FAST'); } catch(e) {}
-    }
-  } else {
-    doc.setFillColor(...gold);
-    doc.rect(26.5, footerTop+6, 1.6, 13, 'F');
-    doc.rect(23, footerTop+10.5, 8.6, 1.6, 'F');
-  }
-
-  // Adresse zentriert, darunter E-Mail · Website
-  const centerX = pageW/2;
-  doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(...navy);
-  doc.text(branding?.name || 'Gemeinde', centerX, footerTop+9, { align:'center' });
-  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(130,130,130);
-  if (branding?.adresse) doc.text(branding.adresse, centerX, footerTop+14, { align:'center' });
-  const contactLine = [branding?.email, branding?.website].filter(Boolean).join('  ·  ');
-  if (contactLine) doc.text(contactLine, centerX, footerTop+19, { align:'center' });
+  // Gleiche Schrift/Farbe wie übriger Dokumenttext (z.B. "Spender/in", "Ausgestellt am")
+  doc.setFont('helvetica','normal'); doc.setFontSize(10.5); doc.setTextColor(60,60,60);
+  let fy = footerTop + 7;
+  if (branding?.adresse) { doc.text(`${branding.name || ''} · ${branding.adresse}`, centerX, fy, { align:'center' }); fy += 5.5; }
+  else if (branding?.name) { doc.text(branding.name, centerX, fy, { align:'center' }); fy += 5.5; }
+  const contactLine = [branding?.email, branding?.website].filter(Boolean).join('   ·   ');
+  if (contactLine) doc.text(contactLine, centerX, fy, { align:'center' });
 }
 
 async function buildSpendenPDF(m, jahr, jahrSpenden, gesamt, branding) {
@@ -2521,23 +2517,42 @@ async function buildSpendenPDF(m, jahr, jahrSpenden, gesamt, branding) {
   const navy = [13, 31, 60];
   const pageW = 210;
   const gemeinde = branding?.name || 'Gemeinde';
+  let y = 20;
 
-  // Header — schlicht, modern, ohne Logo (Logo sitzt im Footer)
-  doc.setFillColor(...navy);
-  doc.rect(0, 0, pageW, 30, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(17);
-  doc.text(`Spendenbescheinigung ${jahr}`, 20, 19);
+  // Logo oben zentriert (weisse Seite, kein Farbbalken)
+  if (branding?.logoUrl) {
+    const dataUri = await imageUrlToDataUri(branding.logoUrl);
+    if (dataUri) {
+      try {
+        const img = await loadImageElement(dataUri);
+        const maxW = 55, maxH = 24;
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const scale = Math.min(maxW/w, maxH/h);
+        w *= scale; h *= scale;
+        doc.addImage(dataUri, (pageW-w)/2, y, w, h, undefined, 'FAST');
+        y += h + 10;
+      } catch(e) { y += 4; }
+    }
+  }
 
-  // Body text
+  // Gemeindename zentriert
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...navy);
+  doc.text(gemeinde, pageW/2, y, { align:'center' });
+  y += 12;
+
+  // Titel zentriert
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(...navy);
+  doc.text(`Spendenbescheinigung ${jahr}`, pageW/2, y, { align:'center' });
+  y += 18;
+
+  // Body text (links)
   doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(60,60,60);
-  doc.text(`${gemeinde}`, 20, 44);
-  doc.text(`Ausgestellt am: ${new Date().toLocaleDateString('de-CH')}`, 20, 50);
-  doc.text(`Spender/in: ${m.anrede} ${m.vorname} ${m.nachname}`, 20, 60);
-  if (m.strasse || m.plzort) doc.text(`${m.strasse||''}${m.strasse&&m.plzort?', ':''}${m.plzort||''}`, 20, 66);
+  doc.text(`Ausgestellt am: ${new Date().toLocaleDateString('de-CH')}`, 20, y); y += 8;
+  doc.text(`Spender/in: ${m.anrede} ${m.vorname} ${m.nachname}`, 20, y); y += 8;
+  if (m.strasse || m.plzort) { doc.text(`${m.strasse||''}${m.strasse&&m.plzort?', ':''}${m.plzort||''}`, 20, y); y += 8; }
+  y += 6;
 
   // Table header
-  let y = 82;
   doc.setFillColor(250, 250, 250);
   doc.rect(20, y-6, 170, 9, 'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(120,120,120);
@@ -2550,7 +2565,7 @@ async function buildSpendenPDF(m, jahr, jahrSpenden, gesamt, branding) {
   doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(60,60,60);
   const wegLabel = { twint:'Twint', bar:'Bar', ueberweisung:'Überweisung', karte:'Karte' };
   jahrSpenden.forEach(s => {
-    if (y > 245) { doc.addPage(); y = 25; }
+    if (y > 240) { doc.addPage(); y = 25; }
     doc.text(fD(s.datum), 22, y);
     doc.text(String(s.zweck||'—'), 65, y);
     doc.text(wegLabel[s.zahlungsweg]||s.zahlungsweg||'—', 120, y);
@@ -2568,14 +2583,14 @@ async function buildSpendenPDF(m, jahr, jahrSpenden, gesamt, branding) {
 
   // Hinweistext
   y += 14;
-  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(150,150,150);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(140,140,140);
   doc.text('Diese Bescheinigung wurde automatisch generiert und ist ohne Unterschrift gültig.', 20, y);
 
-  // Einheitlicher Footer (Logo unten links, Gemeinde/Adresse/Kontakt unten mittig) — auf jeder Seite
+  // Einheitlicher Footer auf jeder Seite
   const pageCount = doc.internal.getNumberOfPages();
   for (let p = 1; p <= pageCount; p++) {
     doc.setPage(p);
-    await drawPdfFooter(doc, branding);
+    drawPdfFooter(doc, branding);
   }
 
   return doc.output('datauristring').split(',')[1]; // base64 ohne data:-Prefix
@@ -2617,6 +2632,12 @@ async function genQuittung(){
 
   if(!jahrSpenden.length){
     toast(`Keine Spenden für ${jahr} bei diesem Mitglied erfasst`);
+    return;
+  }
+
+  const frage = `Spendenbescheinigung ${jahr} für ${m.vorname} ${m.nachname} (CHF ${t.toLocaleString('de-CH')}) per E-Mail versenden?`;
+  if(!confirm(frage)){
+    toast('Abgebrochen');
     return;
   }
 
