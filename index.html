@@ -2348,8 +2348,9 @@ async function delM(id){
 }
 function exportCSV(){const rows=[['Anrede','Vorname','Nachname','E-Mail','Mobil','Status','Eingetreten']];members.forEach(m=>{rows.push([m.anrede,m.vorname,m.nachname,m.email,m.mobil,m.status,m.eingetreten]);});const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.map(r=>r.map(v=>`"${v||''}"`).join(',')).join('\n'));a.download='mitglieder.csv';a.click();toast('CSV exportiert');}
 
-function openK(id){
+async function openK(id){
   const m=members.find(x=>x.id===id);if(!m)return;activeId=id;
+  if(!spenden.length) await loadSpenden();
   // Highlight selected row
   document.querySelectorAll('tbody tr').forEach(r=>r.style.background='');
   const row=document.getElementById('row-'+id);
@@ -2360,7 +2361,8 @@ function openK(id){
   const r=gR(m.rolleId),g=gG(m.groupId);
   document.getElementById('k-badges').innerHTML=`<span class="kchip ${sC(m.status)}">${sL(m.status)}</span>`+(r?`<span class="krole">${r.name}</span>`:'')+( g?`<span class="kchip" style="background:#F4F5F7;color:#6B7280">${g.name}</span>`:'');
   const yrs=aY(m.eingetreten);document.getElementById('kq-j').textContent=yrs!==null?yrs:'—';
-  const st=m.spenden.reduce((s,x)=>s+x.betrag,0);document.getElementById('kq-s').textContent=st>0?String(st):'—';
+  const mSpenden=getMemberSpenden(m);
+  const st=mSpenden.reduce((s,x)=>s+parseFloat(x.betrag||0),0);document.getElementById('kq-s').textContent=st>0?String(st):'—';
   const sv=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val||'—';};
   const si=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
   sv('k-vn',m.vorname);si('k-vn-i',m.vorname);sv('k-nn',m.nachname);si('k-nn-i',m.nachname);
@@ -2381,9 +2383,9 @@ function openK(id){
   const ks=document.getElementById('k-st-i');if(ks)ks.value=m.status;
   const kr=document.getElementById('k-rolle-i');if(kr&&m.rolleId)kr.value=m.rolleId;
   const kg=document.getElementById('k-grp-i');if(kg)kg.value=m.groupId||0;
-  const s26=m.spenden.filter(s=>s.datum.startsWith('2026')).reduce((s,x)=>s+x.betrag,0);
-  document.getElementById('kf-t').textContent=`CHF ${s26.toLocaleString('de-CH')}`;document.getElementById('kf-c').textContent=m.spenden.length;document.getElementById('kt-sp').textContent=m.spenden.length;
-  document.getElementById('kf-body').innerHTML=m.spenden.length?m.spenden.map(s=>`<tr><td>${fD(s.datum)}</td><td><strong>CHF ${s.betrag}</strong></td><td>${zwB(s.weg)}</td><td>${s.zweck}</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:#9CA3AF;padding:12px">Keine Spenden</td></tr>';
+  const s26=mSpenden.filter(s=>s.datum.startsWith('2026')).reduce((s,x)=>s+parseFloat(x.betrag||0),0);
+  document.getElementById('kf-t').textContent=`CHF ${s26.toLocaleString('de-CH')}`;document.getElementById('kf-c').textContent=mSpenden.length;document.getElementById('kt-sp').textContent=mSpenden.length;
+  document.getElementById('kf-body').innerHTML=mSpenden.length?mSpenden.slice().sort((a,b)=>b.datum.localeCompare(a.datum)).map(s=>`<tr><td>${fD(s.datum)}</td><td><strong>CHF ${s.betrag}</strong></td><td>${zwB(s.zahlungsweg)}</td><td>${s.zweck}</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:#9CA3AF;padding:12px">Keine Spenden</td></tr>';
   rndrDms();document.querySelectorAll('.cs').forEach(s=>s.classList.remove('editing'));document.querySelectorAll('.cse').forEach(b=>{if(b.textContent.includes('Fertig')){b.textContent='Bearbeiten';b.style.color='';}});
   // Show delete only for admin/superadmin
   const delBtn=document.getElementById('k-del-btn');
@@ -2453,13 +2455,21 @@ async function genQuittung(){
   if(!activeId)return;
   const m=members.find(x=>x.id===activeId);
   if(!m)return;
-  const jahrSpenden=m.spenden.filter(s=>s.datum.startsWith('2026'));
-  const t=jahrSpenden.reduce((s,x)=>s+x.betrag,0);
+  if(!spenden.length) await loadSpenden();
+  const jahr = String(new Date().getFullYear());
+  const alleSpenden = getMemberSpenden(m);
+  const jahrSpenden = alleSpenden.filter(s=>s.datum.startsWith(jahr));
+  const t = jahrSpenden.reduce((s,x)=>s+parseFloat(x.betrag||0),0);
+
+  if(!jahrSpenden.length){
+    toast(`Keine Spenden für ${jahr} bei diesem Mitglied erfasst`);
+    return;
+  }
 
   // Fallback: .txt Download (falls kein E-Mail oder Versand fehlschlägt)
   function downloadTxt(){
-    const lines=['SPENDENBESCHEINIGUNG 2026','='.repeat(30),'',`Gemeinde: ${_S?.mandant_name||'Gemeinde'}`,`Ausgestellt: ${new Date().toLocaleDateString('de-CH')}`,``,`Spender/in: ${m.anrede} ${m.vorname} ${m.nachname}`,'','Spenden 2026:',...jahrSpenden.map(s=>`  ${fD(s.datum)}   CHF ${s.betrag}   ${s.zweck}`),``,`GESAMT 2026: CHF ${t.toLocaleString('de-CH')}`];
-    const a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(lines.join('\n'));a.download=`Spendenbescheinigung_${m.nachname}.txt`;a.click();
+    const lines=[`SPENDENBESCHEINIGUNG ${jahr}`,'='.repeat(30),'',`Gemeinde: ${_S?.mandant_name||'Gemeinde'}`,`Ausgestellt: ${new Date().toLocaleDateString('de-CH')}`,``,`Spender/in: ${m.anrede} ${m.vorname} ${m.nachname}`,'',`Spenden ${jahr}:`,...jahrSpenden.map(s=>`  ${fD(s.datum)}   CHF ${s.betrag}   ${s.zweck}`),``,`GESAMT ${jahr}: CHF ${t.toLocaleString('de-CH')}`];
+    const a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(lines.join('\n'));a.download=`Spendenbescheinigung_${m.nachname}_${jahr}.txt`;a.click();
   }
 
   if(!m.email){
@@ -2472,7 +2482,7 @@ async function genQuittung(){
   const result = await sendEmail('spendenbescheinigung', m.email, {
     name: `${m.anrede} ${m.vorname} ${m.nachname}`,
     gemeinde: _S?.mandant_name || 'Gemeinde',
-    jahr: '2026',
+    jahr: jahr,
     gesamtbetrag: `CHF ${t.toLocaleString('de-CH')}`,
     spenden: jahrSpenden.map(s => ({ datum: fD(s.datum), betrag: `CHF ${s.betrag}`, zweck: s.zweck }))
   });
@@ -2498,6 +2508,11 @@ function refreshSel(){
   const gs=document.getElementById('nm-grp');if(gs)gs.innerHTML='<option value="0">— keine —</option>'+gruppen.map(g=>`<option value="${g.id}">${g.name}</option>`).join('')+'<option value="__n">+ Neue Gruppe...</option>';
   const gf=document.getElementById('m-gf');if(gf)gf.innerHTML='<option value="">Alle Gruppen</option>'+gruppen.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
   const rf=document.getElementById('m-rf');if(rf)rf.innerHTML='<option value="">Alle Rollen</option>'+rollen.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
+  const nsM=document.getElementById('ns-mitglied');
+  if(nsM){
+    const sorted=[...members].sort((a,b)=>(a.nachname||'').localeCompare(b.nachname||''));
+    nsM.innerHTML='<option value="">— Anonym —</option>'+sorted.map(m=>`<option value="${m._dbId||m.id}">${m.vorname} ${m.nachname}</option>`).join('');
+  }
 }
 
 
@@ -3633,6 +3648,13 @@ function renderAM() {
 // ══════════════════════════════════════════════════════════
 let spenden = [], spendenFilt = [], activeSp = null;
 
+// Gibt alle echten Spenden eines Mitglieds aus der 'spenden'-Tabelle zurück
+function getMemberSpenden(m) {
+  if (!m) return [];
+  const mid = m._dbId || m.id;
+  return spenden.filter(s => s.mitglied_id == mid);
+}
+
 async function loadSpenden() {
   const data = await dbLoad('spenden', 'datum');
   spenden = data.map(s => ({...s, _dbId: s.id}));
@@ -3721,8 +3743,7 @@ async function saveSpende() {
     zahlungsweg: document.getElementById('ns-weg').value,
     zweck: document.getElementById('ns-zweck').value,
     notiz: document.getElementById('ns-notiz').value,
-    mitglied_id: m?._dbId || mitglied_id || null,
-    mitglied_name: m ? m.vorname+' '+m.nachname : ''
+    mitglied_id: m?._dbId || mitglied_id || null
   };
   const saved = await dbSave('spenden', payload);
   if(saved) {
@@ -3768,8 +3789,7 @@ async function updateSp(id) {
     betrag, zahlungsweg: document.getElementById('ns-weg').value,
     zweck: document.getElementById('ns-zweck').value,
     notiz: document.getElementById('ns-notiz').value,
-    mitglied_id: m?._dbId||mitglied_id||null,
-    mitglied_name: m?m.vorname+' '+m.nachname:''
+    mitglied_id: m?._dbId||mitglied_id||null
   };
   await dbUpdate('spenden', id, payload);
   const idx = spenden.findIndex(s=>s._dbId===id);
