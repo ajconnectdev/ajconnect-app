@@ -87,6 +87,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 .ab-wait{background:#FEF3C7;color:#D97706}.ab-wait::before{background:#D97706}
 .ab-pro{background:#EDE9FE;color:#7C3AED}.ab-pro::before{background:#7C3AED}
 .ab-str{background:#DBEAFE;color:#2563EB}.ab-str::before{background:#2563EB}
+.ab-std{background:#DCFCE7;color:#16A34A}.ab-std::before{background:#16A34A}
 .aempty{text-align:center;padding:28px;color:#9CA3AF;font-size:13px}
 .aaction-btn{padding:3px 10px;font-size:11px;border-radius:5px;cursor:pointer;font-family:inherit;border:1px solid}
 /* ADMIN MODALS */
@@ -720,6 +721,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
             <label style="font-size:11px;color:#6B7280;display:block;margin-bottom:4px">Lizenz</label>
             <select id="a-dm-lizenz-sel" style="width:100%;padding:8px;border:1.5px solid #E5E7EB;border-radius:7px;font-size:13px;outline:none">
               <option value="starter">Starter (CHF 149/Mt.)</option>
+              <option value="standard">Standard (CHF 219/Mt.)</option>
               <option value="professional">Professional (CHF 299/Mt.)</option>
             </select>
           </div>
@@ -1297,6 +1299,14 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
                   <a href="https://supabase.com/dashboard" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#1A3560;color:white;border-radius:7px;font-size:12px;text-decoration:none;font-weight:500">Supabase Dashboard öffnen ↗</a>
                 </div>
               </div>
+              <!-- Team & Berechtigungen (nur sichtbar fuer Rolle "Super") -->
+              <div class="card" id="einrichtung-team-card" style="display:none">
+                <div class="cardh"><div class="cardtitle" style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#7C3AED;display:inline-block"></span>Team & Berechtigungen</div><button class="tbtn tbtn-navy" style="font-size:11px" onclick="openNMA_team()">+ Benutzer einladen</button></div>
+                <div class="cardbody" style="display:flex;flex-direction:column;gap:8px">
+                  <p style="font-size:12px;color:#9CA3AF;margin:0 0 4px">Als Gemeinde-Admin ("Super") kannst du hier die Benutzer deiner Gemeinde verwalten und ihre Modul-Zugriffe festlegen.</p>
+                  <div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Rolle</th><th>Status</th><th style="width:140px"></th></tr></thead><tbody id="team-tbody"><tr><td colspan="4" class="aempty">Lädt...</td></tr></tbody></table></div>
+                </div>
+              </div>
               <!-- E-Mail Konfiguration -->
               <div class="card">
                 <div class="cardh"><div class="cardtitle" style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#D97706;display:inline-block"></span>E-Mail / Benutzer-Einladungen</div></div>
@@ -1599,7 +1609,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
       <div class="afg"><label>Gemeindename *</label><input class="afi" id="am-name" placeholder="Ev. Gemeinde Zürich Nord"></div>
       <div class="afg2"><div class="afg"><label>PLZ</label><input class="afi" id="am-plz" placeholder="8001"></div><div class="afg"><label>Ort</label><input class="afi" id="am-ort" placeholder="Zürich"></div></div>
       <div class="afg"><label>E-Mail</label><input class="afi" id="am-email" type="email" placeholder="info@gemeinde.ch"></div>
-      <div class="afg"><label>Lizenz</label><select class="afs" id="am-lizenz"><option value="starter">Starter – CHF 149/Mt.</option><option value="professional">Professional – CHF 299/Mt.</option></select></div>
+      <div class="afg"><label>Lizenz</label><select class="afs" id="am-lizenz"><option value="starter">Starter – CHF 149/Mt.</option><option value="standard">Standard – CHF 219/Mt.</option><option value="professional">Professional – CHF 299/Mt.</option></select></div>
       <div class="afg"><label>Status</label><select class="afs" id="am-aktiv"><option value="false">Inaktiv</option><option value="true">Aktiv – sofort freischalten</option></select></div>
     </div>
     <div class="amf"><button class="abtn abtn-ghost" onclick="closeMo('amo-m')">Abbrechen</button><button class="abtn abtn-gold" onclick="saveAM()">Erstellen</button></div>
@@ -1613,7 +1623,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
       <div class="afg"><label>E-Mail *</label><input class="afi" id="au-email" type="email" placeholder="pastor@gemeinde.ch"></div>
       <div class="afg"><label>Name</label><input class="afi" id="au-name" placeholder="Thomas Müller"></div>
       <div class="afg" id="au-mandant-row"><label>Gemeinde *</label><select class="afs" id="au-mandant"><option value="">— wählen —</option></select></div>
-      <div class="afg"><label>Rolle</label><select class="afs" id="au-rolle"><option value="admin">Admin</option><option value="leiter">Leiter</option><option value="mitarbeiter">Mitarbeiter</option></select></div>
+      <div class="afg"><label>Rolle</label><select class="afs" id="au-rolle"><option value="super">Super (Gemeinde-Admin)</option><option value="admin">Admin</option><option value="leiter">Leiter</option><option value="mitarbeiter">Mitarbeiter</option></select></div>
       <div class="afg"><label>Status</label><select class="afs" id="au-aktiv"><option value="true">Aktiv – kann sich sofort einloggen</option><option value="false">Inaktiv – wartet auf Freischaltung</option></select></div>
     </div>
     <div class="amf"><button class="abtn abtn-ghost" onclick="closeMo('amo-u')">Abbrechen</button><button class="abtn abtn-navy" id="au-save-btn" onclick="saveAU()">Anlegen</button></div>
@@ -1934,9 +1944,9 @@ async function loadUserAndShow(user) {
     if (p.rolle !== 'superadmin' && p.mandant_id) {
       const { data: m } = await sb.from('mandanten').select('name,lizenz,aktiv').eq('id', p.mandant_id).single();
       if (!m || !m.aktiv) { await sb.auth.signOut(); showPage('login'); showErr('Keine aktive Lizenz. Kontakt: info@ajconnect.ch'); return; }
-      _S = { id: user.id, email: user.email, name: p.name||user.email, rolle: p.rolle, mandant_id: p.mandant_id, mandant_name: m.name, lizenz: m.lizenz };
+      _S = { id: user.id, email: user.email, name: p.name||user.email, rolle: p.rolle, mandant_id: p.mandant_id, mandant_name: m.name, lizenz: m.lizenz, berechtigungen: p.berechtigungen||null };
     } else {
-      _S = { id: user.id, email: user.email, name: p.name||user.email, rolle: p.rolle, mandant_id: null, mandant_name: 'AJ Connect', lizenz: 'professional' };
+      _S = { id: user.id, email: user.email, name: p.name||user.email, rolle: p.rolle, mandant_id: null, mandant_name: 'AJ Connect', lizenz: 'professional', berechtigungen: p.berechtigungen||null };
     }
     // For superadmin: check for saved mandant
     if (p.rolle === 'superadmin') {
@@ -1949,6 +1959,7 @@ async function loadUserAndShow(user) {
         // Load data and go straight to app
         await loadAllData();
         initAppUI();
+        applySidebarPermissions();
         showPage('app');
         const adminBtn = document.getElementById('admin-btn-wrap');
         if(adminBtn) adminBtn.style.display = 'block';
@@ -1963,6 +1974,7 @@ async function loadUserAndShow(user) {
     // Normal user: load data and show app
     await loadAllData();
     initAppUI();
+    applySidebarPermissions();
     showPage('app');
   } catch(e) {
     showPage('login');
@@ -2039,7 +2051,7 @@ function initAppUI() {
   if (!_S) return;
   const el = id => document.getElementById(id);
   if (el('sb-gname')) el('sb-gname').textContent = _S.working_mandant_name || _S.mandant_name;
-  if (el('sb-gplan')) el('sb-gplan').textContent = _S.lizenz === 'professional' ? 'Professional' : 'Starter';
+  if (el('sb-gplan')) el('sb-gplan').textContent = lizenzLabel(_S.lizenz);
   if (el('sb-uname')) el('sb-uname').textContent = _S.name || _S.email;
   if (el('sb-av')) {
     const initials = (_S.name || _S.email || 'U').split(' ').filter(w=>w).map(w=>w[0]).join('').toUpperCase().substring(0,2);
@@ -2177,12 +2189,25 @@ function openAUMoFiltered() {
 }
 
 function openAUMo() {
+  _inviteContext = 'admin';
   ['au-email','au-name'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   // Reset Gemeinde dropdown visibility
   const row = document.getElementById('au-mandant-row');
   if(row) row.style.display = '';
   const sel = document.getElementById('au-mandant');
   if(sel) sel.value = '';
+  document.getElementById('amo-u').classList.add('open');
+}
+
+let _inviteContext = 'admin'; // 'admin' (Superadmin, gemeinde-uebergreifend) oder 'team' (Gemeinde-Super, nur eigene Gemeinde)
+
+function openNMA_team(){
+  _inviteContext = 'team';
+  ['au-email','au-name'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('au-rolle').value = 'mitarbeiter';
+  document.getElementById('au-aktiv').value = 'true';
+  const row = document.getElementById('au-mandant-row');
+  if(row) row.style.display = 'none';
   document.getElementById('amo-u').classList.add('open');
 }
 
@@ -2212,14 +2237,23 @@ async function saveAU() {
   if (btn.disabled) return;
   const email = document.getElementById('au-email').value.trim().toLowerCase();
   const name = document.getElementById('au-name').value.trim();
+  const isTeamContext = _inviteContext === 'team';
   const mandantRow = document.getElementById('au-mandant-row');
-  const mid = (mandantRow?.style.display === 'none' && _activeMandant)
-    ? _activeMandant.id
-    : document.getElementById('au-mandant').value;
+  const mid = isTeamContext
+    ? _S.mandant_id
+    : (mandantRow?.style.display === 'none' && _activeMandant)
+      ? _activeMandant.id
+      : document.getElementById('au-mandant').value;
   const rolle = document.getElementById('au-rolle').value;
   if (!email || !mid) { toast('E-Mail und Gemeinde sind Pflicht'); return; }
-  const existing = _AU.find(u => u.email?.toLowerCase() === email);
-  if (existing) { toast('Benutzer mit dieser E-Mail existiert bereits'); return; }
+
+  if(isTeamContext){
+    const {data: dup} = await sb.from('profiles').select('id').eq('mandant_id', mid).eq('email', email).maybeSingle();
+    if(dup){ toast('Benutzer mit dieser E-Mail existiert bereits'); return; }
+  } else {
+    const existing = _AU.find(u => u.email?.toLowerCase() === email);
+    if (existing) { toast('Benutzer mit dieser E-Mail existiert bereits'); return; }
+  }
 
   btn.disabled = true; btn.textContent = 'Wird eingeladen...';
 
@@ -2254,15 +2288,20 @@ async function saveAU() {
       toast('✅ Einladungs-E-Mail gesendet an ' + email);
     }
 
-    const newUser = { id: result.user_id || crypto.randomUUID(), email, name, mandant_id: mid, rolle, aktiv: true };
-    _AU.push(newUser);
     document.getElementById('amo-u').classList.remove('open');
-    await loadAdminData();
-    if (_activeMandant) {
-      const users = _AU.filter(u => u.mandant_id === _activeMandant.id);
-      renderDetailUsers(users);
-      const dm_u = document.getElementById('a-dm-users'); if (dm_u) dm_u.textContent = users.length;
-      const dm_a = document.getElementById('a-dm-aktiv'); if (dm_a) dm_a.textContent = users.filter(u => u.aktiv).length;
+
+    if(isTeamContext){
+      await loadTeamGemeinde();
+    } else {
+      const newUser = { id: result.user_id || crypto.randomUUID(), email, name, mandant_id: mid, rolle, aktiv: true };
+      _AU.push(newUser);
+      await loadAdminData();
+      if (_activeMandant) {
+        const users = _AU.filter(u => u.mandant_id === _activeMandant.id);
+        renderDetailUsers(users);
+        const dm_u = document.getElementById('a-dm-users'); if (dm_u) dm_u.textContent = users.length;
+        const dm_a = document.getElementById('a-dm-aktiv'); if (dm_a) dm_a.textContent = users.filter(u => u.aktiv).length;
+      }
     }
   } catch(e) {
     console.error('saveAU error:', e);
@@ -3982,6 +4021,10 @@ async function inviteMAasUser(maId){
 // NAVIGATION (override)
 // ═══════════════════════════════════════════
 function navTo(p,el2){
+  if(p!=='dashboard' && (p in MODULE_PERMISSIONS) && !hasPermission(p)){
+    toast('Keine Berechtigung für dieses Modul');
+    return;
+  }
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
   document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
   const pg=document.getElementById('pg-'+p);if(pg)pg.classList.add('on');
@@ -4026,7 +4069,14 @@ function navTo(p,el2){
   if(p==='spenden'){if(!spenden.length)loadSpenden();else filterSpenden();}
   if(p==='kreditoren'){if(!kreditoren.length)loadKreditoren();else{rndrKreditoren();filterRechnungen();}}
   if(p==='dokumente'){if(!_dokLoaded){loadDokumente();}else filterDok();}
-  if(p==='einrichtung'){loadGemeindeDaten();}
+  if(p==='einrichtung'){
+    loadGemeindeDaten();
+    const teamCard = document.getElementById('einrichtung-team-card');
+    if(teamCard){
+      if(_S?.rolle==='super'){ teamCard.style.display='block'; loadTeamGemeinde(); }
+      else teamCard.style.display='none';
+    }
+  }
   if(p==='artikel'){
     const mid2=_S?.working_mandant_id||_S?.mandant_id;
     if(!mid2){toast('Bitte zuerst Gemeinde wählen (Arbeiten als)');return;}
@@ -4048,6 +4098,56 @@ function navTo(p,el2){
 function konvertToMitglied(){
   if(!activeKK) return;
   konvertKontakt(activeKK);
+}
+
+// ── Team & Berechtigungen (fuer Rolle "Super" — eigene Gemeinde) ──
+let teamUsers = [];
+
+async function loadTeamGemeinde(){
+  if(!_S?.mandant_id) return;
+  const {data, error} = await sb.from('profiles').select('*').eq('mandant_id', _S.mandant_id).order('name');
+  if(error){ console.warn('loadTeamGemeinde error:', error.message); return; }
+  teamUsers = data || [];
+  rndrTeamGemeinde();
+}
+
+function rndrTeamGemeinde(){
+  const tb = document.getElementById('team-tbody');
+  if(!tb) return;
+  if(!teamUsers.length){ tb.innerHTML = '<tr><td colspan="4" class="aempty">Noch keine Benutzer</td></tr>'; return; }
+  const roleLabelsTeam = {super:'Super (Gemeinde-Admin)', admin:'Admin', leiter:'Leiter', mitarbeiter:'Mitarbeiter', readonly:'Nur lesen'};
+  tb.innerHTML = teamUsers.map(u => `<tr>
+    <td><div style="font-weight:500;color:#1A3560">${u.name||'—'}</div><div style="font-size:11px;color:#9CA3AF">${u.email||''}</div></td>
+    <td>
+      <select class="afs" style="font-size:11px;padding:3px 6px" onchange="changeUserRoleTeam('${u.id}',this.value)" ${u.id===_S.id?'disabled':''}>
+        <option value="super" ${u.rolle==='super'?'selected':''}>Super (Gemeinde-Admin)</option>
+        <option value="admin" ${u.rolle==='admin'?'selected':''}>Admin</option>
+        <option value="leiter" ${u.rolle==='leiter'?'selected':''}>Leiter</option>
+        <option value="mitarbeiter" ${u.rolle==='mitarbeiter'?'selected':''}>Mitarbeiter</option>
+        <option value="readonly" ${u.rolle==='readonly'?'selected':''}>Nur lesen</option>
+      </select>
+    </td>
+    <td><span class="abadge ${u.aktiv?'ab-ok':'ab-wait'}">${u.aktiv?'Aktiv':'Inaktiv'}</span></td>
+    <td style="display:flex;gap:5px;flex-wrap:wrap">
+      <button class="aaction-btn" onclick="openUserPerms('${u.id}','${(u.name||u.email||'').replace(/'/g,"")}')" title="Berechtigungen">🔒 Rechte</button>
+      ${u.id!==_S.id?`<button class="aaction-btn" onclick="toggleTeamUserAktiv('${u.id}',${u.aktiv})">${u.aktiv?'Sperren':'Freischalten'}</button>`:''}
+    </td>
+  </tr>`).join('');
+}
+
+async function changeUserRoleTeam(userId, newRole){
+  const {error} = await sb.from('profiles').update({rolle: newRole}).eq('id', userId);
+  if(error){ toast('Fehler: '+error.message); return; }
+  const u = teamUsers.find(x=>x.id===userId); if(u) u.rolle = newRole;
+  toast('Rolle aktualisiert ✓');
+}
+
+async function toggleTeamUserAktiv(userId, current){
+  const {error} = await sb.from('profiles').update({aktiv: !current}).eq('id', userId);
+  if(error){ toast('Fehler: '+error.message); return; }
+  const u = teamUsers.find(x=>x.id===userId); if(u) u.aktiv = !current;
+  rndrTeamGemeinde();
+  toast(!current ? 'Benutzer freigeschaltet' : 'Benutzer gesperrt');
 }
 
 async function loadGemeindeDaten(){
@@ -4372,11 +4472,11 @@ function openMandantDetail(mandantId) {
 
   // Fill header
   document.getElementById('a-detail-name').textContent = m.name;
-  document.getElementById('a-detail-sub').textContent = (m.lizenz === 'professional' ? 'Professional' : 'Starter') + ' · ' + (m.aktiv ? 'Aktiv' : 'Gesperrt');
+  document.getElementById('a-detail-sub').textContent = lizenzLabel(m.lizenz) + ' · ' + (m.aktiv ? 'Aktiv' : 'Gesperrt');
 
   const lb = document.getElementById('a-detail-lizenz-badge');
-  lb.textContent = m.lizenz === 'professional' ? 'Professional' : 'Starter';
-  lb.className = 'abadge ' + (m.lizenz === 'professional' ? 'ab-pro' : 'ab-str');
+  lb.textContent = lizenzLabel(m.lizenz);
+  lb.className = 'abadge ' + lizenzBadgeClass(m.lizenz);
 
   const sb2 = document.getElementById('a-detail-status-badge');
   sb2.textContent = m.aktiv ? 'Aktiv' : 'Gesperrt';
@@ -4387,7 +4487,7 @@ function openMandantDetail(mandantId) {
   document.getElementById('a-dm-users').textContent = users.length;
   document.getElementById('a-dm-aktiv').textContent = users.filter(u => u.aktiv).length;
   document.getElementById('a-dm-pend').textContent = users.filter(u => !u.aktiv).length;
-  document.getElementById('a-dm-lizenz').textContent = m.lizenz === 'professional' ? 'Pro' : 'Starter';
+  document.getElementById('a-dm-lizenz').textContent = lizenzLabel(m.lizenz);
 
   // Fill settings form
   document.getElementById('a-dm-name-inp').value = m.name;
@@ -4405,7 +4505,7 @@ function renderDetailUsers(users) {
     tb.innerHTML = '<tr><td colspan="4" class="aempty">Noch keine Benutzer — jetzt hinzufügen</td></tr>';
     return;
   }
-  const roleLabels = {superadmin:'Super Admin', admin:'Admin', leiter:'Leiter', mitarbeiter:'Mitarbeiter'};
+  const roleLabels = {superadmin:'Super Admin', super:'Super (Gemeinde-Admin)', admin:'Admin', leiter:'Leiter', mitarbeiter:'Mitarbeiter'};
   tb.innerHTML = users.map(u => `<tr>
     <td>
       <div style="font-weight:500;color:#1A3560">${u.name||'—'}</div>
@@ -4413,6 +4513,7 @@ function renderDetailUsers(users) {
     </td>
     <td>
       <select class="afs" style="font-size:11px;padding:3px 6px" onchange="changeUserRole('${u.id}',this.value)" ${u.rolle==='superadmin'?'disabled':''}>
+        <option value="super" ${u.rolle==='super'?'selected':''}>Super (Gemeinde-Admin)</option>
         <option value="admin" ${u.rolle==='admin'?'selected':''}>Admin</option>
         <option value="leiter" ${u.rolle==='leiter'?'selected':''}>Leiter</option>
         <option value="mitarbeiter" ${u.rolle==='mitarbeiter'?'selected':''}>Mitarbeiter</option>
@@ -4517,7 +4618,7 @@ function renderAM() {
         </div>
         <div style="font-size:11px;color:#9CA3AF">${m.email||''}</div>
       </td>
-      <td><span class="abadge ${m.lizenz==='professional'?'ab-pro':'ab-str'}">${m.lizenz==='professional'?'Professional':'Starter'}</span></td>
+      <td><span class="abadge ${lizenzBadgeClass(m.lizenz)}">${lizenzLabel(m.lizenz)}</span></td>
       <td><span class="abadge ${m.aktiv?'ab-ok':'ab-no'}">${m.aktiv?'Aktiv':'Inaktiv'}</span></td>
       <td>${cnt}</td>
       <td onclick="event.stopPropagation()">
@@ -5990,6 +6091,12 @@ async function changeUserRole(userId, newRole) {
   } catch(e) { toast('Fehler: ' + e.message); }
 }
 
+// ── Lizenzstufen: legen die MAXIMAL verfügbaren Module pro Gemeinde fest ──
+const LIZENZ_LABELS = { starter: 'Starter', standard: 'Standard', professional: 'Professional' };
+const LIZENZ_BADGE_CSS = { starter: 'ab-str', standard: 'ab-std', professional: 'ab-pro' };
+function lizenzLabel(l){ return LIZENZ_LABELS[l] || 'Starter'; }
+function lizenzBadgeClass(l){ return LIZENZ_BADGE_CSS[l] || 'ab-str'; }
+
 const MODULE_PERMISSIONS = {
   mitglieder: 'Mitglieder',
   kontakte: 'Kontakte',
@@ -5997,51 +6104,139 @@ const MODULE_PERMISSIONS = {
   gottesdienste: 'Gottesdienste',
   worship: 'Worship',
   volunteer: 'Freiwillige',
-  events: 'Events',
-  spenden: 'Spenden',
+  events: 'Veranstaltungen',
+  spenden: 'Twint & Spenden',
   kreditoren: 'Kreditoren',
   artikel: 'Artikel',
+  mitarbeiter: 'Mitarbeiter',
   dokumente: 'Dokumente',
   einrichtung: 'Einrichtung',
+};
+
+// Vordefinierte Rollen-Pakete (Schnellauswahl) — koennen danach frei angepasst werden
+// Welche Module pro Lizenzstufe ueberhaupt verfuegbar sind (Obergrenze, unabhaengig von Einzel-Berechtigungen)
+const LIZENZ_MODULE_MAP = {
+  starter: ['mitglieder','kontakte','gottesdienste','dokumente','einrichtung'],
+  standard: ['mitglieder','kontakte','gottesdienste','dokumente','einrichtung','groups','events','spenden','volunteer','worship'],
+  professional: Object.keys(MODULE_PERMISSIONS)
+};
+function lizenzModule(mod){
+  const lizenz = _S?.lizenz || 'starter';
+  const allowed = LIZENZ_MODULE_MAP[lizenz] || LIZENZ_MODULE_MAP.starter;
+  return allowed.includes(mod);
+}
+
+const ROLLEN_PRESETS = {
+  gemeindeleiter: Object.keys(MODULE_PERMISSIONS), // alles
+  admin: ['mitglieder','kontakte','groups','dokumente'], // CRM/Verwaltung
+  finanzen: ['spenden','kreditoren','mitarbeiter'], // Finanzen + Personal/HR
+  mitarbeiter_standard: ['events','gottesdienste','worship'] // Veranstaltungen/Kalender
 };
 
 let _permUserId = null;
 
 function openUserPerms(userId, userName) {
+  if(!_S || (_S.rolle!=='superadmin' && _S.rolle!=='super')){
+    toast('Keine Berechtigung, um Zugriffsrechte zu ändern');
+    return;
+  }
   _permUserId = userId;
   document.getElementById('perm-user-name').textContent = userName;
-  // Load saved perms from localStorage (per user)
-  const saved = JSON.parse(localStorage.getItem('aj-perms-' + userId) || 'null');
-  // Render checkboxes
+  loadUserPermsFromDB(userId);
+}
+
+async function loadUserPermsFromDB(userId){
   const grid = document.getElementById('perm-grid');
-  grid.innerHTML = Object.entries(MODULE_PERMISSIONS).map(([key, label]) => {
-    const checked = !saved || saved.includes(key);
-    return `<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#F9FAFB;border-radius:6px;cursor:pointer;font-size:13px">
-      <input type="checkbox" id="perm-${key}" ${checked?'checked':''} style="width:15px;height:15px;accent-color:#1A3560">
-      ${label}
-    </label>`;
-  }).join('');
+  grid.innerHTML = '<div style="text-align:center;padding:16px;color:#9CA3AF;font-size:13px">Lädt...</div>';
+  const {data} = await sb.from('profiles').select('berechtigungen,rolle,mandant_id').eq('id', userId).single();
+  // Sicherheitsgrenze: ein "Super" (Gemeinde-Admin) darf NUR Benutzer der eigenen Gemeinde bearbeiten
+  if(_S.rolle==='super' && data?.mandant_id !== _S.mandant_id){
+    toast('Keine Berechtigung für Benutzer einer anderen Gemeinde');
+    return;
+  }
+  let lizenz = 'professional';
+  if(data?.mandant_id){
+    const {data: mand} = await sb.from('mandanten').select('lizenz').eq('id', data.mandant_id).single();
+    lizenz = mand?.lizenz || 'starter';
+  }
+  const lizenzAllowed = LIZENZ_MODULE_MAP[lizenz] || LIZENZ_MODULE_MAP.starter;
+  const saved = data?.berechtigungen;
+  const checkedList = saved && Array.isArray(saved) ? saved : Object.keys(MODULE_PERMISSIONS);
+  document.getElementById('perm-lizenz-note').textContent = `Lizenz dieser Gemeinde: ${lizenzLabel(lizenz)} — Module ausserhalb der Lizenz sind ausgegraut und können nicht aktiviert werden.`;
+  renderPermGrid(checkedList, lizenzAllowed);
   document.getElementById('mo-perms').classList.add('open');
 }
 
-function saveUserPerms() {
+function renderPermGrid(checkedList, lizenzAllowed){
+  lizenzAllowed = lizenzAllowed || Object.keys(MODULE_PERMISSIONS);
+  const grid = document.getElementById('perm-grid');
+  grid.innerHTML = Object.entries(MODULE_PERMISSIONS).map(([key, label]) => {
+    const inLizenz = lizenzAllowed.includes(key);
+    const checked = checkedList.includes(key) && inLizenz;
+    return `<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:${inLizenz?'#F9FAFB':'#F4F5F7'};border-radius:6px;cursor:${inLizenz?'pointer':'not-allowed'};font-size:13px;opacity:${inLizenz?'1':'0.5'}">
+      <input type="checkbox" id="perm-${key}" ${checked?'checked':''} ${inLizenz?'':'disabled'} style="width:15px;height:15px;accent-color:#1A3560">
+      ${label}${inLizenz?'':' <span style="font-size:10px;color:#9CA3AF">(nicht in Lizenz)</span>'}
+    </label>`;
+  }).join('');
+}
+
+function applyPermPreset(presetKey){
+  const cbs = document.querySelectorAll('#perm-grid input[type=checkbox]:not([disabled])');
+  const allowedKeys = Array.from(cbs).map(cb=>cb.id.replace('perm-',''));
+  const preset = (ROLLEN_PRESETS[presetKey]||[]).filter(k=>allowedKeys.includes(k));
+  document.querySelectorAll('#perm-grid input[type=checkbox]').forEach(cb=>{
+    if(cb.disabled) return;
+    cb.checked = preset.includes(cb.id.replace('perm-',''));
+  });
+}
+
+async function saveUserPerms() {
   if(!_permUserId) return;
+  if(!_S || (_S.rolle!=='superadmin' && _S.rolle!=='super')){
+    toast('Keine Berechtigung, um Zugriffsrechte zu ändern');
+    return;
+  }
+  if(_S.rolle==='super'){
+    const {data: targetProfile} = await sb.from('profiles').select('mandant_id').eq('id', _permUserId).single();
+    if(targetProfile?.mandant_id !== _S.mandant_id){
+      toast('Keine Berechtigung für Benutzer einer anderen Gemeinde');
+      return;
+    }
+  }
   const allowed = Object.keys(MODULE_PERMISSIONS).filter(key => {
     const cb = document.getElementById('perm-' + key);
     return cb && cb.checked;
   });
-  localStorage.setItem('aj-perms-' + _permUserId, JSON.stringify(allowed));
+  const {error} = await sb.from('profiles').update({ berechtigungen: allowed }).eq('id', _permUserId);
+  if(error){ toast('Fehler: '+error.message); return; }
+  // Falls der aktuell eingeloggte Benutzer sich selbst betrifft, sofort anwenden
+  if(_S && _S.id === _permUserId){ _S.berechtigungen = allowed; applySidebarPermissions(); }
   closeMo('mo-perms');
   toast('Berechtigungen gespeichert ✓');
 }
 
-// Check if current user has permission for a module
+// Prueft ob der AKTUELL eingeloggte Benutzer Zugriff auf ein Modul hat
+// Reihenfolge: 1) Superadmin sieht alles  2) Lizenz-Obergrenze der Gemeinde  3) "Super" sieht alles innerhalb der Lizenz  4) Individuelle Benutzer-Berechtigung
 function hasPermission(module) {
   if(!_S) return false;
-  if(_S.rolle === 'superadmin' || _S.rolle === 'admin') return true;
-  const saved = JSON.parse(localStorage.getItem('aj-perms-' + _S.id) || 'null');
-  if(!saved) return true; // no restrictions set = all allowed
-  return saved.includes(module);
+  if(_S.rolle === 'superadmin') return true;
+  if(!lizenzModule(module)) return false; // Modul nicht in der Lizenz der Gemeinde enthalten
+  if(_S.rolle === 'super') return true; // Gemeinde-Super sieht immer alles, was die Lizenz erlaubt
+  if(!Array.isArray(_S.berechtigungen)) return true; // noch nie eingeschraenkt = alles erlaubt, was die Lizenz zulaesst
+  return _S.berechtigungen.includes(module);
+}
+
+// Blendet Sidebar-Punkte aus, fuer die der Benutzer keine Berechtigung hat
+function applySidebarPermissions(){
+  document.querySelectorAll('.sb-item').forEach(el => {
+    const onclick = el.getAttribute('onclick') || '';
+    const match = onclick.match(/navTo\('([a-z]+)'/);
+    if(!match) return; // z.B. Dashboard ohne Modul-Gate
+    const modKey = match[1];
+    if(modKey === 'dashboard'){ el.style.display=''; return; }
+    if(!(modKey in MODULE_PERMISSIONS)){ el.style.display=''; return; } // Modul nicht in der Liste = immer sichtbar
+    el.style.display = hasPermission(modKey) ? '' : 'none';
+  });
 }
 
 // ══════════════════════════════════════════════════════════
@@ -7160,7 +7355,14 @@ async function doRegister() {
       <div class="mx" onclick="closeMo('mo-perms')">✕</div>
     </div>
     <div class="mb2">
-      <p style="font-size:13px;color:#6B7280;margin-bottom:14px">Wähle welche Module dieser Benutzer sehen darf. Deaktivierte Module werden in der Sidebar ausgeblendet.</p>
+      <p style="font-size:13px;color:#6B7280;margin-bottom:6px">Wähle welche Module dieser Benutzer sehen darf. Deaktivierte Module werden in der Sidebar ausgeblendet.</p>
+      <p style="font-size:11.5px;color:#D97706;margin-bottom:10px" id="perm-lizenz-note"></p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="tbtn tbtn-ghost" style="font-size:11px" onclick="applyPermPreset('gemeindeleiter')">👑 Gemeindeleiter (alle)</button>
+        <button class="tbtn tbtn-ghost" style="font-size:11px" onclick="applyPermPreset('admin')">📋 Admin (CRM)</button>
+        <button class="tbtn tbtn-ghost" style="font-size:11px" onclick="applyPermPreset('finanzen')">💰 Finanzen + HR</button>
+        <button class="tbtn tbtn-ghost" style="font-size:11px" onclick="applyPermPreset('mitarbeiter_standard')">📅 Mitarbeiter-Standard</button>
+      </div>
       <div id="perm-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
     </div>
     <div class="mfoot">
