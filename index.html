@@ -1740,7 +1740,15 @@ async function dbSave(table, payload) {
 async function dbUpdate(table, id, payload) {
   try {
     const {error} = await sb.from(table).update({...payload, updated_at: new Date().toISOString()}).eq('id', id);
-    if(error) { toast('Updatefehler: '+error.message); return false; }
+    if(error) {
+      // Fallback: manche Tabellen (z.B. mandanten) haben kein 'updated_at' Feld
+      if(error.message && error.message.includes("'updated_at'")) {
+        const {error: err2} = await sb.from(table).update(payload).eq('id', id);
+        if(err2) { toast('Updatefehler: '+err2.message); return false; }
+        return true;
+      }
+      toast('Updatefehler: '+error.message); return false;
+    }
     return true;
   } catch(e) { toast('Fehler: '+e.message); return false; }
 }
