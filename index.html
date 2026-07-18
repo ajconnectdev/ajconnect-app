@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AJ Connect</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0F1F3D;min-height:100vh}
@@ -1584,8 +1585,10 @@ const SUPABASE_ANON_KEY = SB_KEY; // Alias für Edge Function Aufrufe
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
 // ── E-Mail Helper: ruft die send-email Edge Function auf (Brevo) ──
-async function sendEmail(type, to, data) {
+async function sendEmail(type, to, data, attachment) {
   try {
+    const body = { type, to, data };
+    if (attachment) body.attachment = attachment;
     const res = await fetch(`${SB_URL}/functions/v1/send-email`, {
       method: 'POST',
       headers: {
@@ -1593,7 +1596,7 @@ async function sendEmail(type, to, data) {
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         'apikey': SUPABASE_ANON_KEY
       },
-      body: JSON.stringify({ type, to, data })
+      body: JSON.stringify(body)
     });
     const result = await res.json();
     if (!res.ok || result.error) {
@@ -2451,6 +2454,73 @@ function dmsDel(fid){if(!activeId)return;dmsStore[activeId]=(dmsStore[activeId]|
 function dmsDrag(e,on){e.preventDefault();document.getElementById('dms-drop').style.borderColor=on?'#C8941A':'#D1D5DB';}
 function dmsDrop(e){e.preventDefault();document.getElementById('dms-drop').style.borderColor='#D1D5DB';if(!activeId)return;Array.from(e.dataTransfer.files).forEach(file=>{const ext=file.name.split('.').pop()||'dat';const d=new Date();const date=`${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;if(!dmsStore[activeId])dmsStore[activeId]=[];dmsStore[activeId].push({id:dmsSeq++,name:file.name,size:file.size,ext,date});});rndrDms();toast('Hochgeladen');}
 
+// ── PDF-Erzeugung für Spendenbescheinigung (jsPDF) ──
+function buildSpendenPDF(m, jahr, jahrSpenden, gesamt, gemeinde) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const navy = [13, 31, 60];
+  const gold = [200, 148, 26];
+  const pageW = 210;
+
+  // Header
+  doc.setFillColor(...navy);
+  doc.rect(0, 0, pageW, 32, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
+  doc.text('AJ Connect', 20, 15);
+  doc.setTextColor(...gold); doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text('CONNECT. ORGANIZE. GROW.', 20, 22);
+
+  // Title
+  doc.setTextColor(...navy); doc.setFont('helvetica','bold'); doc.setFontSize(16);
+  doc.text(`Spendenbescheinigung ${jahr}`, 20, 46);
+
+  // Body text
+  doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(60,60,60);
+  doc.text(`${gemeinde}`, 20, 56);
+  doc.text(`Ausgestellt am: ${new Date().toLocaleDateString('de-CH')}`, 20, 62);
+  doc.text(`Spender/in: ${m.anrede} ${m.vorname} ${m.nachname}`, 20, 72);
+  if (m.strasse || m.plzort) doc.text(`${m.strasse||''}${m.strasse&&m.plzort?', ':''}${m.plzort||''}`, 20, 78);
+
+  // Table header
+  let y = 92;
+  doc.setFillColor(250, 250, 250);
+  doc.rect(20, y-6, 170, 9, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(120,120,120);
+  doc.text('DATUM', 22, y);
+  doc.text('ZWECK', 65, y);
+  doc.text('ZAHLUNGSWEG', 120, y);
+  doc.text('BETRAG', 175, y, { align: 'right' });
+  y += 8;
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(60,60,60);
+  const wegLabel = { twint:'Twint', bar:'Bar', ueberweisung:'Überweisung', karte:'Karte' };
+  jahrSpenden.forEach(s => {
+    if (y > 265) { doc.addPage(); y = 25; }
+    doc.text(fD(s.datum), 22, y);
+    doc.text(String(s.zweck||'—'), 65, y);
+    doc.text(wegLabel[s.zahlungsweg]||s.zahlungsweg||'—', 120, y);
+    doc.text(`CHF ${parseFloat(s.betrag).toLocaleString('de-CH',{minimumFractionDigits:2})}`, 175, y, { align: 'right' });
+    doc.setDrawColor(235,235,235); doc.line(20, y+3, 190, y+3);
+    y += 9;
+  });
+
+  // Total
+  y += 6;
+  doc.setDrawColor(...navy); doc.setLineWidth(0.5); doc.line(20, y-6, 190, y-6);
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...navy);
+  doc.text(`Total ${jahr}:`, 120, y);
+  doc.text(`CHF ${gesamt.toLocaleString('de-CH',{minimumFractionDigits:2})}`, 175, y, { align: 'right' });
+
+  // Footer note
+  y += 16;
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(150,150,150);
+  doc.text('Diese Bescheinigung wurde automatisch generiert und ist ohne Unterschrift gültig.', 20, y);
+  doc.text(`${gemeinde} · info@ajconnect.ch`, 20, y+5);
+
+  return doc.output('datauristring').split(',')[1]; // base64 ohne data:-Prefix
+}
+
 async function genQuittung(){
   if(!activeId)return;
   const m=members.find(x=>x.id===activeId);
@@ -2468,7 +2538,7 @@ async function genQuittung(){
 
   // Fallback: .txt Download (falls kein E-Mail oder Versand fehlschlägt)
   function downloadTxt(){
-    const lines=[`SPENDENBESCHEINIGUNG ${jahr}`,'='.repeat(30),'',`Gemeinde: ${_S?.mandant_name||'Gemeinde'}`,`Ausgestellt: ${new Date().toLocaleDateString('de-CH')}`,``,`Spender/in: ${m.anrede} ${m.vorname} ${m.nachname}`,'',`Spenden ${jahr}:`,...jahrSpenden.map(s=>`  ${fD(s.datum)}   CHF ${s.betrag}   ${s.zweck}`),``,`GESAMT ${jahr}: CHF ${t.toLocaleString('de-CH')}`];
+    const lines=[`SPENDENBESCHEINIGUNG ${jahr}`,'='.repeat(30),'',`Gemeinde: ${_S?.working_mandant_name||_S?.mandant_name||'Gemeinde'}`,`Ausgestellt: ${new Date().toLocaleDateString('de-CH')}`,``,`Spender/in: ${m.anrede} ${m.vorname} ${m.nachname}`,'',`Spenden ${jahr}:`,...jahrSpenden.map(s=>`  ${fD(s.datum)}   CHF ${s.betrag}   ${s.zweck}`),``,`GESAMT ${jahr}: CHF ${t.toLocaleString('de-CH')}`];
     const a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(lines.join('\n'));a.download=`Spendenbescheinigung_${m.nachname}_${jahr}.txt`;a.click();
   }
 
@@ -2479,12 +2549,17 @@ async function genQuittung(){
   }
 
   toast('Sende Spendenbescheinigung...');
+  const gemeindeName = _S?.working_mandant_name || _S?.mandant_name || 'Gemeinde';
+  const pdfBase64 = buildSpendenPDF(m, jahr, jahrSpenden, t, gemeindeName);
   const result = await sendEmail('spendenbescheinigung', m.email, {
     name: `${m.anrede} ${m.vorname} ${m.nachname}`,
-    gemeinde: _S?.mandant_name || 'Gemeinde',
+    gemeinde: gemeindeName,
     jahr: jahr,
     gesamtbetrag: `CHF ${t.toLocaleString('de-CH')}`,
     spenden: jahrSpenden.map(s => ({ datum: fD(s.datum), betrag: `CHF ${s.betrag}`, zweck: s.zweck }))
+  }, {
+    name: `Spendenbescheinigung_${jahr}_${m.nachname}.pdf`,
+    content: pdfBase64
   });
 
   if(result.success){
