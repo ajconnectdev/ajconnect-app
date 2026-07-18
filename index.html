@@ -3738,11 +3738,11 @@ async function saveSpende() {
   const mitglied_id = document.getElementById('ns-mitglied').value || null;
   const m = mitglied_id ? members.find(x=>x.id==mitglied_id||x._dbId==mitglied_id) : null;
   const payload = {
+    mandant_id: mid,
     datum: document.getElementById('ns-datum').value,
     betrag,
     zahlungsweg: document.getElementById('ns-weg').value,
     zweck: document.getElementById('ns-zweck').value,
-    notiz: document.getElementById('ns-notiz').value,
     mitglied_id: m?._dbId || mitglied_id || null
   };
   const saved = await dbSave('spenden', payload);
@@ -3788,7 +3788,6 @@ async function updateSp(id) {
     datum: document.getElementById('ns-datum').value,
     betrag, zahlungsweg: document.getElementById('ns-weg').value,
     zweck: document.getElementById('ns-zweck').value,
-    notiz: document.getElementById('ns-notiz').value,
     mitglied_id: m?._dbId||mitglied_id||null
   };
   await dbUpdate('spenden', id, payload);
