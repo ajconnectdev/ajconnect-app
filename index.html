@@ -775,6 +775,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
       <div class="sb-item" onclick="navTo('artikel',this)"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 17.82 9.64 17 12 17s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>Artikel</div>
       <div class="sb-item" onclick="navTo('kreditoren',this)"><svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>Kreditoren</div>
       <div class="sb-sec">Verwaltung</div>
+      <div class="sb-item" onclick="navTo('mitarbeiter',this)"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>Mitarbeiter</div>
       <div class="sb-item" onclick="navTo('dokumente',this)"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>Dokumente</div>
       <div class="sb-item" onclick="navTo('einrichtung',this)"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58z"/></svg>Einrichtung</div>
       <div class="sb-foot">
@@ -1176,6 +1177,35 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
     </div>
   </div>
 </div>
+        <div class="page" id="pg-mitarbeiter">
+          <div class="topbar">
+            <div class="topbar-title">Mitarbeiter</div>
+            <div class="topbar-right">
+              <button class="tbtn tbtn-navy" onclick="openNMA()">+ Neuer Mitarbeiter</button>
+            </div>
+          </div>
+          <div class="sgrid4" style="margin-bottom:16px">
+            <div class="scard"><div class="sico" style="background:#EFF6FF"><svg viewBox="0 0 24 24" style="fill:#2563EB"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div><div><div class="sn" id="ma-total">0</div><div class="sl">Mitarbeiter total</div></div></div>
+            <div class="scard"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><div><div class="sn" id="ma-aktiv">0</div><div class="sl">Aktiv</div></div></div>
+            <div class="scard"><div class="sico" style="background:#FEF3C7"><svg viewBox="0 0 24 24" style="fill:#D97706"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-6V6h1.5v5.5H17V13z"/></svg></div><div><div class="sn" id="ma-abt">0</div><div class="sl">Abteilungen</div></div></div>
+          </div>
+          <div class="tcard">
+            <div class="tcardh">
+              <input class="afs" id="ma-search" placeholder="Suche Name, E-Mail..." style="min-width:220px" oninput="filterMA()">
+              <select class="afs" id="ma-filter-status" onchange="filterMA()">
+                <option value="">Alle Status</option>
+                <option value="aktiv">Aktiv</option>
+                <option value="inaktiv">Inaktiv</option>
+              </select>
+            </div>
+            <div style="overflow-x:auto">
+              <table>
+                <thead><tr><th>Name</th><th>Position</th><th>Abteilung</th><th>E-Mail</th><th>Telefon</th><th>Status</th><th style="width:90px"></th></tr></thead>
+                <tbody id="ma-tbody"><tr><td colspan="7" class="aempty">Lädt...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
         <div class="page" id="pg-dokumente">
   <div class="topbar">
     <div class="topbar-title">Dokumente</div>
@@ -2281,7 +2311,7 @@ function closeMo(id){document.getElementById(id).classList.remove('open');}
 function tIA(id){document.getElementById(id).classList.toggle('open');}
 function zwB(w){return{twint:'<span style="background:#E0F2FE;color:#0369A1;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">TWINT</span>',bar:'<span style="background:#DCFCE7;color:#16A34A;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">Bar</span>',ueberweisung:'<span style="background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">Überweisung</span>'}[w]||w;}
 
-const PT={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',kreditoren:'Kreditoren',dokumente:'Dokumente',einrichtung:'Einrichtung'};
+const PT={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung'};
 
 
 
@@ -3311,6 +3341,76 @@ function downloadICS(id) {
   toast('📅 Kalendereintrag heruntergeladen');
 }
 
+// UTF-8-sichere Base64-Kodierung (für Umlaute in ICS-Inhalten)
+function utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+
+// ── Termin per E-Mail an ausgewählte Mitarbeiter versenden ──
+async function openTerminMo() {
+  if (!activeEVP) return;
+  const ev = events.find(x => x.id === activeEVP);
+  if (!ev) return;
+  if (!maLoaded) await loadMitarbeiter();
+  document.getElementById('termin-eventname').textContent = `${ev.name} · ${fD(ev.datum)} ${ev.zeit||''} Uhr`;
+  const list = document.getElementById('termin-mitarbeiter-list');
+  const aktive = mitarbeiter.filter(m => m.status === 'aktiv' && m.email);
+  if (!aktive.length) {
+    list.innerHTML = '<div style="color:#9CA3AF;font-size:13px;text-align:center;padding:20px">Keine aktiven Mitarbeiter mit E-Mail-Adresse gefunden.<br>Lege zuerst welche unter "Mitarbeiter" an.</div>';
+  } else {
+    list.innerHTML = aktive.map(m => `
+      <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #E5E7EB;border-radius:8px;cursor:pointer">
+        <input type="checkbox" class="termin-ma-cb" value="${m.id}" style="width:16px;height:16px">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:#1A3560">${m.vorname} ${m.nachname}</div>
+          <div style="font-size:11px;color:#9CA3AF">${m.position||''} ${m.email?'· '+m.email:''}</div>
+        </div>
+      </label>`).join('');
+  }
+  document.getElementById('mo-termin').classList.add('open');
+}
+
+async function sendTerminAnMitarbeiter() {
+  const ev = events.find(x => x.id === activeEVP);
+  if (!ev) return;
+  const selected = Array.from(document.querySelectorAll('.termin-ma-cb:checked')).map(cb => cb.value);
+  if (!selected.length) { toast('Bitte mindestens einen Mitarbeiter auswählen'); return; }
+  const empfaenger = mitarbeiter.filter(m => selected.includes(m.id));
+
+  const btn = document.getElementById('termin-send-btn');
+  btn.disabled = true; btn.textContent = 'Wird gesendet...';
+
+  const branding = await getGemeindeBranding();
+  const icsBase64 = utf8ToBase64(generateICS(ev));
+  let ok = 0, fail = 0;
+
+  for (const m of empfaenger) {
+    const result = await sendEmail('termin', m.email, {
+      name: `${m.vorname} ${m.nachname}`,
+      eventName: ev.name,
+      datum: fD(ev.datum),
+      zeit: ev.zeit || '',
+      ort: ev.ort || '',
+      beschreibung: ev.desc || '',
+      gemeinde: branding.name,
+      gemeindeAdresse: branding.adresse,
+      logoUrl: branding.logoUrl
+    }, {
+      name: `${ev.name.replace(/[^a-z0-9äöü]/gi,'_')}.ics`,
+      content: icsBase64
+    });
+    if (result.success) ok++; else fail++;
+  }
+
+  btn.disabled = false; btn.textContent = 'Termin versenden';
+  closeMo('mo-termin');
+  if (fail === 0) toast(`✅ Termin an ${ok} Mitarbeiter gesendet`);
+  else toast(`⚠ ${ok} gesendet, ${fail} fehlgeschlagen`);
+}
+
 let events=[
   {id:'ev1',name:'Gemeindefest Sommer 2026',datum:'2026-07-05',zeit:'14:00',end:'20:00',typ:'Gemeindefest',ort:'Gemeindepark',verantw:'Anna Müller',max:200,anmeld:'ja',status:'geplant',desc:'Jährliches Gemeindefest mit Grill und Musik',anmeldungen:47},
   {id:'ev2',name:'Lobpreis-Abend',datum:'2026-05-08',zeit:'19:30',end:'21:30',typ:'Konzert',ort:'Hauptsaal',verantw:'Peter Keller',max:150,anmeld:'nein',status:'geplant',desc:'',anmeldungen:0},
@@ -3389,6 +3489,109 @@ function tEditEVP(secId,btn){
 async function deleteEV(){if(!activeEVP||!confirm('Löschen?'))return;const ev=events.find(x=>x.id===activeEVP);if(ev?._dbId)await dbDelete('events',ev._dbId);events=events.filter(x=>x.id!==activeEVP);closeEVP();rndrEvents();toast('Gelöscht');}
 
 // ═══════════════════════════════════════════
+// MITARBEITER (HR)
+// ═══════════════════════════════════════════
+let mitarbeiter=[], maFilt=[], maLoaded=false, editingMAId=null;
+
+async function loadMitarbeiter(){
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid){ mitarbeiter=[]; filterMA(); return; }
+  const data = await dbLoad('mitarbeiter','nachname');
+  mitarbeiter = (data||[]).map(m => ({
+    id: m.id, _dbId: m.id,
+    vorname: m.vorname||'', nachname: m.nachname||'',
+    email: m.email||'', telefon: m.telefon||'',
+    position: m.position||'', abteilung: m.abteilung||'',
+    eintritt: m.eintritt||'', status: m.status||'aktiv',
+    notizen: m.notizen||''
+  }));
+  maLoaded = true;
+  filterMA();
+}
+
+function updMAStats(){
+  const e=id=>document.getElementById(id);
+  if(e('ma-total'))e('ma-total').textContent=mitarbeiter.length;
+  if(e('ma-aktiv'))e('ma-aktiv').textContent=mitarbeiter.filter(m=>m.status==='aktiv').length;
+  if(e('ma-abt'))e('ma-abt').textContent=new Set(mitarbeiter.map(m=>m.abteilung).filter(Boolean)).size;
+}
+
+function filterMA(){
+  const q=(document.getElementById('ma-search')?.value||'').toLowerCase();
+  const st=document.getElementById('ma-filter-status')?.value||'';
+  maFilt = mitarbeiter.filter(m=>{
+    if(st && m.status!==st) return false;
+    if(q && !(m.vorname+' '+m.nachname+m.email+m.position+m.abteilung).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  rndrMA(); updMAStats();
+}
+
+function rndrMA(){
+  const tb=document.getElementById('ma-tbody'); if(!tb) return;
+  if(!maFilt.length){ tb.innerHTML='<tr><td colspan="7" class="aempty">Keine Mitarbeiter gefunden</td></tr>'; return; }
+  tb.innerHTML = maFilt.map(m=>`<tr>
+    <td style="font-weight:500;color:#1A3560">${m.vorname} ${m.nachname}</td>
+    <td style="font-size:12px;color:#6B7280">${m.position||'—'}</td>
+    <td style="font-size:12px;color:#6B7280">${m.abteilung||'—'}</td>
+    <td style="font-size:12px;color:#6B7280">${m.email||'—'}</td>
+    <td style="font-size:12px;color:#6B7280">${m.telefon||'—'}</td>
+    <td><span style="padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500;${m.status==='aktiv'?'background:#DCFCE7;color:#16A34A':'background:#F4F5F7;color:#9CA3AF'}">${m.status==='aktiv'?'Aktiv':'Inaktiv'}</span></td>
+    <td style="display:flex;gap:4px">
+      <button class="aaction-btn" onclick="openNMA('${m.id}')">Bearbeiten</button>
+      <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteMA('${m.id}')">Löschen</button>
+    </td>
+  </tr>`).join('');
+}
+
+function openNMA(id){
+  editingMAId = id || null;
+  const e=i=>document.getElementById(i);
+  const m = id ? mitarbeiter.find(x=>x.id===id) : null;
+  e('nma-title').textContent = m ? '👤 Mitarbeiter bearbeiten' : '👤 Neuer Mitarbeiter';
+  e('ma-vorname').value = m?.vorname||''; e('ma-nachname').value = m?.nachname||'';
+  e('ma-email').value = m?.email||''; e('ma-telefon').value = m?.telefon||'';
+  e('ma-position').value = m?.position||''; e('ma-abteilung').value = m?.abteilung||'';
+  e('ma-eintritt').value = m?.eintritt||''; e('ma-status').value = m?.status||'aktiv';
+  e('ma-notizen').value = m?.notizen||'';
+  document.getElementById('mo-nma').classList.add('open');
+}
+
+async function saveMA(){
+  const vorname=document.getElementById('ma-vorname').value.trim();
+  const nachname=document.getElementById('ma-nachname').value.trim();
+  const email=document.getElementById('ma-email').value.trim().toLowerCase();
+  if(!vorname||!nachname||!email){ toast('Vorname, Nachname und E-Mail sind Pflicht'); return; }
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid){ toast('Bitte zuerst Gemeinde wählen'); return; }
+  const payload = {
+    mandant_id: mid, vorname, nachname, email,
+    telefon: document.getElementById('ma-telefon').value,
+    position: document.getElementById('ma-position').value,
+    abteilung: document.getElementById('ma-abteilung').value,
+    eintritt: document.getElementById('ma-eintritt').value || null,
+    status: document.getElementById('ma-status').value,
+    notizen: document.getElementById('ma-notizen').value
+  };
+  if(editingMAId){
+    const m = mitarbeiter.find(x=>x.id===editingMAId);
+    const ok = await dbUpdate('mitarbeiter', m._dbId, payload);
+    if(ok){ Object.assign(m, payload); filterMA(); closeMo('mo-nma'); toast('Gespeichert ✓'); }
+  } else {
+    const saved = await dbSave('mitarbeiter', payload);
+    if(saved){ mitarbeiter.push({...payload, id: saved.id, _dbId: saved.id}); filterMA(); closeMo('mo-nma'); toast('Mitarbeiter angelegt ✓'); }
+  }
+}
+
+async function deleteMA(id){
+  if(!confirm('Mitarbeiter löschen?')) return;
+  const m = mitarbeiter.find(x=>x.id===id);
+  if(m?._dbId) await dbDelete('mitarbeiter', m._dbId);
+  mitarbeiter = mitarbeiter.filter(x=>x.id!==id);
+  filterMA(); toast('Gelöscht');
+}
+
+// ═══════════════════════════════════════════
 // NAVIGATION (override)
 // ═══════════════════════════════════════════
 function navTo(p,el2){
@@ -3396,7 +3599,7 @@ function navTo(p,el2){
   document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
   const pg=document.getElementById('pg-'+p);if(pg)pg.classList.add('on');
   if(el2)el2.classList.add('active');
-  const titles={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',volunteer:'Freiwillige',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',artikel:'Artikel',kreditoren:'Kreditoren',dokumente:'Dokumente',einrichtung:'Einrichtung'};
+  const titles={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',volunteer:'Freiwillige',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',artikel:'Artikel',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung'};
   document.getElementById('tb-title').textContent=titles[p]||p;
   const isM=p==='mitglieder';
   document.getElementById('vt-wrap').style.display=isM?'block':'none';
@@ -3446,6 +3649,11 @@ function navTo(p,el2){
     const mid3=_S?.working_mandant_id||_S?.mandant_id;
     if(!mid3){toast('Bitte zuerst Gemeinde wählen (Arbeiten als)');return;}
     if(!_volLoaded){loadVolunteer();}else{filterEinsaetze();rndrBereiche();}
+  }
+  if(p==='mitarbeiter'){
+    const mid4=_S?.working_mandant_id||_S?.mandant_id;
+    if(!mid4){toast('Bitte zuerst Gemeinde wählen (Arbeiten als)');return;}
+    if(!maLoaded){loadMitarbeiter();}else{filterMA();}
   }
 }
 
@@ -5959,6 +6167,7 @@ async function doRegister() {
     <div class="kcap">Veranstaltung</div>
     <div style="display:flex;gap:6px;margin-left:auto">
       <button style="padding:5px 11px;border-radius:7px;font-size:11px;background:#EFF6FF;color:#2563EB;border:1px solid #BFDBFE;cursor:pointer;font-family:inherit" onclick="downloadICS(activeEVP)">📅 In Kalender speichern</button>
+      <button style="padding:5px 11px;border-radius:7px;font-size:11px;background:#FDF3DC;color:#C8941A;border:1px solid #f5dfa3;cursor:pointer;font-family:inherit" onclick="openTerminMo()">📧 Termin versenden</button>
       <div id="ev-panel-del-wrap" style="display:none">
         <button style="padding:5px 11px;border-radius:7px;font-size:11px;background:#FEE2E2;color:#DC2626;border:1px solid #fca5a5;cursor:pointer;font-family:inherit" onclick="deleteEV()">Löschen</button>
       </div>
@@ -6002,6 +6211,37 @@ async function doRegister() {
   </div>
 </div>
 
+
+<!-- MODAL: NEUER/BEARBEITEN MITARBEITER -->
+<div class="mo" id="mo-nma">
+  <div class="modal" style="max-width:520px">
+    <div class="mh"><div class="mt2" id="nma-title">👤 Neuer Mitarbeiter</div><div class="mx" onclick="closeMo('mo-nma')">✕</div></div>
+    <div class="mb2"><div class="fg2">
+      <div class="fgg"><label class="fl">Vorname *</label><input class="fi" id="ma-vorname"></div>
+      <div class="fgg"><label class="fl">Nachname *</label><input class="fi" id="ma-nachname"></div>
+      <div class="fgg full"><label class="fl">E-Mail *</label><input class="fi" id="ma-email" type="email" placeholder="mitarbeiter@gemeinde.ch"></div>
+      <div class="fgg"><label class="fl">Telefon</label><input class="fi" id="ma-telefon" placeholder="+41 79 123 45 67"></div>
+      <div class="fgg"><label class="fl">Position</label><input class="fi" id="ma-position" placeholder="z.B. Jugendarbeiter"></div>
+      <div class="fgg"><label class="fl">Abteilung</label><input class="fi" id="ma-abteilung" placeholder="z.B. Jugend, Musik, Verwaltung"></div>
+      <div class="fgg"><label class="fl">Eintrittsdatum</label><input class="fi" id="ma-eintritt" type="date"></div>
+      <div class="fgg"><label class="fl">Status</label><select class="fs" id="ma-status"><option value="aktiv">Aktiv</option><option value="inaktiv">Inaktiv</option></select></div>
+      <div class="fgg full"><label class="fl">Notizen</label><textarea class="fta" id="ma-notizen" placeholder="Interne Notizen..."></textarea></div>
+    </div></div>
+    <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-nma')">Abbrechen</button><button class="tbtn tbtn-navy" id="nma-save-btn" onclick="saveMA()">Speichern</button></div>
+  </div>
+</div>
+
+<!-- MODAL: TERMIN VERSENDEN (Mitarbeiter auswählen) -->
+<div class="mo" id="mo-termin">
+  <div class="modal" style="max-width:480px">
+    <div class="mh"><div class="mt2">📧 Termin an Mitarbeiter versenden</div><div class="mx" onclick="closeMo('mo-termin')">✕</div></div>
+    <div class="mb2">
+      <div style="font-size:12.5px;color:#6B7280;margin-bottom:10px" id="termin-eventname"></div>
+      <div id="termin-mitarbeiter-list" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto"></div>
+    </div>
+    <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-termin')">Abbrechen</button><button class="tbtn tbtn-navy" id="termin-send-btn" onclick="sendTerminAnMitarbeiter()">Termin versenden</button></div>
+  </div>
+</div>
 
 <!-- IMPORT/EXPORT CENTER MODAL -->
 <div class="mo" id="mo-impexp" style="z-index:800">
