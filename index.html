@@ -1034,12 +1034,12 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
                     <button class="tbtn tbtn-navy" style="font-size:12px" onclick="openNEv()">+ Neues Event</button>
                   </div>
                 </div>
-                <div style="overflow-x:auto"><table><thead><tr><th>Datum</th><th>Event</th><th>Typ</th><th>Ort</th><th>Anmeldungen</th><th>Status</th></tr></thead><tbody id="ev-tbody"></tbody></table></div>
+                <div style="overflow-x:auto"><table><thead><tr><th>Datum</th><th>Event</th><th>Typ</th><th>Ort</th><th>Anmeldungen</th><th>Status</th><th></th></tr></thead><tbody id="ev-tbody"></tbody></table></div>
               </div>
             </div>
             <div style="width:300px;flex-shrink:0">
               <div class="card">
-                <div class="cardh"><div class="cardtitle">Kalender Mai 2026</div></div>
+                <div class="cardh"><div class="cardtitle" id="ev-cal-title">Kommende Events</div></div>
                 <div class="cardbody" id="ev-cal-body" style="font-size:12px"></div>
               </div>
             </div>
@@ -1226,6 +1226,19 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
               <div class="card">
                 <div class="cardh"><div class="cardtitle" style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#16A34A;display:inline-block"></span>Gemeinde-Stammdaten</div><button class="tbtn tbtn-navy" style="font-size:11px" onclick="saveGemeindeDaten()">Speichern</button></div>
                 <div class="cardbody" style="display:flex;flex-direction:column;gap:10px">
+                  <div>
+                    <label style="font-size:11px;color:#6B7280;display:block;margin-bottom:5px">Gemeinde-Logo</label>
+                    <div style="display:flex;align-items:center;gap:12px">
+                      <div id="cfg-logo-preview" style="width:64px;height:64px;border-radius:10px;background:#F4F5F7;border:1.5px dashed #D1D5DB;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+                        <span style="font-size:10px;color:#9CA3AF;text-align:center">Kein Logo</span>
+                      </div>
+                      <div style="display:flex;flex-direction:column;gap:6px">
+                        <input type="file" id="cfg-logo-file" accept="image/png,image/jpeg,image/svg+xml" style="display:none" onchange="uploadGemeindeLogo(this.files[0])">
+                        <button type="button" class="tbtn tbtn-ghost" style="font-size:12px" onclick="document.getElementById('cfg-logo-file').click()">Logo hochladen</button>
+                        <span style="font-size:10.5px;color:#9CA3AF">PNG/JPG/SVG, max. 2 MB. Erscheint auf allen E-Mails & PDFs statt AJ Connect.</span>
+                      </div>
+                    </div>
+                  </div>
                   <div><label style="font-size:11px;color:#6B7280;display:block;margin-bottom:3px">Gemeindename</label><input id="cfg-name" style="width:100%;padding:8px;border:1.5px solid #E5E7EB;border-radius:7px;font-size:13px;outline:none" value="Ev. Gemeinde"></div>
                   <div><label style="font-size:11px;color:#6B7280;display:block;margin-bottom:3px">Adresse</label><input id="cfg-addr" style="width:100%;padding:8px;border:1.5px solid #E5E7EB;border-radius:7px;font-size:13px;outline:none" placeholder="Strasse, PLZ Ort"></div>
                   <div><label style="font-size:11px;color:#6B7280;display:block;margin-bottom:3px">E-Mail</label><input id="cfg-email" type="email" style="width:100%;padding:8px;border:1.5px solid #E5E7EB;border-radius:7px;font-size:13px;outline:none" placeholder="info@gemeinde.ch"></div>
@@ -2169,6 +2182,7 @@ async function saveAU() {
   btn.disabled = true; btn.textContent = 'Wird eingeladen...';
 
   try {
+    const { data: mandantRow2 } = await sb.from('mandanten').select('name,adresse,logo_url').eq('id',mid).single();
     const { data: { session } } = await sb.auth.getSession();
     const res = await fetch(`${SB_URL}/functions/v1/invite-user`, {
       method: 'POST',
@@ -2177,7 +2191,12 @@ async function saveAU() {
         'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`,
         'apikey': SUPABASE_ANON_KEY
       },
-      body: JSON.stringify({ email, name, rolle, mandant_id: mid })
+      body: JSON.stringify({
+        email, name, rolle, mandant_id: mid,
+        gemeindeName: mandantRow2?.name || '',
+        gemeindeAdresse: mandantRow2?.adresse || '',
+        logoUrl: mandantRow2?.logo_url || null
+      })
     });
     const result = await res.json();
 
@@ -2455,21 +2474,40 @@ function dmsDrag(e,on){e.preventDefault();document.getElementById('dms-drop').st
 function dmsDrop(e){e.preventDefault();document.getElementById('dms-drop').style.borderColor='#D1D5DB';if(!activeId)return;Array.from(e.dataTransfer.files).forEach(file=>{const ext=file.name.split('.').pop()||'dat';const d=new Date();const date=`${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;if(!dmsStore[activeId])dmsStore[activeId]=[];dmsStore[activeId].push({id:dmsSeq++,name:file.name,size:file.size,ext,date});});rndrDms();toast('Hochgeladen');}
 
 // ── PDF-Erzeugung für Spendenbescheinigung (jsPDF) ──
-function buildSpendenPDF(m, jahr, jahrSpenden, gesamt, gemeinde) {
+async function buildSpendenPDF(m, jahr, jahrSpenden, gesamt, branding) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const navy = [13, 31, 60];
   const gold = [200, 148, 26];
   const pageW = 210;
+  const gemeinde = branding?.name || 'Gemeinde';
 
   // Header
   doc.setFillColor(...navy);
   doc.rect(0, 0, pageW, 32, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
-  doc.text('AJ Connect', 20, 15);
-  doc.setTextColor(...gold); doc.setFontSize(9); doc.setFont('helvetica','normal');
-  doc.text('CONNECT. ORGANIZE. GROW.', 20, 22);
+
+  if (branding?.logoUrl) {
+    // Gemeinde-Logo statt AJ Connect Kreuz
+    const dataUri = await imageUrlToDataUri(branding.logoUrl);
+    if (dataUri) {
+      try { doc.addImage(dataUri, 16, 6, 20, 20, undefined, 'FAST'); } catch(e) {}
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+      doc.text(gemeinde, 42, 19);
+    } else {
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
+      doc.text(gemeinde, 20, 19);
+    }
+  } else {
+    // Fallback: AJ Connect Kreuz (solange kein eigenes Logo hochgeladen ist)
+    doc.setFillColor(...gold);
+    doc.rect(21.5, 8, 2, 16, 'F');
+    doc.rect(17, 12.5, 11, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
+    doc.text(gemeinde, 36, 19);
+  }
 
   // Title
   doc.setTextColor(...navy); doc.setFont('helvetica','bold'); doc.setFontSize(16);
@@ -2512,13 +2550,38 @@ function buildSpendenPDF(m, jahr, jahrSpenden, gesamt, gemeinde) {
   doc.text(`Total ${jahr}:`, 120, y);
   doc.text(`CHF ${gesamt.toLocaleString('de-CH',{minimumFractionDigits:2})}`, 175, y, { align: 'right' });
 
-  // Footer note
+  // Footer note: Gemeinde-Name + Adresse statt AJ Connect
   y += 16;
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(150,150,150);
   doc.text('Diese Bescheinigung wurde automatisch generiert und ist ohne Unterschrift gültig.', 20, y);
-  doc.text(`${gemeinde} · info@ajconnect.ch`, 20, y+5);
+  const footerLine = [gemeinde, branding?.adresse].filter(Boolean).join(' · ');
+  doc.text(footerLine, 20, y+5);
 
   return doc.output('datauristring').split(',')[1]; // base64 ohne data:-Prefix
+}
+
+// ── Gemeinde-Branding (Name, Adresse, Logo) für E-Mails & PDFs ──
+async function getGemeindeBranding(){
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  const fallback = { name: _S?.working_mandant_name || _S?.mandant_name || 'Gemeinde', adresse: '', logoUrl: null };
+  if(!mid) return fallback;
+  const {data,error} = await sb.from('mandanten').select('name,adresse,logo_url').eq('id',mid).single();
+  if(error || !data) return fallback;
+  return { name: data.name || fallback.name, adresse: data.adresse || '', logoUrl: data.logo_url || null };
+}
+
+// Lädt ein Bild von einer URL und wandelt es in eine Base64 Data-URI um (für jsPDF)
+async function imageUrlToDataUri(url){
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return await new Promise((resolve,reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch(e) { return null; }
 }
 
 async function genQuittung(){
@@ -2549,11 +2612,13 @@ async function genQuittung(){
   }
 
   toast('Sende Spendenbescheinigung...');
-  const gemeindeName = _S?.working_mandant_name || _S?.mandant_name || 'Gemeinde';
-  const pdfBase64 = buildSpendenPDF(m, jahr, jahrSpenden, t, gemeindeName);
+  const branding = await getGemeindeBranding();
+  const pdfBase64 = await buildSpendenPDF(m, jahr, jahrSpenden, t, branding);
   const result = await sendEmail('spendenbescheinigung', m.email, {
     name: `${m.anrede} ${m.vorname} ${m.nachname}`,
-    gemeinde: gemeindeName,
+    gemeinde: branding.name,
+    gemeindeAdresse: branding.adresse,
+    logoUrl: branding.logoUrl,
     jahr: jahr,
     gesamtbetrag: `CHF ${t.toLocaleString('de-CH')}`,
     spenden: jahrSpenden.map(s => ({ datum: fD(s.datum), betrag: `CHF ${s.betrag}`, zweck: s.zweck }))
@@ -3142,6 +3207,68 @@ function addToSetlist(lid){if(!setlisten.length){toast('Erst Setlist erstellen')
 // ═══════════════════════════════════════════
 // EVENTS
 // ═══════════════════════════════════════════
+// ── Kalendereintrag (.ics) für iOS/Android/Outlook ──
+function icsEscape(str) {
+  return String(str||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
+}
+function icsDateTime(datum, zeit) {
+  // datum: 'YYYY-MM-DD', zeit: 'HH:MM' -> 'YYYYMMDDTHHMMSS' (lokale Zeit, kein UTC-Suffix)
+  const d = datum.replace(/-/g,'');
+  const t = (zeit||'00:00').replace(':','') + '00';
+  return `${d}T${t}`;
+}
+function generateICS(ev) {
+  const uid = (ev._dbId || ev.id) + '@ajconnect.ch';
+  const dtStart = icsDateTime(ev.datum, ev.zeit || '00:00');
+  // Ende: falls Endzeit vorhanden nutzen, sonst +2 Stunden ab Start
+  let dtEnd;
+  if (ev.end) {
+    dtEnd = icsDateTime(ev.datum, ev.end);
+  } else {
+    const [h,m] = (ev.zeit||'00:00').split(':').map(Number);
+    const endDate = new Date(2000,0,1,h||0,m||0);
+    endDate.setHours(endDate.getHours()+2);
+    dtEnd = icsDateTime(ev.datum, `${String(endDate.getHours()).padStart(2,'0')}:${String(endDate.getMinutes()).padStart(2,'0')}`);
+  }
+  const now = new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  const desc = [ev.desc, ev.verantw ? `Verantwortlich: ${ev.verantw}` : ''].filter(Boolean).join('\\n');
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//AJ Connect//Veranstaltungen//DE',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VTIMEZONE',
+    'TZID:Europe/Zurich',
+    'END:VTIMEZONE',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${now}`,
+    `DTSTART;TZID=Europe/Zurich:${dtStart}`,
+    `DTEND;TZID=Europe/Zurich:${dtEnd}`,
+    `SUMMARY:${icsEscape(ev.name)}`,
+    ev.ort ? `LOCATION:${icsEscape(ev.ort)}` : '',
+    desc ? `DESCRIPTION:${icsEscape(desc)}` : '',
+    'STATUS:CONFIRMED',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].filter(Boolean);
+  return lines.join('\r\n');
+}
+function downloadICS(id) {
+  const ev = events.find(x => x.id === id || x._dbId === id);
+  if (!ev) return;
+  const ics = generateICS(ev);
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${ev.name.replace(/[^a-z0-9äöü]/gi,'_')}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('📅 Kalendereintrag heruntergeladen');
+}
+
 let events=[
   {id:'ev1',name:'Gemeindefest Sommer 2026',datum:'2026-07-05',zeit:'14:00',end:'20:00',typ:'Gemeindefest',ort:'Gemeindepark',verantw:'Anna Müller',max:200,anmeld:'ja',status:'geplant',desc:'Jährliches Gemeindefest mit Grill und Musik',anmeldungen:47},
   {id:'ev2',name:'Lobpreis-Abend',datum:'2026-05-08',zeit:'19:30',end:'21:30',typ:'Konzert',ort:'Hauptsaal',verantw:'Peter Keller',max:150,anmeld:'nein',status:'geplant',desc:'',anmeldungen:0},
@@ -3164,7 +3291,7 @@ function rndrEvents(){
   if(e('ev-anmeld'))e('ev-anmeld').textContent=events.reduce((s,x)=>s+(x.anmeldungen||0),0);
   if(e('ev-naechst'))e('ev-naechst').textContent=naechst?fD(naechst.datum):'—';
   const f=evFilter==='alle'?events:evFilter==='geplant'?geplant:events.filter(x=>x.status==='durchgefuehrt');
-  tb.innerHTML=f.map(ev=>'<tr onclick="openEVP(\''+ev.id+'\')" style="cursor:pointer" id="evr-'+ev.id+'"><td style="font-weight:500;color:#1A3560">'+fD(ev.datum)+'<div style="font-size:11px;color:#9CA3AF">'+ev.zeit+' Uhr</div></td><td><div style="font-weight:500">'+(evTE[ev.typ]||'📅')+' '+ev.name+'</div><div style="font-size:11px;color:#9CA3AF">'+(ev.desc||'').substring(0,50)+'</div></td><td><span style="background:#F4F5F7;color:#6B7280;padding:2px 7px;border-radius:4px;font-size:11px">'+ev.typ+'</span></td><td style="font-size:12px;color:#6B7280">'+(ev.ort||'—')+'</td><td style="font-size:12px;text-align:center">'+(ev.anmeld==='ja'?'<span style="font-weight:500;color:#1A3560">'+(ev.anmeldungen||0)+'</span>/'+(ev.max||'∞'):'—')+'</td><td><span style="padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500;'+(evSC[ev.status]||'')+'">'+(evSL[ev.status]||ev.status)+'</span></td></tr>').join('');
+  tb.innerHTML=f.map(ev=>'<tr onclick="openEVP(\''+ev.id+'\')" style="cursor:pointer" id="evr-'+ev.id+'"><td style="font-weight:500;color:#1A3560">'+fD(ev.datum)+'<div style="font-size:11px;color:#9CA3AF">'+ev.zeit+' Uhr</div></td><td><div style="font-weight:500">'+(evTE[ev.typ]||'📅')+' '+ev.name+'</div><div style="font-size:11px;color:#9CA3AF">'+(ev.desc||'').substring(0,50)+'</div></td><td><span style="background:#F4F5F7;color:#6B7280;padding:2px 7px;border-radius:4px;font-size:11px">'+ev.typ+'</span></td><td style="font-size:12px;color:#6B7280">'+(ev.ort||'—')+'</td><td style="font-size:12px;text-align:center">'+(ev.anmeld==='ja'?'<span style="font-weight:500;color:#1A3560">'+(ev.anmeldungen||0)+'</span>/'+(ev.max||'∞'):'—')+'</td><td><span style="padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500;'+(evSC[ev.status]||'')+'">'+(evSL[ev.status]||ev.status)+'</span></td><td style="text-align:center"><button title="In Kalender speichern" style="background:none;border:none;cursor:pointer;font-size:16px;padding:4px" onclick="event.stopPropagation();downloadICS(\''+ev.id+'\')">📅</button></td></tr>').join('');
   const cal=e('ev-cal-body');
   if(cal){const up=[...events].filter(x=>x.datum>=today).sort((a,b)=>a.datum.localeCompare(b.datum)).slice(0,6);cal.innerHTML=up.length?up.map(ev=>{const d=new Date(ev.datum);return'<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #E5E7EB;cursor:pointer" onclick="openEVP(\''+ev.id+'\')"><div style="width:38px;height:38px;background:#FDF3DC;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0"><div style="font-size:15px;font-weight:600;color:#C8941A;line-height:1">'+d.getDate()+'</div><div style="font-size:9px;color:#C8941A;text-transform:uppercase">'+['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'][d.getMonth()]+'</div></div><div><div style="font-size:13px;font-weight:500;color:#1A3560">'+ev.name+'</div><div style="font-size:11px;color:#9CA3AF">'+ev.zeit+' · '+(ev.ort||'')+'</div></div></div>';}).join(''):'<div style="color:#9CA3AF;font-size:12px;text-align:center;padding:16px">Keine kommenden Events</div>';}
 }
@@ -3267,6 +3394,7 @@ function navTo(p,el2){
   if(p==='spenden'){if(!spenden.length)loadSpenden();else filterSpenden();}
   if(p==='kreditoren'){if(!kreditoren.length)loadKreditoren();else{rndrKreditoren();filterRechnungen();}}
   if(p==='dokumente'){if(!_dokLoaded){loadDokumente();}else filterDok();}
+  if(p==='einrichtung'){loadGemeindeDaten();}
   if(p==='artikel'){
     const mid2=_S?.working_mandant_id||_S?.mandant_id;
     if(!mid2){toast('Bitte zuerst Gemeinde wählen (Arbeiten als)');return;}
@@ -3285,11 +3413,55 @@ function konvertToMitglied(){
   konvertKontakt(activeKK);
 }
 
+async function loadGemeindeDaten(){
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid) return;
+  const {data,error} = await sb.from('mandanten').select('name,email,adresse,telefon,website,logo_url').eq('id',mid).single();
+  if(error || !data) return;
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
+  set('cfg-name',data.name); set('cfg-email',data.email); set('cfg-addr',data.adresse);
+  set('cfg-tel',data.telefon); set('cfg-web',data.website);
+  const prev=document.getElementById('cfg-logo-preview');
+  if(prev){
+    if(data.logo_url) prev.innerHTML=`<img src="${data.logo_url}" style="width:100%;height:100%;object-fit:contain">`;
+    else prev.innerHTML='<span style="font-size:10px;color:#9CA3AF;text-align:center">Kein Logo</span>';
+  }
+  _S._gemeindeLogo = data.logo_url || null;
+}
+
+async function uploadGemeindeLogo(file){
+  if(!file) return;
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid){ toast('Bitte zuerst Gemeinde wählen'); return; }
+  if(file.size > 2*1024*1024){ toast('Datei zu gross (max. 2 MB)'); return; }
+  toast('Logo wird hochgeladen...');
+  const ext = file.name.split('.').pop();
+  const path = `${mid}/logo.${ext}`;
+  const { error: upErr } = await sb.storage.from('logos').upload(path, file, { upsert: true, cacheControl: '3600' });
+  if(upErr){ toast('Fehler beim Hochladen: '+upErr.message); return; }
+  const { data: pub } = sb.storage.from('logos').getPublicUrl(path);
+  const logoUrl = pub?.publicUrl + '?t=' + Date.now(); // Cache-Bust
+  const { error: dbErr } = await sb.from('mandanten').update({ logo_url: logoUrl }).eq('id', mid);
+  if(dbErr){ toast('Fehler beim Speichern: '+dbErr.message); return; }
+  const prev=document.getElementById('cfg-logo-preview');
+  if(prev) prev.innerHTML=`<img src="${logoUrl}" style="width:100%;height:100%;object-fit:contain">`;
+  _S._gemeindeLogo = logoUrl;
+  toast('✅ Logo gespeichert');
+}
+
 function saveGemeindeDaten(){
   const name=document.getElementById('cfg-name')?.value;
-  if(_S&&_S.mandant_id&&name){
-    dbUpdate('mandanten',_S.mandant_id,{name,email:document.getElementById('cfg-email')?.value||''});
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(mid && name){
+    dbUpdate('mandanten',mid,{
+      name,
+      email: document.getElementById('cfg-email')?.value||'',
+      adresse: document.getElementById('cfg-addr')?.value||'',
+      telefon: document.getElementById('cfg-tel')?.value||'',
+      website: document.getElementById('cfg-web')?.value||''
+    });
     _S.mandant_name=name;
+    if(_S.working_mandant_id) _S.working_mandant_name=name;
     const gn=document.getElementById('sb-gname');if(gn)gn.textContent=name;
   }
   toast('Gemeinde-Daten gespeichert ✓');
@@ -5744,6 +5916,7 @@ async function doRegister() {
   <div class="ktop">
     <div class="kcap">Veranstaltung</div>
     <div style="display:flex;gap:6px;margin-left:auto">
+      <button style="padding:5px 11px;border-radius:7px;font-size:11px;background:#EFF6FF;color:#2563EB;border:1px solid #BFDBFE;cursor:pointer;font-family:inherit" onclick="downloadICS(activeEVP)">📅 In Kalender speichern</button>
       <div id="ev-panel-del-wrap" style="display:none">
         <button style="padding:5px 11px;border-radius:7px;font-size:11px;background:#FEE2E2;color:#DC2626;border:1px solid #fca5a5;cursor:pointer;font-family:inherit" onclick="deleteEV()">Löschen</button>
       </div>
