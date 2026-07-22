@@ -1299,6 +1299,22 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
                   <a href="https://supabase.com/dashboard" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#1A3560;color:white;border-radius:7px;font-size:12px;text-decoration:none;font-weight:500">Supabase Dashboard öffnen ↗</a>
                 </div>
               </div>
+              <!-- Social Media (Instagram) -->
+              <div class="card">
+                <div class="cardh"><div class="cardtitle" style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#DB2777;display:inline-block"></span>Social Media (Instagram)</div></div>
+                <div class="cardbody" style="display:flex;flex-direction:column;gap:10px">
+                  <div id="ig-status-box" style="padding:14px;border-radius:10px;background:#F9FAFB;border:1px solid #E5E7EB">
+                    <div style="font-size:13px;color:#9CA3AF">Prüfe Verbindung...</div>
+                  </div>
+                  <div id="ig-publish-box" style="display:none;flex-direction:column;gap:8px">
+                    <label class="fl">Reel veröffentlichen</label>
+                    <input type="file" id="ig-video-file" accept="video/mp4,video/quicktime">
+                    <textarea class="fta" id="ig-caption" placeholder="Bildunterschrift / Hashtags..." style="min-height:60px"></textarea>
+                    <button class="tbtn tbtn-navy" style="font-size:12px;align-self:start" onclick="publishInstagramReel()">📤 Reel veröffentlichen</button>
+                    <span style="font-size:10.5px;color:#9CA3AF">Max. 90 Sekunden. Verarbeitung kann bis zu einer Minute dauern.</span>
+                  </div>
+                </div>
+              </div>
               <!-- Team & Berechtigungen (nur sichtbar fuer Rolle "Super") -->
               <div class="card" id="einrichtung-team-card" style="display:none">
                 <div class="cardh"><div class="cardtitle" style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#7C3AED;display:inline-block"></span>Team & Berechtigungen</div><button class="tbtn tbtn-navy" style="font-size:11px" onclick="openNMA_team()">+ Benutzer einladen</button></div>
@@ -4071,6 +4087,7 @@ function navTo(p,el2){
   if(p==='dokumente'){if(!_dokLoaded){loadDokumente();}else filterDok();}
   if(p==='einrichtung'){
     loadGemeindeDaten();
+    loadInstagramStatus();
     const teamCard = document.getElementById('einrichtung-team-card');
     if(teamCard){
       if(_S?.rolle==='super'){ teamCard.style.display='block'; loadTeamGemeinde(); }
@@ -4149,6 +4166,70 @@ async function toggleTeamUserAktiv(userId, current){
   rndrTeamGemeinde();
   toast(!current ? 'Benutzer freigeschaltet' : 'Benutzer gesperrt');
 }
+
+// ── Instagram Integration ──
+async function loadInstagramStatus(){
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  const box = document.getElementById('ig-status-box');
+  const pubBox = document.getElementById('ig-publish-box');
+  if(!box) return;
+  if(!mid){ box.innerHTML = '<div style="font-size:13px;color:#9CA3AF">Bitte zuerst Gemeinde wählen</div>'; return; }
+  box.innerHTML = '<div style="font-size:13px;color:#9CA3AF">Prüfe Verbindung...</div>';
+  try {
+    const res = await fetch(`/api/instagram/status?mandant_id=${mid}`);
+    const data = await res.json();
+    if(data.connected){
+      box.innerHTML = `<div style="font-size:13px;color:#16A34A;font-weight:600">✅ Verbunden als @${data.username}</div><div style="font-size:11px;color:#9CA3AF;margin-top:2px">Seit ${fD(data.connectedAt?.split('T')[0])}</div>`;
+      if(pubBox) pubBox.style.display='flex';
+    } else {
+      box.innerHTML = `<div style="font-size:13px;color:#6B7280;margin-bottom:8px">Noch nicht verbunden</div><a href="/api/instagram/authorize?mandant_id=${mid}" class="tbtn tbtn-navy" style="font-size:12px;text-decoration:none;display:inline-block">Mit Instagram verbinden</a>`;
+      if(pubBox) pubBox.style.display='none';
+    }
+  } catch(e){
+    box.innerHTML = '<div style="font-size:13px;color:#DC2626">Fehler beim Prüfen der Verbindung</div>';
+  }
+}
+
+async function publishInstagramReel(){
+  const file = document.getElementById('ig-video-file').files[0];
+  const caption = document.getElementById('ig-caption').value;
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!file){ toast('Bitte zuerst ein Video auswählen'); return; }
+  if(!mid){ toast('Bitte zuerst Gemeinde wählen'); return; }
+  toast('Video wird hochgeladen...');
+  try {
+    const path = `${mid}/instagram-reels/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+    const { error: upErr } = await sb.storage.from('dokumente').upload(path, file, { contentType: file.type });
+    if(upErr){ toast('Upload-Fehler: '+upErr.message); return; }
+    const { data: urlData } = sb.storage.from('dokumente').getPublicUrl(path);
+    toast('Reel wird veröffentlicht — das kann bis zu einer Minute dauern...');
+    const res = await fetch('/api/instagram/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mandant_id: mid, video_url: urlData.publicUrl, caption })
+    });
+    const result = await res.json();
+    if(!res.ok || result.error){ toast('Fehler: '+(result.error||'Unbekannt')); return; }
+    toast('✅ Reel veröffentlicht!');
+    document.getElementById('ig-video-file').value = '';
+    document.getElementById('ig-caption').value = '';
+  } catch(e){ toast('Fehler: '+e.message); }
+}
+
+// Zeigt Toast nach Rückkehr vom Instagram-OAuth-Ablauf
+(function checkInstagramCallbackStatus(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.has('instagram')){
+    const status = params.get('instagram');
+    const reason = params.get('reason');
+    setTimeout(() => {
+      if(status === 'connected') toast('✅ Instagram erfolgreich verbunden');
+      else if(status === 'error') toast('⚠ Instagram-Verbindung fehlgeschlagen' + (reason ? ': '+reason : ''));
+    }, 800);
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+  }
+})();
 
 async function loadGemeindeDaten(){
   const mid = _S?.working_mandant_id || _S?.mandant_id;
