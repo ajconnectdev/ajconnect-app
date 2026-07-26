@@ -1257,7 +1257,15 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
           <div class="topbar">
             <div class="topbar-title">KI-Assistent</div>
           </div>
-          <p style="font-size:12.5px;color:#9CA3AF;margin:-8px 0 16px">Lässt Texte für Ankündigungen, E-Mails oder Social Media von Claude (Anthropic) erstellen. Prüfe generierte Texte vor dem Versand immer noch einmal selbst.</p>
+          <p style="font-size:12.5px;color:#9CA3AF;margin:-8px 0 16px">Powered by Claude (Anthropic). Prüfe generierte Texte und Antworten vor der Verwendung immer noch einmal selbst.</p>
+
+          <div class="ktabs" style="margin-bottom:16px">
+            <div class="ktab on" onclick="sTabKI('ki-tab-text',this)">✨ Text generieren</div>
+            <div class="ktab" onclick="sTabKI('ki-tab-frage',this)">💬 Fragen zu meiner Gemeinde</div>
+          </div>
+
+          <!-- TAB: TEXT GENERIEREN -->
+          <div class="tpane on" id="ki-tab-text">
           <div class="g2">
             <div class="card">
               <div class="cardh"><div class="cardtitle">Text generieren</div></div>
@@ -1283,11 +1291,33 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
                 <div id="ki-result-empty" style="text-align:center;padding:40px 20px;color:#9CA3AF;font-size:13px">Noch kein Text generiert — links ausfüllen und auf "Text generieren" klicken.</div>
                 <div id="ki-result-box" style="display:none">
                   <textarea class="fta" id="ki-result-text" style="min-height:220px;font-size:13.5px;line-height:1.6"></textarea>
-                  <div style="display:flex;gap:8px;margin-top:10px">
+                  <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
                     <button class="tbtn tbtn-ghost" onclick="copyKiResult()">📋 Kopieren</button>
                     <button class="tbtn tbtn-ghost" onclick="generateKiText()">🔄 Nochmal generieren</button>
                   </div>
+                  <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+                    <select class="fs" id="ki-uebersetzen-sprache" style="max-width:160px">
+                      <option>Englisch</option><option>Französisch</option><option>Italienisch</option><option>Portugiesisch</option><option>Spanisch</option><option>Albanisch</option><option>Tigrinya</option>
+                    </select>
+                    <button class="tbtn tbtn-ghost" onclick="translateKiResult()">🌐 Übersetzen</button>
+                  </div>
                 </div>
+              </div>
+            </div>
+          </div>
+          </div>
+
+          <!-- TAB: FRAGE-ASSISTENT -->
+          <div class="tpane" id="ki-tab-frage">
+            <div class="card">
+              <div class="cardh"><div class="cardtitle">Frag in normaler Sprache — z.B. "Wie viele Neuzugänge hatten wir dieses Jahr?"</div></div>
+              <div class="cardbody">
+                <div id="ki-frage-verlauf" style="display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto;margin-bottom:14px;padding:4px"></div>
+                <div style="display:flex;gap:8px">
+                  <input class="fi" id="ki-frage-input" placeholder="Deine Frage..." style="flex:1" onkeydown="if(event.key==='Enter')askKiAssistent()">
+                  <button class="tbtn tbtn-navy" id="ki-frage-btn" onclick="askKiAssistent()">Fragen</button>
+                </div>
+                <p style="font-size:11px;color:#9CA3AF;margin-top:10px">Die KI antwortet nur anhand einer zusammengefassten Übersicht deiner Gemeinde (Mitglieder-, Spenden- und Terminzahlen) — sieht keine Namen oder Detaildaten einzelner Personen.</p>
               </div>
             </div>
           </div>
@@ -1816,7 +1846,124 @@ const SUPABASE_ANON_KEY = SB_KEY; // Alias für Edge Function Aufrufe
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
 // ── E-Mail Helper: ruft die send-email Edge Function auf (Brevo) ──
-// ── KI-Assistent (Anthropic Claude) ──
+// ── KI: Dokument zusammenfassen ──
+async function summarizeDocument(d){
+  document.getElementById('mo-ki-summary').classList.add('open');
+  document.getElementById('ki-sum-loading').style.display = 'block';
+  document.getElementById('ki-sum-result').style.display = 'none';
+  document.getElementById('ki-sum-docname').textContent = d.name;
+
+  try {
+    const fileRes = await fetch(d.datei_url);
+    if(!fileRes.ok) throw new Error('Datei konnte nicht geladen werden');
+    const blob = await fileRes.blob();
+    if(blob.size > 10*1024*1024){ throw new Error('Datei zu gross für die KI-Analyse (max. 10 MB)'); }
+    const mediaType = blob.type || 'application/octet-stream';
+    const base64 = await new Promise((resolve,reject)=>{
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${SB_URL}/functions/v1/ai-assist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ typ: 'zusammenfassung', fileBase64: base64, mediaType, dateiName: d.name })
+    });
+    const result = await res.json();
+    if(!res.ok || result.error) throw new Error(result.error || 'Unbekannter Fehler');
+
+    document.getElementById('ki-sum-loading').style.display = 'none';
+    document.getElementById('ki-sum-result').style.display = 'block';
+    document.getElementById('ki-sum-text').value = result.text;
+  } catch(e){
+    document.getElementById('ki-sum-loading').innerHTML = `<span style="color:#DC2626">Fehler: ${e.message}</span>`;
+  }
+}
+
+function copyKiSummary(){
+  const ta = document.getElementById('ki-sum-text');
+  ta.select();
+  document.execCommand('copy');
+  toast('📋 In Zwischenablage kopiert');
+}
+
+// ── KI: Text übersetzen ──
+async function translateKiResult(){
+  const sprache = document.getElementById('ki-uebersetzen-sprache').value;
+  const originalText = document.getElementById('ki-result-text').value;
+  if(!originalText){ toast('Erst einen Text generieren'); return; }
+  toast('Übersetze...');
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${SB_URL}/functions/v1/ai-assist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ typ: 'uebersetzung', kontext: originalText, sprache })
+    });
+    const result = await res.json();
+    if(!res.ok || result.error){ toast('Fehler: '+(result.error||'Unbekannt')); return; }
+    document.getElementById('ki-result-text').value = result.text;
+    toast('✅ Übersetzt nach ' + sprache);
+  } catch(e){ toast('Fehler: '+e.message); }
+}
+
+// ── KI: Suchassistent über echte Gemeindedaten (RAG-Ansatz, keine direkte DB-Abfrage durch die KI) ──
+async function askKiAssistent(){
+  const frage = document.getElementById('ki-frage-input').value.trim();
+  if(!frage){ toast('Bitte eine Frage eingeben'); return; }
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid){ toast('Bitte zuerst Gemeinde wählen'); return; }
+
+  const btn = document.getElementById('ki-frage-btn');
+  btn.disabled = true; btn.textContent = 'Suche Antwort...';
+
+  try {
+    // Datenzusammenfassung wird HIER im Browser erstellt (mit den bereits durch RLS
+    // korrekt gefilterten Daten der eigenen Gemeinde) — die KI bekommt nie direkten
+    // Datenbankzugriff, nur diese kompakte, bereits geprüfte Zusammenfassung.
+    if(!members.length) await loadAllData();
+    if(!spenden.length) await loadSpenden();
+    const heute = new Date();
+    const jahrPrefix = String(heute.getFullYear());
+    const monatPrefix = jahrPrefix + '-' + String(heute.getMonth()+1).padStart(2,'0');
+
+    const datenKontext = {
+      gemeinde: (_S.working_mandant_name || _S.mandant_name),
+      heutigesDatum: heute.toISOString().split('T')[0],
+      mitgliederGesamt: members.length,
+      mitgliederAktiv: members.filter(m=>m.status==='aktiv').length,
+      mitgliederNeuDiesesJahr: members.filter(m=>m.eintritt && m.eintritt.startsWith(jahrPrefix)).length,
+      mitgliederBesucher: members.filter(m=>m.status==='besucher').length,
+      spendenDiesesJahrTotal: spenden.filter(s=>s.datum && s.datum.startsWith(jahrPrefix)).reduce((s,x)=>s+parseFloat(x.betrag||0),0),
+      spendenDiesenMonatTotal: spenden.filter(s=>s.datum && s.datum.startsWith(monatPrefix)).reduce((s,x)=>s+parseFloat(x.betrag||0),0),
+      anzahlSpendenDiesesJahr: spenden.filter(s=>s.datum && s.datum.startsWith(jahrPrefix)).length,
+      kommendeVeranstaltungen: (events||[]).filter(e=>e.datum >= heute.toISOString().split('T')[0]).slice(0,10).map(e=>({name:e.name, datum:e.datum, ort:e.ort})),
+      mitarbeiterGesamt: (mitarbeiter||[]).length,
+      mitarbeiterAktiv: (mitarbeiter||[]).filter(m=>m.status==='aktiv').length
+    };
+
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${SB_URL}/functions/v1/ai-assist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ typ: 'frage', kontext: frage, daten: datenKontext })
+    });
+    const result = await res.json();
+    if(!res.ok || result.error){ toast('Fehler: '+(result.error||'Unbekannt')); return; }
+
+    const chatBox = document.getElementById('ki-frage-verlauf');
+    chatBox.insertAdjacentHTML('beforeend', `
+      <div style="align-self:flex-end;background:#1A3560;color:white;padding:9px 13px;border-radius:10px 10px 2px 10px;max-width:80%;font-size:13px">${frage}</div>
+      <div style="align-self:flex-start;background:#F4F5F7;color:#1A1A1A;padding:9px 13px;border-radius:10px 10px 10px 2px;max-width:80%;font-size:13px;white-space:pre-wrap">${result.text}</div>
+    `);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    document.getElementById('ki-frage-input').value = '';
+  } catch(e){ toast('Fehler: '+e.message); }
+  btn.disabled = false; btn.textContent = 'Fragen';
+}
 async function generateKiText(){
   const typ = document.getElementById('ki-typ').value;
   const kontext = document.getElementById('ki-kontext').value.trim();
@@ -4241,6 +4388,13 @@ async function deleteMA(id){
 }
 
 // ── Detail-Panel ──
+function sTabKI(name, el){
+  document.querySelectorAll('#pg-ki .ktab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('#pg-ki .tpane').forEach(t=>t.classList.remove('on'));
+  if(el) el.classList.add('on');
+  const tp = document.getElementById(name); if(tp) tp.classList.add('on');
+}
+
 function sTabMA(name, el){
   document.querySelectorAll('#ma-panel .ktab').forEach(t=>t.classList.remove('on'));
   document.querySelectorAll('#ma-panel .tpane').forEach(t=>t.classList.remove('on'));
@@ -5770,8 +5924,8 @@ function rndrDok() {
     grid.innerHTML = '<div style="text-align:center;color:#9CA3AF;padding:40px;grid-column:1/-1">Keine Dokumente gefunden</div>';
     return;
   }
-  const icons = {protokoll:'📋', vertrag:'📄', rechnung:'💰', bild:'🖼', sonstiges:'📁'};
-  const colors = {protokoll:'#DBEAFE', vertrag:'#EDE9FE', rechnung:'#DCFCE7', bild:'#FEF3C7', sonstiges:'#F3F4F6'};
+  const icons = {protokoll:'📋', vertrag:'📄', rechnung:'💰', bild:'🖼', predigt:'🎙', sonstiges:'📁'};
+  const colors = {protokoll:'#DBEAFE', vertrag:'#EDE9FE', rechnung:'#DCFCE7', bild:'#FEF3C7', predigt:'#FDF3DC', sonstiges:'#F3F4F6'};
   const fmtSize = b => b > 1048576 ? (b/1048576).toFixed(1)+' MB' : b > 1024 ? Math.round(b/1024)+' KB' : b+' B';
   grid.innerHTML = '';
   dokFilt.sort((a,b) => (b.created_at||'').localeCompare(a.created_at||'')).forEach(d => {
@@ -5825,6 +5979,14 @@ function rndrDok() {
     delBtn.style.cssText = 'background:#FEE2E2;color:#DC2626;border-color:#fca5a5';
     delBtn.textContent = '🗑';
     delBtn.onclick = function(e){ e.stopPropagation(); delDok(d._dbId); };
+    if(d.datei_url){
+      const sumBtn = document.createElement('button');
+      sumBtn.className = 'aaction-btn';
+      sumBtn.title = 'Mit KI zusammenfassen';
+      sumBtn.textContent = '🤖';
+      sumBtn.onclick = function(e){ e.stopPropagation(); summarizeDocument(d); };
+      btns.appendChild(sumBtn);
+    }
     btns.appendChild(delBtn);
     card.appendChild(ico);
     card.appendChild(name);
@@ -5867,6 +6029,7 @@ async function uploadDok(input) {
     else if(nameLow.includes('protokoll') || nameLow.includes('minutes')) typ = 'protokoll';
     else if(nameLow.includes('vertrag') || nameLow.includes('contract')) typ = 'vertrag';
     else if(nameLow.includes('rechnung') || nameLow.includes('invoice')) typ = 'rechnung';
+    else if(nameLow.includes('predigt') || nameLow.includes('sermon')) typ = 'predigt';
     
     // Try Supabase Storage upload
     let datei_url = '';
@@ -7546,6 +7709,21 @@ async function doRegister() {
   </div>
 </div>
 
+
+<!-- MODAL: KI-ZUSAMMENFASSUNG -->
+<div class="mo" id="mo-ki-summary">
+  <div class="modal" style="max-width:520px">
+    <div class="mh"><div class="mt2">🤖 KI-Zusammenfassung</div><div class="mx" onclick="closeMo('mo-ki-summary')">✕</div></div>
+    <div class="mb2">
+      <div id="ki-sum-loading" style="text-align:center;padding:30px;color:#9CA3AF;font-size:13px">Dokument wird analysiert...</div>
+      <div id="ki-sum-result" style="display:none">
+        <div style="font-size:12px;color:#9CA3AF;margin-bottom:8px" id="ki-sum-docname"></div>
+        <textarea class="fta" id="ki-sum-text" style="min-height:220px;font-size:13.5px;line-height:1.6"></textarea>
+        <button class="tbtn tbtn-ghost" style="margin-top:10px" onclick="copyKiSummary()">📋 Kopieren</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL: NEUE AUFGABE -->
 <div class="mo" id="mo-nauf">
