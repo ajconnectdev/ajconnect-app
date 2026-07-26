@@ -782,6 +782,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
       <div class="sb-item" onclick="navTo('kreditoren',this)"><svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>Kreditoren</div>
       <div class="sb-sec">Verwaltung</div>
       <div class="sb-item" onclick="navTo('mitarbeiter',this)"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>Mitarbeiter</div>
+      <div class="sb-item" onclick="navTo('ki',this)"><svg viewBox="0 0 24 24"><path d="M12 2a1 1 0 011 1v1.07A7.002 7.002 0 0119 11v2a7.002 7.002 0 01-6 6.93V21a1 1 0 01-2 0v-1.07A7.002 7.002 0 015 13v-2a7.002 7.002 0 016-6.93V3a1 1 0 011-1zm0 4a5 5 0 00-5 5v2a5 5 0 0010 0v-2a5 5 0 00-5-5zm-2 5.5a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z"/></svg>KI-Assistent</div>
       <div class="sb-item" onclick="navTo('dokumente',this)"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>Dokumente</div>
       <div class="sb-item" onclick="navTo('einrichtung',this)"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58z"/></svg>Einrichtung</div>
       <div class="sb-foot">
@@ -1248,6 +1249,46 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
                 <thead><tr><th>Name</th><th>Position</th><th>Abteilung</th><th>Pensum</th><th>Anstellung</th><th>Status</th><th style="width:36px"></th><th style="width:90px"></th></tr></thead>
                 <tbody id="ma-tbody"><tr><td colspan="8" class="aempty">Lädt...</td></tr></tbody>
               </table>
+            </div>
+          </div>
+        </div>
+        <!-- KI-ASSISTENT -->
+        <div class="page" id="pg-ki">
+          <div class="topbar">
+            <div class="topbar-title">KI-Assistent</div>
+          </div>
+          <p style="font-size:12.5px;color:#9CA3AF;margin:-8px 0 16px">Lässt Texte für Ankündigungen, E-Mails oder Social Media von Claude (Anthropic) erstellen. Prüfe generierte Texte vor dem Versand immer noch einmal selbst.</p>
+          <div class="g2">
+            <div class="card">
+              <div class="cardh"><div class="cardtitle">Text generieren</div></div>
+              <div class="cardbody" style="display:flex;flex-direction:column;gap:12px">
+                <div class="fgg"><label class="fl">Art des Textes</label><select class="fs" id="ki-typ">
+                  <option value="ankuendigung">Ankündigung (z.B. für Gottesdienst/Event)</option>
+                  <option value="email">E-Mail an Mitglieder</option>
+                  <option value="social">Social-Media-Post (Instagram/Facebook)</option>
+                  <option value="dank">Dankes-Nachricht (z.B. an Spender/Freiwillige)</option>
+                </select></div>
+                <div class="fgg"><label class="fl">Worum geht's? (Stichpunkte reichen)</label><textarea class="fta" id="ki-kontext" placeholder="z.B. Sommerfest am 15. August, 14 Uhr, Gemeindepark, mit Grill und Kinderprogramm, alle sind eingeladen" style="min-height:100px"></textarea></div>
+                <div class="fgg"><label class="fl">Tonalität</label><select class="fs" id="ki-ton">
+                  <option value="freundlich">Freundlich & einladend</option>
+                  <option value="formell">Formell & sachlich</option>
+                  <option value="locker">Locker & jugendlich</option>
+                </select></div>
+                <button class="tbtn tbtn-navy" onclick="generateKiText()" id="ki-generate-btn">✨ Text generieren</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="cardh"><div class="cardtitle">Ergebnis</div></div>
+              <div class="cardbody">
+                <div id="ki-result-empty" style="text-align:center;padding:40px 20px;color:#9CA3AF;font-size:13px">Noch kein Text generiert — links ausfüllen und auf "Text generieren" klicken.</div>
+                <div id="ki-result-box" style="display:none">
+                  <textarea class="fta" id="ki-result-text" style="min-height:220px;font-size:13.5px;line-height:1.6"></textarea>
+                  <div style="display:flex;gap:8px;margin-top:10px">
+                    <button class="tbtn tbtn-ghost" onclick="copyKiResult()">📋 Kopieren</button>
+                    <button class="tbtn tbtn-ghost" onclick="generateKiText()">🔄 Nochmal generieren</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1775,6 +1816,47 @@ const SUPABASE_ANON_KEY = SB_KEY; // Alias für Edge Function Aufrufe
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
 // ── E-Mail Helper: ruft die send-email Edge Function auf (Brevo) ──
+// ── KI-Assistent (Anthropic Claude) ──
+async function generateKiText(){
+  const typ = document.getElementById('ki-typ').value;
+  const kontext = document.getElementById('ki-kontext').value.trim();
+  const ton = document.getElementById('ki-ton').value;
+  if(!kontext){ toast('Bitte kurz beschreiben, worum es geht'); return; }
+
+  const btn = document.getElementById('ki-generate-btn');
+  btn.disabled = true; btn.textContent = 'Generiere...';
+
+  try {
+    const branding = await getGemeindeBranding();
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${SB_URL}/functions/v1/ai-assist`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ typ, kontext, ton, gemeinde: branding.name })
+    });
+    const result = await res.json();
+    if(!res.ok || result.error){ toast('Fehler: '+(result.error||'Unbekannt')); return; }
+
+    document.getElementById('ki-result-empty').style.display = 'none';
+    document.getElementById('ki-result-box').style.display = 'block';
+    document.getElementById('ki-result-text').value = result.text;
+  } catch(e){
+    toast('Fehler: '+e.message);
+  }
+  btn.disabled = false; btn.textContent = '✨ Text generieren';
+}
+
+function copyKiResult(){
+  const ta = document.getElementById('ki-result-text');
+  ta.select();
+  document.execCommand('copy');
+  toast('📋 In Zwischenablage kopiert');
+}
+
 async function sendEmail(type, to, data, attachment) {
   try {
     const body = { type, to, data };
@@ -2627,7 +2709,7 @@ function closeMo(id){document.getElementById(id).classList.remove('open');}
 function tIA(id){document.getElementById(id).classList.toggle('open');}
 function zwB(w){return{twint:'<span style="background:#E0F2FE;color:#0369A1;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">TWINT</span>',bar:'<span style="background:#DCFCE7;color:#16A34A;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">Bar</span>',ueberweisung:'<span style="background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">Überweisung</span>'}[w]||w;}
 
-const PT={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben'};
+const PT={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben',ki:'KI-Assistent'};
 
 
 
@@ -4515,7 +4597,7 @@ function navTo(p,el2){
   document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
   const pg=document.getElementById('pg-'+p);if(pg)pg.classList.add('on');
   if(el2)el2.classList.add('active');
-  const titles={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',volunteer:'Freiwillige',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',artikel:'Artikel',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben'};
+  const titles={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',volunteer:'Freiwillige',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',artikel:'Artikel',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben',ki:'KI-Assistent'};
   document.getElementById('tb-title').textContent=titles[p]||p;
   const isM=p==='mitglieder';
   document.getElementById('vt-wrap').style.display=isM?'block':'none';
@@ -6781,13 +6863,14 @@ const MODULE_PERMISSIONS = {
   mitarbeiter: 'Mitarbeiter',
   dokumente: 'Dokumente',
   einrichtung: 'Einrichtung',
+  ki: 'KI-Assistent',
 };
 
 // Vordefinierte Rollen-Pakete (Schnellauswahl) — koennen danach frei angepasst werden
 // Welche Module pro Lizenzstufe ueberhaupt verfuegbar sind (Obergrenze, unabhaengig von Einzel-Berechtigungen)
 const LIZENZ_MODULE_MAP = {
   starter: ['mitglieder','kontakte','gottesdienste','dokumente','einrichtung'],
-  standard: ['mitglieder','kontakte','gottesdienste','dokumente','einrichtung','groups','events','spenden','volunteer','worship'],
+  standard: ['mitglieder','kontakte','gottesdienste','dokumente','einrichtung','groups','events','spenden','volunteer','worship','ki'],
   professional: Object.keys(MODULE_PERMISSIONS)
 };
 function lizenzModule(mod){
