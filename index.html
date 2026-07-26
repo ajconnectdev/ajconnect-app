@@ -763,6 +763,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
       </div>
       <div class="sb-sec">Übersicht</div>
       <div class="sb-item active" onclick="navTo('dashboard',this)"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</div>
+      <div class="sb-item" onclick="navTo('aufgaben',this)"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Meine Aufgaben</div>
       <div class="sb-sec">Gemeinde</div>
       <div class="sb-item" onclick="navTo('mitglieder',this)"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>Mitglieder</div>
       <div class="sb-item" onclick="navTo('kontakte',this)"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>Kontakte</div>
@@ -823,26 +824,60 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
         <div class="page on" id="pg-dashboard">
           <div class="sgrid4">
             <div class="scard"><div class="sico" style="background:#EFF6FF"><svg viewBox="0 0 24 24" style="fill:#2563EB"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div><div><div class="sn" id="db-m">0</div><div class="sl">Mitglieder</div><div class="sd" style="color:#16A34A" id="db-md"></div></div></div>
-            <div class="scard"><div class="sico" style="background:#FDF3DC"><svg viewBox="0 0 24 24" style="fill:#C8941A"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2z"/></svg></div><div><div class="sn">CHF 4'820</div><div class="sl">Spenden April</div><div class="sd" style="color:#16A34A">↑ 12%</div></div></div>
-            <div class="scard"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13z"/></svg></div><div><div class="sn">Heute</div><div class="sl">Gottesdienst</div><div class="sd" style="color:#6B7280">10:00 · Hauptsaal</div></div></div>
-            <div class="scard"><div class="sico" style="background:#FEE2E2"><svg viewBox="0 0 24 24" style="fill:#DC2626"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg></div><div><div class="sn">7</div><div class="sl">Offene Aufgaben</div><div class="sd" style="color:#DC2626">2 überfällig</div></div></div>
+            <div class="scard"><div class="sico" style="background:#FDF3DC"><svg viewBox="0 0 24 24" style="fill:#C8941A"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2z"/></svg></div><div><div class="sn" id="db-spenden">CHF 0</div><div class="sl" id="db-spenden-label">Spenden diesen Monat</div><div class="sd" style="color:#9CA3AF" id="db-spenden-sub">&nbsp;</div></div></div>
+            <div class="scard"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13z"/></svg></div><div><div class="sn" id="db-gd-sn">—</div><div class="sl">Gottesdienst heute</div><div class="sd" style="color:#6B7280" id="db-gd-sd">Keiner geplant</div></div></div>
+            <div class="scard" style="cursor:pointer" onclick="navTo('aufgaben')"><div class="sico" style="background:#FEE2E2"><svg viewBox="0 0 24 24" style="fill:#DC2626"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg></div><div><div class="sn" id="db-auf-n">0</div><div class="sl">Offene Aufgaben</div><div class="sd" style="color:#DC2626" id="db-auf-sd">&nbsp;</div></div></div>
+          </div>
+          <div class="card" id="db-bibelvers-card" style="background:linear-gradient(135deg,#FDF3DC,#FBEAC8);border:1px solid #f0dca8;margin-top:16px">
+            <div class="cardbody" style="display:flex;gap:14px;align-items:flex-start">
+              <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:#C8941A;flex-shrink:0;margin-top:2px"><path d="M6 2c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z"/></svg>
+              <div>
+                <div style="font-size:14.5px;font-style:italic;color:#5c4413;line-height:1.5" id="db-bibelvers-text">Lädt...</div>
+                <div style="font-size:12px;font-weight:600;color:#C8941A;margin-top:6px" id="db-bibelvers-ref"></div>
+              </div>
+            </div>
           </div>
           <div class="g2">
             <div class="card" style="background:linear-gradient(135deg,#1A3560,#0F1F3D);border:none">
               <div class="cardh"><div class="cardtitle" style="color:rgba(255,255,255,0.6);font-size:11px;text-transform:uppercase;letter-spacing:1px">Gottesdienst heute</div></div>
-              <div class="cardbody">
-                <div style="font-size:16px;font-weight:600;color:white;margin-bottom:12px">Ostern — Er ist auferstanden!</div>
-                <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;font-size:13px;color:rgba(255,255,255,0.75)"><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:#e8b84b;flex-shrink:0"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>10:00 – 12:00 Uhr</div>
-                <div style="display:flex;align-items:center;gap:7px;font-size:13px;color:rgba(255,255,255,0.75)"><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:#e8b84b;flex-shrink:0"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13z"/></svg>Hauptsaal · Musterstrasse 1</div>
+              <div class="cardbody" id="db-gd-card-body">
+                <div style="font-size:14px;color:rgba(255,255,255,0.6)">Lädt...</div>
               </div>
             </div>
             <div class="card">
               <div class="cardh"><div class="cardtitle">Schnellzugriff</div></div>
               <div class="cardbody" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
                 <div onclick="navTo('mitglieder');openNM()" style="background:#F4F5F7;border:1px solid #E5E7EB;border-radius:9px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px" onmouseover="this.style.borderColor='#C8941A';this.style.background='#FDF3DC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F4F5F7'"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#1A3560"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6z"/></svg><span style="font-size:12px;font-weight:500;color:#1A1A1A">Mitglied erfassen</span></div>
-                <div onclick="navTo('einrichtung')" style="background:#F4F5F7;border:1px solid #E5E7EB;border-radius:9px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px" onmouseover="this.style.borderColor='#C8941A';this.style.background='#FDF3DC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F4F5F7'"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#1A3560"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58z"/></svg><span style="font-size:12px;font-weight:500;color:#1A1A1A">Einrichtung</span></div>
+                <div onclick="navTo('spenden');openNS()" style="background:#F4F5F7;border:1px solid #E5E7EB;border-radius:9px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px" onmouseover="this.style.borderColor='#C8941A';this.style.background='#FDF3DC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F4F5F7'"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#1A3560"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg><span style="font-size:12px;font-weight:500;color:#1A1A1A">Spende erfassen</span></div>
+                <div onclick="navTo('kontakte');openNK()" style="background:#F4F5F7;border:1px solid #E5E7EB;border-radius:9px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px" onmouseover="this.style.borderColor='#C8941A';this.style.background='#FDF3DC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F4F5F7'"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#1A3560"><path d="M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8z"/></svg><span style="font-size:12px;font-weight:500;color:#1A1A1A">Kontakt erfassen</span></div>
+                <div onclick="navTo('events');openNEv()" style="background:#F4F5F7;border:1px solid #E5E7EB;border-radius:9px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px" onmouseover="this.style.borderColor='#C8941A';this.style.background='#FDF3DC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F4F5F7'"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#1A3560"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg><span style="font-size:12px;font-weight:500;color:#1A1A1A">Veranstaltung anlegen</span></div>
               </div>
             </div>
+          </div>
+        </div>
+        <!-- MEINE AUFGABEN -->
+        <div class="page" id="pg-aufgaben">
+          <div class="topbar">
+            <div class="topbar-title">Meine Aufgaben</div>
+            <div class="topbar-right">
+              <button class="tbtn tbtn-navy" onclick="openNAufgabe()">+ Neue Aufgabe</button>
+            </div>
+          </div>
+          <p style="font-size:12.5px;color:#9CA3AF;margin:-8px 0 16px">Nur du siehst deine eigenen Aufgaben — andere Benutzer sehen sie nicht.</p>
+          <div class="sgrid4" style="margin-bottom:16px">
+            <div class="scard"><div class="sico" style="background:#EFF6FF"><svg viewBox="0 0 24 24" style="fill:#2563EB"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg></div><div><div class="sn" id="auf-offen-n">0</div><div class="sl">Offen</div></div></div>
+            <div class="scard"><div class="sico" style="background:#FEE2E2"><svg viewBox="0 0 24 24" style="fill:#DC2626"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div><div><div class="sn" id="auf-ueberf-n">0</div><div class="sl">Überfällig</div></div></div>
+            <div class="scard"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><div><div class="sn" id="auf-erledigt-n">0</div><div class="sl">Erledigt</div></div></div>
+          </div>
+          <div class="tcard">
+            <div class="tcardh">
+              <select class="afs" id="auf-filter" onchange="rndrAufgaben()">
+                <option value="offen">Offene Aufgaben</option>
+                <option value="alle">Alle Aufgaben</option>
+                <option value="erledigt">Erledigt</option>
+              </select>
+            </div>
+            <div id="auf-list" style="display:flex;flex-direction:column;gap:8px;padding:14px"></div>
           </div>
         </div>
         <!-- MITGLIEDER -->
@@ -1977,6 +2012,7 @@ async function loadUserAndShow(user) {
         initAppUI();
         applySidebarPermissions();
         showPage('app');
+        updStats();loadDashboardLive();showDailyBibelvers();
         const adminBtn = document.getElementById('admin-btn-wrap');
         if(adminBtn) adminBtn.style.display = 'block';
         setTimeout(() => { populateWorkingMandantSel(); }, 300);
@@ -1992,6 +2028,7 @@ async function loadUserAndShow(user) {
     initAppUI();
     applySidebarPermissions();
     showPage('app');
+    updStats();loadDashboardLive();showDailyBibelvers();
   } catch(e) {
     showPage('login');
     showErr('Fehler: ' + e.message);
@@ -2370,7 +2407,7 @@ function closeMo(id){document.getElementById(id).classList.remove('open');}
 function tIA(id){document.getElementById(id).classList.toggle('open');}
 function zwB(w){return{twint:'<span style="background:#E0F2FE;color:#0369A1;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">TWINT</span>',bar:'<span style="background:#DCFCE7;color:#16A34A;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">Bar</span>',ueberweisung:'<span style="background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">Überweisung</span>'}[w]||w;}
 
-const PT={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung'};
+const PT={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben'};
 
 
 
@@ -2420,6 +2457,109 @@ function chG(s,id){if(s.value==='__n'){openGM();s.value='';return;}const m=membe
 function rndrCards(){document.getElementById('m-cg').innerHTML=mFilt.map(m=>{const g=gG(m.groupId);return`<div class="mc" onclick="openK('${m.id}')"><div class="mc-av" style="background:${m.color}">${ini(m)}</div><div class="mc-n">${m.vorname} ${m.nachname}</div><div class="mc-b"><span class="sbadge ${sC(m.status)}">${sL(m.status)}</span></div><div class="mc-d"></div><div class="mc-r"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12h2V6h16v12h2V6c0-1.11-.89-2-2-2z"/></svg>${m.email}</div>${g?`<div class="mc-r"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg>${g.name}</div>`:''}</div>`;}).join('');}
 
 function updStats(){const t=members.length,a=members.filter(m=>m.status==='aktiv').length,b=members.filter(m=>m.status==='besucher').length,n=members.filter(m=>m.status==='neu').length;['ms-t','db-m'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t;});['ms-a','ms-b','ms-n','nb-m'].forEach((id,i)=>{const el=document.getElementById(id);if(el)el.textContent=[a,b,n,t][i];});const dm=document.getElementById('db-md');if(dm)dm.textContent=`↑ ${n} diesen Monat`;}
+
+// ── Dashboard: echte Live-Zahlen (Spenden diesen Monat, Gottesdienst heute, Aufgaben) ──
+const MONATSNAMEN = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+async function loadDashboardLive(){
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  const heute = new Date();
+  const heuteStr = heute.toISOString().split('T')[0];
+  const monatPrefix = heuteStr.slice(0,7); // YYYY-MM
+
+  // Spenden diesen Monat
+  const spendLabel = document.getElementById('db-spenden-label');
+  if(spendLabel) spendLabel.textContent = `Spenden ${MONATSNAMEN[heute.getMonth()]}`;
+  if(mid){
+    const {data: spendenMonat} = await sb.from('spenden').select('betrag').eq('mandant_id',mid).gte('datum', monatPrefix+'-01').lte('datum', monatPrefix+'-31');
+    const summe = (spendenMonat||[]).reduce((s,x)=>s+parseFloat(x.betrag||0),0);
+    const el = document.getElementById('db-spenden'); if(el) el.textContent = `CHF ${summe.toLocaleString('de-CH')}`;
+    const sub = document.getElementById('db-spenden-sub'); if(sub) sub.textContent = `${(spendenMonat||[]).length} Spenden erfasst`;
+  }
+
+  // Gottesdienst heute
+  const gdStatEl = document.getElementById('db-gd-sn');
+  const gdStatSub = document.getElementById('db-gd-sd');
+  const gdBody = document.getElementById('db-gd-card-body');
+  let heutigerGD = null;
+  if(mid){
+    const {data: gdHeute} = await sb.from('gottesdienste').select('*').eq('mandant_id',mid).eq('datum', heuteStr).order('zeit',{ascending:true}).limit(1);
+    heutigerGD = (gdHeute && gdHeute[0]) || null;
+  }
+  if(heutigerGD){
+    if(gdStatEl) gdStatEl.textContent = heutigerGD.zeit || 'Heute';
+    if(gdStatSub) gdStatSub.textContent = heutigerGD.ort || '';
+    if(gdBody) gdBody.innerHTML = `
+      <div style="font-size:16px;font-weight:600;color:white;margin-bottom:12px">${heutigerGD.titel || heutigerGD.typ || 'Gottesdienst'}</div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;font-size:13px;color:rgba(255,255,255,0.75)"><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:#e8b84b;flex-shrink:0"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>${heutigerGD.zeit || ''} Uhr</div>
+      <div style="display:flex;align-items:center;gap:7px;font-size:13px;color:rgba(255,255,255,0.75)"><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:#e8b84b;flex-shrink:0"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13z"/></svg>${heutigerGD.ort || 'Ort noch offen'}</div>`;
+  } else {
+    if(gdStatEl) gdStatEl.textContent = '—';
+    if(gdStatSub) gdStatSub.textContent = 'Keiner geplant';
+    if(gdBody) gdBody.innerHTML = `
+      <div style="font-size:15px;font-weight:600;color:white;margin-bottom:8px">Heute keine Veranstaltungen</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.75)">Sei gesegnet heute. 🙏</div>`;
+  }
+
+  // Offene Aufgaben (nur die des eingeloggten Benutzers)
+  await updAufgabenDashboardStat();
+}
+
+// ── Täglicher Bibelvers ──
+const BIBELVERSE = [
+  {text:'Denn ich weiss, was ich für Gedanken über euch habe, spricht der HERR: Gedanken des Friedens und nicht des Leides, dass ich euch gebe das Ende, des ihr wartet.', ref:'Jeremia 29,11'},
+  {text:'Der HERR ist mein Hirte, mir wird nichts mangeln.', ref:'Psalm 23,1'},
+  {text:'Alle eure Sorge werfet auf ihn; denn er sorget für euch.', ref:'1. Petrus 5,7'},
+  {text:'Ich vermag alles durch den, der mich mächtig macht, Christus.', ref:'Philipper 4,13'},
+  {text:'Befiehl dem HERRN deine Wege und hoffe auf ihn; er wird\'s wohl machen.', ref:'Psalm 37,5'},
+  {text:'Denn Gott hat uns nicht gegeben den Geist der Furcht, sondern der Kraft und der Liebe und der Besonnenheit.', ref:'2. Timotheus 1,7'},
+  {text:'Die Liebe ist langmütig und freundlich, die Liebe eifert nicht.', ref:'1. Korinther 13,4'},
+  {text:'Seid stark und unverzagt, fürchtet euch nicht; denn der HERR, dein Gott, ist mit dir in allem, was du tun wirst.', ref:'Josua 1,9'},
+  {text:'Freuet euch in dem Herrn allewege; und abermals sage ich: Freuet euch!', ref:'Philipper 4,4'},
+  {text:'Der HERR ist mein Licht und mein Heil; vor wem sollte ich mich fürchten?', ref:'Psalm 27,1'},
+  {text:'Alle Dinge dienen denen zum Besten, die Gott lieben.', ref:'Römer 8,28'},
+  {text:'Kommet her zu mir alle, die ihr mühselig und beladen seid; ich will euch erquicken.', ref:'Matthäus 11,28'},
+  {text:'Sei getrost und unverzagt, fürchte dich nicht und lass dich nicht schrecken; denn der HERR, dein Gott, ist mit dir in allem, was du tun wirst.', ref:'Josua 1,9'},
+  {text:'Denn also hat Gott die Welt geliebt, dass er seinen eingeborenen Sohn gab.', ref:'Johannes 3,16'},
+  {text:'Harre auf den HERRN! Sei getrost und unverzagt und harre auf den HERRN!', ref:'Psalm 27,14'},
+  {text:'Ich kann alles durch Christus, der mich mächtig macht.', ref:'Philipper 4,13'},
+  {text:'Gott ist unsre Zuversicht und Stärke, eine Hilfe in den grossen Nöten.', ref:'Psalm 46,2'},
+  {text:'Wachet, steht im Glauben, seid mannhaft und seid stark.', ref:'1. Korinther 16,13'},
+  {text:'Der Friede Gottes, der höher ist als alle Vernunft, bewahre eure Herzen und Sinne.', ref:'Philipper 4,7'},
+  {text:'Deines Wortes Rede ist meines Fusses Leuchte und ein Licht auf meinem Wege.', ref:'Psalm 119,105'},
+  {text:'Ich vermag alles durch den, der mich mächtig macht.', ref:'Philipper 4,13'},
+  {text:'Lobe den HERRN, meine Seele, und vergiss nicht, was er dir Gutes getan hat.', ref:'Psalm 103,2'},
+  {text:'Vertraue auf den HERRN von ganzem Herzen und verlass dich nicht auf deinen Verstand.', ref:'Sprüche 3,5'},
+  {text:'Der HERR wird für dich streiten, und du wirst stille sein.', ref:'2. Mose 14,14'},
+  {text:'Bittet, so wird euch gegeben; suchet, so werdet ihr finden.', ref:'Matthäus 7,7'},
+  {text:'Die auf den HERRN harren, kriegen neue Kraft, dass sie auffahren mit Flügeln wie Adler.', ref:'Jesaja 40,31'},
+  {text:'Seid fröhlich in Hoffnung, geduldig in Trübsal, haltet an am Gebet.', ref:'Römer 12,12'},
+  {text:'Ein fröhlich Herz macht das Leben lustig; aber ein betrübter Mut vertrocknet das Gebein.', ref:'Sprüche 17,22'},
+  {text:'So jemand mir will nachfolgen, der verleugne sich selbst und nehme sein Kreuz auf sich.', ref:'Matthäus 16,24'},
+  {text:'Gott widersteht den Hoffärtigen, aber den Demütigen gibt er Gnade.', ref:'1. Petrus 5,5'},
+  {text:'Wirf dein Anliegen auf den HERRN; der wird dich versorgen.', ref:'Psalm 55,23'},
+  {text:'Der HERR ist nahe bei denen, die zerbrochenen Herzens sind.', ref:'Psalm 34,19'},
+  {text:'Ich bin bei dir und will dich behüten, wo du hinziehst.', ref:'1. Mose 28,15'},
+  {text:'Nichts ist unmöglich bei Gott.', ref:'Lukas 1,37'},
+  {text:'Meine Gnade genügt dir; denn meine Kraft vollendet sich in der Schwachheit.', ref:'2. Korinther 12,9'},
+  {text:'Danket dem HERRN; denn er ist freundlich, und seine Güte währet ewiglich.', ref:'Psalm 136,1'},
+  {text:'So aber nun bleibt Glaube, Hoffnung, Liebe, diese drei; aber die Liebe ist die grösste.', ref:'1. Korinther 13,13'},
+  {text:'Der HERR segne dich und behüte dich.', ref:'4. Mose 6,24'},
+  {text:'Suchet zuerst das Reich Gottes und seine Gerechtigkeit, so wird euch solches alles zufallen.', ref:'Matthäus 6,33'},
+  {text:'Meine Hilfe kommt vom HERRN, der Himmel und Erde gemacht hat.', ref:'Psalm 121,2'}
+];
+
+function showDailyBibelvers(){
+  const now = new Date();
+  const start = new Date(now.getFullYear(),0,0);
+  const diff = now - start;
+  const dayOfYear = Math.floor(diff / 86400000);
+  const verse = BIBELVERSE[dayOfYear % BIBELVERSE.length];
+  const t = document.getElementById('db-bibelvers-text');
+  const r = document.getElementById('db-bibelvers-ref');
+  if(t) t.textContent = `„${verse.text}"`;
+  if(r) r.textContent = verse.ref;
+}
 
 function openNM(){
   refreshSel();
@@ -4045,14 +4185,14 @@ function navTo(p,el2){
   document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
   const pg=document.getElementById('pg-'+p);if(pg)pg.classList.add('on');
   if(el2)el2.classList.add('active');
-  const titles={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',volunteer:'Freiwillige',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',artikel:'Artikel',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung'};
+  const titles={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',volunteer:'Freiwillige',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',artikel:'Artikel',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben'};
   document.getElementById('tb-title').textContent=titles[p]||p;
   const isM=p==='mitglieder';
   document.getElementById('vt-wrap').style.display=isM?'block':'none';
   document.getElementById('btn-exp').style.display=isM?'inline-flex':'none';
   document.getElementById('btn-new').style.display=isM?'inline-flex':'none';
   if(isM){updStats();rndrTbl();}
-  if(p==='dashboard'){updStats();}
+  if(p==='dashboard'){updStats();loadDashboardLive();showDailyBibelvers();}
   // Block navigation if superadmin has no mandant
   if(p==='dashboard'||p==='mitglieder'||p==='kontakte'||p==='groups'||
      p==='gottesdienste'||p==='worship'||p==='events'||p==='spenden'||
@@ -4109,12 +4249,131 @@ function navTo(p,el2){
     if(!mid4){toast('Bitte zuerst Gemeinde wählen (Arbeiten als)');return;}
     if(!maLoaded){loadMitarbeiter();}else{filterMA();}
   }
+  if(p==='aufgaben'){loadAufgaben();}
 }
 
 
 function konvertToMitglied(){
   if(!activeKK) return;
   konvertKontakt(activeKK);
+}
+
+// ═══════════════════════════════════════════
+// MEINE AUFGABEN — rein persönlich, jeder Benutzer sieht nur seine eigenen
+// ═══════════════════════════════════════════
+let aufgaben = [];
+
+async function loadAufgaben(){
+  if(!_S?.id) return;
+  const {data, error} = await sb.from('aufgaben').select('*').eq('user_id', _S.id).order('faellig_am',{ascending:true, nullsFirst:false});
+  if(error){ console.warn('loadAufgaben error:', error.message); aufgaben = []; }
+  else aufgaben = data || [];
+  rndrAufgaben();
+}
+
+const PRIO_CSS = {niedrig:'background:#F4F5F7;color:#6B7280', mittel:'background:#FEF3C7;color:#D97706', hoch:'background:#FEE2E2;color:#DC2626'};
+const PRIO_LABEL = {niedrig:'Niedrig', mittel:'Mittel', hoch:'Hoch'};
+
+function rndrAufgaben(){
+  const filter = document.getElementById('auf-filter')?.value || 'offen';
+  const heute = new Date().toISOString().split('T')[0];
+  let list = aufgaben;
+  if(filter === 'offen') list = aufgaben.filter(a => a.status !== 'erledigt');
+  else if(filter === 'erledigt') list = aufgaben.filter(a => a.status === 'erledigt');
+
+  const box = document.getElementById('auf-list');
+  if(box){
+    if(!list.length){
+      box.innerHTML = '<div style="text-align:center;padding:24px;color:#9CA3AF;font-size:13px">Keine Aufgaben in dieser Ansicht — geniess den freien Moment 🙂</div>';
+    } else {
+      box.innerHTML = list.map(a => {
+        const ueberfaellig = a.faellig_am && a.faellig_am < heute && a.status !== 'erledigt';
+        const erledigt = a.status === 'erledigt';
+        return `<div style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid ${ueberfaellig?'#fca5a5':'#E5E7EB'};border-radius:8px;background:${erledigt?'#F9FAFB':'white'}">
+          <input type="checkbox" ${erledigt?'checked':''} onchange="toggleAufgabe('${a.id}')" style="width:17px;height:17px;margin-top:2px;accent-color:#16A34A;cursor:pointer">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13.5px;font-weight:500;color:${erledigt?'#9CA3AF':'#1A3560'};text-decoration:${erledigt?'line-through':'none'}">${a.titel}</div>
+            ${a.beschreibung ? `<div style="font-size:12px;color:#9CA3AF;margin-top:2px">${a.beschreibung}</div>` : ''}
+            <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
+              <span style="padding:2px 8px;border-radius:5px;font-size:10.5px;font-weight:500;${PRIO_CSS[a.prioritaet]||PRIO_CSS.mittel}">${PRIO_LABEL[a.prioritaet]||'Mittel'}</span>
+              ${a.faellig_am ? `<span style="font-size:11px;color:${ueberfaellig?'#DC2626':'#9CA3AF'};font-weight:${ueberfaellig?'600':'400'}">${ueberfaellig?'⚠ ':''}Fällig: ${fD(a.faellig_am)}</span>` : ''}
+            </div>
+          </div>
+          <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteAufgabe('${a.id}')">Löschen</button>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Stats
+  const offen = aufgaben.filter(a => a.status !== 'erledigt');
+  const ueberf = offen.filter(a => a.faellig_am && a.faellig_am < heute);
+  const erledigtCount = aufgaben.filter(a => a.status === 'erledigt');
+  const e = id => document.getElementById(id);
+  if(e('auf-offen-n')) e('auf-offen-n').textContent = offen.length;
+  if(e('auf-ueberf-n')) e('auf-ueberf-n').textContent = ueberf.length;
+  if(e('auf-erledigt-n')) e('auf-erledigt-n').textContent = erledigtCount.length;
+}
+
+function openNAufgabe(){
+  const e = id => document.getElementById(id);
+  e('auf-titel').value = ''; e('auf-beschreibung').value = ''; e('auf-faellig').value = ''; e('auf-prioritaet').value = 'mittel';
+  document.getElementById('mo-nauf').classList.add('open');
+}
+
+async function saveAufgabe(){
+  const titel = document.getElementById('auf-titel').value.trim();
+  if(!titel){ toast('Titel ist Pflicht'); return; }
+  const payload = {
+    user_id: _S.id,
+    titel,
+    beschreibung: document.getElementById('auf-beschreibung').value,
+    faellig_am: document.getElementById('auf-faellig').value || null,
+    prioritaet: document.getElementById('auf-prioritaet').value,
+    status: 'offen'
+  };
+  const {data, error} = await sb.from('aufgaben').insert(payload).select().single();
+  if(error){ toast('Fehler: '+error.message); return; }
+  aufgaben.push(data);
+  closeMo('mo-nauf');
+  rndrAufgaben();
+  updAufgabenDashboardStat();
+  toast('Aufgabe angelegt ✓');
+}
+
+async function toggleAufgabe(id){
+  const a = aufgaben.find(x=>x.id===id);
+  if(!a) return;
+  const neuerStatus = a.status === 'erledigt' ? 'offen' : 'erledigt';
+  const {error} = await sb.from('aufgaben').update({status: neuerStatus}).eq('id', id);
+  if(error){ toast('Fehler: '+error.message); return; }
+  a.status = neuerStatus;
+  rndrAufgaben();
+  updAufgabenDashboardStat();
+}
+
+async function deleteAufgabe(id){
+  if(!confirm('Aufgabe löschen?')) return;
+  const {error} = await sb.from('aufgaben').delete().eq('id', id);
+  if(error){ toast('Fehler: '+error.message); return; }
+  aufgaben = aufgaben.filter(a=>a.id!==id);
+  rndrAufgaben();
+  updAufgabenDashboardStat();
+  toast('Gelöscht');
+}
+
+// Aktualisiert die "Offene Aufgaben"-Kachel auf dem Dashboard
+async function updAufgabenDashboardStat(){
+  if(!_S?.id) return;
+  const {data, error} = await sb.from('aufgaben').select('faellig_am,status').eq('user_id', _S.id).neq('status','erledigt');
+  if(error) return;
+  const heute = new Date().toISOString().split('T')[0];
+  const offen = data || [];
+  const ueberfaellig = offen.filter(a => a.faellig_am && a.faellig_am < heute);
+  const nEl = document.getElementById('db-auf-n');
+  const sdEl = document.getElementById('db-auf-sd');
+  if(nEl) nEl.textContent = offen.length;
+  if(sdEl) sdEl.textContent = ueberfaellig.length ? `${ueberfaellig.length} überfällig` : (offen.length ? 'Alles im Zeitplan' : 'Keine offenen Aufgaben');
 }
 
 // ── Team & Berechtigungen (fuer Rolle "Super" — eigene Gemeinde) ──
@@ -6874,6 +7133,20 @@ async function doRegister() {
   </div>
 </div>
 
+
+<!-- MODAL: NEUE AUFGABE -->
+<div class="mo" id="mo-nauf">
+  <div class="modal" style="max-width:440px">
+    <div class="mh"><div class="mt2">✅ Neue Aufgabe</div><div class="mx" onclick="closeMo('mo-nauf')">✕</div></div>
+    <div class="mb2">
+      <div class="fgg"><label class="fl">Titel *</label><input class="fi" id="auf-titel" placeholder="z.B. Predigt für Sonntag vorbereiten"></div>
+      <div class="fgg"><label class="fl">Beschreibung</label><textarea class="fta" id="auf-beschreibung" placeholder="Details (optional)..."></textarea></div>
+      <div class="fgg"><label class="fl">Fällig am</label><input class="fi" id="auf-faellig" type="date"></div>
+      <div class="fgg"><label class="fl">Priorität</label><select class="fs" id="auf-prioritaet"><option value="niedrig">Niedrig</option><option value="mittel" selected>Mittel</option><option value="hoch">Hoch</option></select></div>
+    </div>
+    <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-nauf')">Abbrechen</button><button class="tbtn tbtn-navy" onclick="saveAufgabe()">Speichern</button></div>
+  </div>
+</div>
 
 <!-- MODAL: NEUER MITARBEITER (Schnellanlage) -->
 <div class="mo" id="mo-nma">
