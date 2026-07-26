@@ -650,7 +650,10 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
       <div class="acard">
         <div class="acardh">
           <div class="acardtitle">Kirchgemeinden</div>
-          <button class="abtn abtn-gold" onclick="openAMo()">+ Neue Gemeinde</button>
+          <div style="display:flex;gap:8px">
+            <button class="abtn abtn-ghost" onclick="openAMo()">+ Schnell anlegen</button>
+            <button class="abtn abtn-gold" onclick="openOnboardingWizard()">🧙 Onboarding-Wizard</button>
+          </div>
         </div>
         <div style="overflow-x:auto">
           <table>
@@ -1653,6 +1656,84 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
   </div>
 </div>
 <!-- ADMIN MODALS -->
+<!-- ONBOARDING WIZARD -->
+<div class="amo" id="amo-wizard">
+  <div class="amodal" style="max-width:560px">
+    <div class="amh"><div class="amt">🧙 Neue Gemeinde einrichten</div><div class="amx" onclick="closeMo('amo-wizard')">✕</div></div>
+    <div class="amb">
+      <!-- Schritt-Anzeige -->
+      <div style="display:flex;gap:6px;margin-bottom:18px" id="wiz-steps-indicator">
+        <div class="wiz-dot on" data-step="1">1. Gemeinde</div>
+        <div class="wiz-dot" data-step="2">2. Lizenz</div>
+        <div class="wiz-dot" data-step="3">3. Logo</div>
+        <div class="wiz-dot" data-step="4">4. Super-User</div>
+      </div>
+
+      <!-- SCHRITT 1: Gemeinde-Daten -->
+      <div class="wiz-panel" id="wiz-panel-1">
+        <div class="ainfo">Grunddaten der neuen Gemeinde.</div>
+        <div class="afg"><label>Gemeindename *</label><input class="afi" id="wiz-name" placeholder="Ev. Gemeinde Zürich Nord"></div>
+        <div class="afg"><label>Adresse</label><input class="afi" id="wiz-adresse" placeholder="Strasse, PLZ Ort"></div>
+        <div class="afg2"><div class="afg"><label>PLZ</label><input class="afi" id="wiz-plz" placeholder="8001"></div><div class="afg"><label>Ort</label><input class="afi" id="wiz-ort" placeholder="Zürich"></div></div>
+        <div class="afg"><label>E-Mail</label><input class="afi" id="wiz-email" type="email" placeholder="info@gemeinde.ch"></div>
+        <div class="afg2"><div class="afg"><label>Telefon</label><input class="afi" id="wiz-telefon" placeholder="+41 44 123 45 67"></div><div class="afg"><label>Website</label><input class="afi" id="wiz-website" placeholder="www.gemeinde.ch"></div></div>
+      </div>
+
+      <!-- SCHRITT 2: Lizenz -->
+      <div class="wiz-panel" id="wiz-panel-2" style="display:none">
+        <div class="ainfo">Welche Lizenzstufe soll diese Gemeinde erhalten? Legt fest, welche Module sichtbar sind.</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+          <label class="wiz-lizenz-card"><input type="radio" name="wiz-lizenz" value="starter" checked><div><strong>Starter</strong> — CHF 149/Mt.<div style="font-size:11.5px;color:#9CA3AF">Mitglieder, Kontakte, Gottesdienste, Dokumente, Einrichtung</div></div></label>
+          <label class="wiz-lizenz-card"><input type="radio" name="wiz-lizenz" value="standard"><div><strong>Standard</strong> — CHF 219/Mt.<div style="font-size:11.5px;color:#9CA3AF">+ Small Groups, Veranstaltungen, Twint & Spenden, Freiwillige, Worship</div></div></label>
+          <label class="wiz-lizenz-card"><input type="radio" name="wiz-lizenz" value="professional"><div><strong>Professional</strong> — CHF 299/Mt.<div style="font-size:11.5px;color:#9CA3AF">+ Kreditoren, Artikel, Mitarbeiter/HR — alles</div></div></label>
+        </div>
+        <div class="afg" style="margin-top:14px"><label>Status</label><select class="afs" id="wiz-aktiv"><option value="true">Aktiv — sofort freischalten</option><option value="false">Inaktiv — später manuell aktivieren</option></select></div>
+      </div>
+
+      <!-- SCHRITT 3: Logo -->
+      <div class="wiz-panel" id="wiz-panel-3" style="display:none">
+        <div class="ainfo">Optional — kann auch später in der Einrichtung der Gemeinde nachgeholt werden.</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:10px">
+          <div id="wiz-logo-preview" style="width:64px;height:64px;border-radius:10px;background:#F4F5F7;border:1.5px dashed #D1D5DB;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+            <span style="font-size:10px;color:#9CA3AF;text-align:center">Kein Logo</span>
+          </div>
+          <div>
+            <input type="file" id="wiz-logo-file" accept="image/png,image/jpeg,image/svg+xml" style="display:none" onchange="uploadWizardLogo(this.files[0])">
+            <button type="button" class="abtn abtn-ghost" onclick="document.getElementById('wiz-logo-file').click()">Logo hochladen</button>
+            <div style="font-size:10.5px;color:#9CA3AF;margin-top:4px">PNG/JPG/SVG, max. 2 MB</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCHRITT 4: Super-User einladen -->
+      <div class="wiz-panel" id="wiz-panel-4" style="display:none">
+        <div class="ainfo">Diese Person erhält vollen Zugriff auf die Gemeinde (Rolle "Super") und kann selbst weitere Benutzer verwalten.</div>
+        <div class="afg"><label>Name</label><input class="afi" id="wiz-super-name" placeholder="Max Mustermann"></div>
+        <div class="afg"><label>E-Mail *</label><input class="afi" id="wiz-super-email" type="email" placeholder="pastor@gemeinde.ch"></div>
+      </div>
+
+      <!-- SCHRITT 5 (intern): Fertig -->
+      <div class="wiz-panel" id="wiz-panel-done" style="display:none;text-align:center;padding:10px 0">
+        <div style="font-size:36px">🎉</div>
+        <div style="font-size:16px;font-weight:600;color:#1A3560;margin-top:8px" id="wiz-done-name"></div>
+        <div style="font-size:13px;color:#6B7280;margin-top:6px">ist eingerichtet. Die Einladungs-E-Mail wurde versendet.</div>
+        <div style="background:#F9FAFB;border-radius:10px;padding:14px;margin-top:16px;text-align:left;font-size:13px" id="wiz-done-summary"></div>
+      </div>
+    </div>
+    <div class="amf" id="wiz-footer">
+      <button class="abtn abtn-ghost" id="wiz-back-btn" onclick="wizBack()" style="visibility:hidden">Zurück</button>
+      <button class="abtn abtn-gold" id="wiz-next-btn" onclick="wizNext()">Weiter</button>
+    </div>
+  </div>
+</div>
+<style>
+.wiz-dot{font-size:10.5px;color:#9CA3AF;padding:5px 9px;border-radius:6px;background:#F4F5F7;flex:1;text-align:center}
+.wiz-dot.on{background:#1A3560;color:white;font-weight:600}
+.wiz-dot.done{background:#DCFCE7;color:#16A34A}
+.wiz-lizenz-card{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:9px;cursor:pointer;font-size:13px}
+.wiz-lizenz-card input{margin-top:3px}
+</style>
+
 <div class="amo" id="amo-m">
   <div class="amodal">
     <div class="amh"><div class="amt">Neue Gemeinde</div><div class="amx" onclick="closeMo('amo-m')">✕</div></div>
@@ -2228,6 +2309,144 @@ function openAMo() {
   document.getElementById('am-lizenz').value = 'starter';
   document.getElementById('am-aktiv').value = 'false';
   document.getElementById('amo-m').classList.add('open');
+}
+
+// ═══════════════════════════════════════════
+// ONBOARDING-WIZARD (Superadmin) — neue Gemeinde in 4 geführten Schritten
+// ═══════════════════════════════════════════
+let _wizState = { step: 1, mandantId: null, mandantName: '', lizenz: 'starter', adresse: '', email: '', logoUrl: null };
+
+function openOnboardingWizard(){
+  _wizState = { step: 1, mandantId: null, mandantName: '', lizenz: 'starter', adresse: '', email: '', logoUrl: null };
+  ['wiz-name','wiz-adresse','wiz-plz','wiz-ort','wiz-email','wiz-telefon','wiz-website','wiz-super-name','wiz-super-email'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.querySelector('input[name="wiz-lizenz"][value="starter"]').checked = true;
+  document.getElementById('wiz-aktiv').value = 'true';
+  const prev = document.getElementById('wiz-logo-preview');
+  if(prev) prev.innerHTML = '<span style="font-size:10px;color:#9CA3AF;text-align:center">Kein Logo</span>';
+  wizGoToStep(1);
+  document.getElementById('amo-wizard').classList.add('open');
+}
+
+function wizGoToStep(n){
+  _wizState.step = n;
+  for(let i=1;i<=4;i++){
+    const panel = document.getElementById('wiz-panel-'+i);
+    if(panel) panel.style.display = (i===n) ? 'block' : 'none';
+  }
+  document.getElementById('wiz-panel-done').style.display = 'none';
+  document.querySelectorAll('.wiz-dot').forEach(d=>{
+    const s = parseInt(d.dataset.step);
+    d.classList.remove('on','done');
+    if(s===n) d.classList.add('on');
+    else if(s<n) d.classList.add('done');
+  });
+  document.getElementById('wiz-back-btn').style.visibility = (n===1) ? 'hidden' : 'visible';
+  document.getElementById('wiz-next-btn').textContent = (n===4) ? 'Einladen & Fertigstellen' : 'Weiter';
+  document.getElementById('wiz-footer').style.display = 'flex';
+}
+
+function wizBack(){
+  if(_wizState.step > 1) wizGoToStep(_wizState.step - 1);
+}
+
+async function wizNext(){
+  const step = _wizState.step;
+
+  if(step === 1){
+    const name = document.getElementById('wiz-name').value.trim();
+    if(!name){ toast('Gemeindename ist Pflicht'); return; }
+    const payload = {
+      name,
+      adresse: document.getElementById('wiz-adresse').value,
+      plz: document.getElementById('wiz-plz').value,
+      ort: document.getElementById('wiz-ort').value,
+      email: document.getElementById('wiz-email').value,
+      telefon: document.getElementById('wiz-telefon').value,
+      website: document.getElementById('wiz-website').value
+    };
+    if(_wizState.mandantId){
+      const {error} = await sb.from('mandanten').update(payload).eq('id', _wizState.mandantId);
+      if(error){ toast('Fehler: '+error.message); return; }
+    } else {
+      const {data, error} = await sb.from('mandanten').insert({...payload, lizenz:'starter', aktiv:false}).select().single();
+      if(error){ toast('Fehler: '+error.message); return; }
+      _wizState.mandantId = data.id;
+    }
+    _wizState.mandantName = name;
+    _wizState.adresse = payload.adresse;
+    _wizState.email = payload.email;
+    wizGoToStep(2);
+
+  } else if(step === 2){
+    const lizenz = document.querySelector('input[name="wiz-lizenz"]:checked').value;
+    const aktiv = document.getElementById('wiz-aktiv').value === 'true';
+    const {error} = await sb.from('mandanten').update({lizenz, aktiv}).eq('id', _wizState.mandantId);
+    if(error){ toast('Fehler: '+error.message); return; }
+    _wizState.lizenz = lizenz;
+    wizGoToStep(3);
+
+  } else if(step === 3){
+    wizGoToStep(4);
+
+  } else if(step === 4){
+    const superName = document.getElementById('wiz-super-name').value.trim();
+    const superEmail = document.getElementById('wiz-super-email').value.trim().toLowerCase();
+    if(!superEmail){ toast('E-Mail für den Super-User ist Pflicht'); return; }
+
+    const btn = document.getElementById('wiz-next-btn');
+    btn.disabled = true; btn.textContent = 'Wird eingeladen...';
+
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch(`${SB_URL}/functions/v1/invite-user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
+        body: JSON.stringify({
+          email: superEmail, name: superName, rolle: 'super', mandant_id: _wizState.mandantId,
+          gemeindeName: _wizState.mandantName, gemeindeAdresse: _wizState.adresse, logoUrl: _wizState.logoUrl
+        })
+      });
+      const result = await res.json();
+      btn.disabled = false; btn.textContent = 'Einladen & Fertigstellen';
+
+      if(!res.ok || result.error){ toast('Fehler: '+(result.error||'Unbekannt')); return; }
+
+      document.getElementById('wiz-done-name').textContent = _wizState.mandantName;
+      document.getElementById('wiz-done-summary').innerHTML = `
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#9CA3AF">Lizenz</span><strong>${lizenzLabel(_wizState.lizenz)}</strong></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#9CA3AF">Super-User</span><strong>${superEmail}</strong></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#9CA3AF">Login-Link</span><strong>app.ajconnect.ch</strong></div>`;
+      for(let i=1;i<=4;i++){ const p=document.getElementById('wiz-panel-'+i); if(p) p.style.display='none'; }
+      document.getElementById('wiz-panel-done').style.display = 'block';
+      document.querySelectorAll('.wiz-dot').forEach(d=>{ d.classList.remove('on'); d.classList.add('done'); });
+      document.getElementById('wiz-footer').style.display = 'none';
+      await loadAdminData();
+      toast('✅ Gemeinde eingerichtet und Einladung versendet');
+    } catch(e){
+      btn.disabled = false; btn.textContent = 'Einladen & Fertigstellen';
+      toast('Fehler: '+e.message);
+    }
+  }
+}
+
+async function uploadWizardLogo(file){
+  if(!file || !_wizState.mandantId){ toast('Bitte zuerst Schritt 1 abschliessen'); return; }
+  if(file.size > 2*1024*1024){ toast('Datei zu gross (max. 2 MB)'); return; }
+  toast('Logo wird hochgeladen...');
+  const ext = file.name.split('.').pop();
+  const path = `${_wizState.mandantId}/logo.${ext}`;
+  const { error: upErr } = await sb.storage.from('logos').upload(path, file, { upsert: true, cacheControl: '3600' });
+  if(upErr){ toast('Fehler beim Hochladen: '+upErr.message); return; }
+  const { data: pub } = sb.storage.from('logos').getPublicUrl(path);
+  const logoUrl = pub?.publicUrl + '?t=' + Date.now();
+  const { error: dbErr } = await sb.from('mandanten').update({ logo_url: logoUrl }).eq('id', _wizState.mandantId);
+  if(dbErr){ toast('Fehler beim Speichern: '+dbErr.message); return; }
+  _wizState.logoUrl = logoUrl;
+  const prev = document.getElementById('wiz-logo-preview');
+  if(prev) prev.innerHTML = `<img src="${logoUrl}" style="width:100%;height:100%;object-fit:contain">`;
+  toast('✅ Logo gespeichert');
 }
 
 function openAUMoFiltered() {
