@@ -1175,7 +1175,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
           <div class="topbar">
             <div class="topbar-title">Buchhaltung</div>
           </div>
-          <p style="font-size:12.5px;color:#9CA3AF;margin:-8px 0 16px">Einfaches Kassenbuch: Kontenplan, Kostenstellen und Buchungen. Kein Ersatz für eine geprüfte doppelte Buchhaltung — für die meisten Kirchgemeinden ausreichend.</p>
+          <p style="font-size:12.5px;color:#9CA3AF;margin:-8px 0 16px">Einfaches Kassenbuch: Kontenplan, Kostenstellen und Buchungen.</p>
 
           <div class="ktabs" style="margin-bottom:16px">
             <div class="ktab on" onclick="sTabBH('bh-tab-buchungen',this)">Buchungen</div>
@@ -2999,25 +2999,35 @@ async function loadDashboardLive(){
     const sub = document.getElementById('db-spenden-sub'); if(sub) sub.textContent = `${(spendenMonat||[]).length} Spenden erfasst`;
   }
 
-  // Gottesdienst heute
+  // Gottesdienst ODER Veranstaltung heute (beide Tabellen prüfen — war zuvor ein Bug: nur Gottesdienste wurden geprüft)
   const gdStatEl = document.getElementById('db-gd-sn');
   const gdStatSub = document.getElementById('db-gd-sd');
   const gdBody = document.getElementById('db-gd-card-body');
-  let heutigerGD = null;
+  let heutigerTermin = null, terminArt = null;
   if(mid){
-    const {data: gdHeute} = await sb.from('gottesdienste').select('*').eq('mandant_id',mid).eq('datum', heuteStr).order('zeit',{ascending:true}).limit(1);
-    heutigerGD = (gdHeute && gdHeute[0]) || null;
+    const [gdRes, evRes] = await Promise.all([
+      sb.from('gottesdienste').select('*').eq('mandant_id',mid).eq('datum', heuteStr).order('zeit',{ascending:true}).limit(1),
+      sb.from('events').select('*').eq('mandant_id',mid).eq('datum', heuteStr).order('zeit',{ascending:true}).limit(1)
+    ]);
+    if(gdRes.data && gdRes.data[0]){ heutigerTermin = gdRes.data[0]; terminArt = 'gottesdienst'; }
+    else if(evRes.data && evRes.data[0]){ heutigerTermin = evRes.data[0]; terminArt = 'event'; }
   }
-  if(heutigerGD){
-    if(gdStatEl) gdStatEl.textContent = heutigerGD.zeit || 'Heute';
-    if(gdStatSub) gdStatSub.textContent = heutigerGD.ort || '';
+  if(heutigerTermin){
+    const titel = terminArt==='gottesdienst' ? (heutigerTermin.titel || heutigerTermin.typ || 'Gottesdienst') : heutigerTermin.name;
+    const label = terminArt==='gottesdienst' ? 'Gottesdienst heute' : 'Veranstaltung heute';
+    if(gdStatEl) gdStatEl.textContent = heutigerTermin.zeit || 'Heute';
+    if(gdStatSub) gdStatSub.textContent = heutigerTermin.ort || '';
+    const gdLabelEl = document.querySelector('#pg-dashboard .sgrid4 .scard:nth-child(3) .sl');
+    if(gdLabelEl) gdLabelEl.textContent = label;
     if(gdBody) gdBody.innerHTML = `
-      <div style="font-size:16px;font-weight:600;color:white;margin-bottom:12px">${heutigerGD.titel || heutigerGD.typ || 'Gottesdienst'}</div>
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;font-size:13px;color:rgba(255,255,255,0.75)"><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:#e8b84b;flex-shrink:0"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>${heutigerGD.zeit || ''} Uhr</div>
-      <div style="display:flex;align-items:center;gap:7px;font-size:13px;color:rgba(255,255,255,0.75)"><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:#e8b84b;flex-shrink:0"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13z"/></svg>${heutigerGD.ort || 'Ort noch offen'}</div>`;
+      <div style="font-size:16px;font-weight:600;color:white;margin-bottom:12px">${titel}</div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;font-size:13px;color:rgba(255,255,255,0.75)"><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:#e8b84b;flex-shrink:0"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>${heutigerTermin.zeit || ''} Uhr</div>
+      <div style="display:flex;align-items:center;gap:7px;font-size:13px;color:rgba(255,255,255,0.75)"><svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:#e8b84b;flex-shrink:0"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13z"/></svg>${heutigerTermin.ort || 'Ort noch offen'}</div>`;
   } else {
     if(gdStatEl) gdStatEl.textContent = '—';
     if(gdStatSub) gdStatSub.textContent = 'Keiner geplant';
+    const gdLabelEl = document.querySelector('#pg-dashboard .sgrid4 .scard:nth-child(3) .sl');
+    if(gdLabelEl) gdLabelEl.textContent = 'Gottesdienst heute';
     if(gdBody) gdBody.innerHTML = `
       <div style="font-size:15px;font-weight:600;color:white;margin-bottom:8px">Heute keine Veranstaltungen</div>
       <div style="font-size:13px;color:rgba(255,255,255,0.75)">Sei gesegnet heute. 🙏</div>`;
