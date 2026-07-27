@@ -6,6 +6,7 @@
 <title>AJ Connect</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0F1F3D;min-height:100vh}
@@ -778,6 +779,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
       <div class="sb-item" onclick="navTo('events',this)"><svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2z"/></svg>Veranstaltungen</div>
       <div class="sb-sec">Finanzen</div>
       <div class="sb-item" onclick="navTo('spenden',this)"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2z"/></svg>Twint & Spenden</div>
+      <div class="sb-item" onclick="navTo('buchhaltung',this)"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>Buchhaltung</div>
       <div class="sb-item" onclick="navTo('artikel',this)"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 17.82 9.64 17 12 17s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>Artikel</div>
       <div class="sb-item" onclick="navTo('kreditoren',this)"><svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>Kreditoren</div>
       <div class="sb-sec">Verwaltung</div>
@@ -1168,7 +1170,70 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
   </div>
 </div>
 
-<div class="page" id="pg-kreditoren">
+        <!-- BUCHHALTUNG (Kassenbuch) -->
+        <div class="page" id="pg-buchhaltung">
+          <div class="topbar">
+            <div class="topbar-title">Buchhaltung</div>
+          </div>
+          <p style="font-size:12.5px;color:#9CA3AF;margin:-8px 0 16px">Einfaches Kassenbuch: Kontenplan, Kostenstellen und Buchungen. Kein Ersatz für eine geprüfte doppelte Buchhaltung — für die meisten Kirchgemeinden ausreichend.</p>
+
+          <div class="ktabs" style="margin-bottom:16px">
+            <div class="ktab on" onclick="sTabBH('bh-tab-buchungen',this)">Buchungen</div>
+            <div class="ktab" onclick="sTabBH('bh-tab-konten',this)">Kontenplan</div>
+            <div class="ktab" onclick="sTabBH('bh-tab-kostenstellen',this)">Kostenstellen</div>
+            <div class="ktab" onclick="sTabBH('bh-tab-berichte',this)">Berichte</div>
+          </div>
+
+          <!-- TAB: BUCHUNGEN -->
+          <div class="tpane on" id="bh-tab-buchungen">
+            <div class="sgrid4" style="margin-bottom:16px">
+              <div class="scard"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg></div><div><div class="sn" id="bh-einnahmen">CHF 0</div><div class="sl">Einnahmen (Jahr)</div></div></div>
+              <div class="scard"><div class="sico" style="background:#FEE2E2"><svg viewBox="0 0 24 24" style="fill:#DC2626"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg></div><div><div class="sn" id="bh-ausgaben">CHF 0</div><div class="sl">Ausgaben (Jahr)</div></div></div>
+              <div class="scard"><div class="sico" style="background:#DBEAFE"><svg viewBox="0 0 24 24" style="fill:#2563EB"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg></div><div><div class="sn" id="bh-saldo">CHF 0</div><div class="sl">Saldo (Jahr)</div></div></div>
+            </div>
+            <div class="tcard">
+              <div class="tcardh">
+                <select class="afs" id="bh-filter-jahr" onchange="filterBuchungen()" style="width:100px"></select>
+                <select class="afs" id="bh-filter-konto" onchange="filterBuchungen()"><option value="">Alle Konten</option></select>
+                <select class="afs" id="bh-filter-kostenstelle" onchange="filterBuchungen()"><option value="">Alle Kostenstellen</option></select>
+                <button class="tbtn tbtn-navy" style="margin-left:auto" onclick="openNBuchung()">+ Neue Buchung</button>
+              </div>
+              <div style="overflow-x:auto"><table><thead><tr><th>Datum</th><th>Konto</th><th>Kostenstelle</th><th>Beschreibung</th><th style="text-align:right">Betrag</th><th style="width:70px"></th></tr></thead><tbody id="bh-tbody"><tr><td colspan="6" class="aempty">Lädt...</td></tr></tbody></table></div>
+            </div>
+          </div>
+
+          <!-- TAB: KONTENPLAN -->
+          <div class="tpane" id="bh-tab-konten">
+            <div class="tcard">
+              <div class="tcardh"><div style="font-size:13px;color:#6B7280">Konten für Einnahmen & Ausgaben</div><button class="tbtn tbtn-navy" style="margin-left:auto" onclick="openNKonto()">+ Neues Konto</button></div>
+              <div style="overflow-x:auto"><table><thead><tr><th>Nr.</th><th>Name</th><th>Typ</th><th>Status</th><th style="width:70px"></th></tr></thead><tbody id="bh-konten-tbody"><tr><td colspan="5" class="aempty">Lädt...</td></tr></tbody></table></div>
+            </div>
+          </div>
+
+          <!-- TAB: KOSTENSTELLEN -->
+          <div class="tpane" id="bh-tab-kostenstellen">
+            <div class="tcard">
+              <div class="tcardh"><div style="font-size:13px;color:#6B7280">Kostenstellen für Auswertungen (z.B. Bauprojekt, Jugend, Mission)</div><button class="tbtn tbtn-navy" style="margin-left:auto" onclick="openNKostenstelle()">+ Neue Kostenstelle</button></div>
+              <div style="overflow-x:auto"><table><thead><tr><th>Nr.</th><th>Name</th><th>Beschreibung</th><th>Status</th><th style="width:70px"></th></tr></thead><tbody id="bh-kostenstellen-tbody"><tr><td colspan="5" class="aempty">Lädt...</td></tr></tbody></table></div>
+            </div>
+          </div>
+
+          <!-- TAB: BERICHTE -->
+          <div class="tpane" id="bh-tab-berichte">
+            <div class="fgg" style="max-width:160px;margin-bottom:16px"><label class="fl">Jahr</label><select class="fs" id="bh-bericht-jahr" onchange="rndrBerichte()"></select></div>
+            <div class="g2">
+              <div class="card">
+                <div class="cardh"><div class="cardtitle">Nach Konto</div></div>
+                <div class="cardbody"><table><thead><tr><th>Konto</th><th style="text-align:right">Einnahmen</th><th style="text-align:right">Ausgaben</th></tr></thead><tbody id="bh-bericht-konten"></tbody></table></div>
+              </div>
+              <div class="card">
+                <div class="cardh"><div class="cardtitle">Nach Kostenstelle</div></div>
+                <div class="cardbody"><table><thead><tr><th>Kostenstelle</th><th style="text-align:right">Einnahmen</th><th style="text-align:right">Ausgaben</th></tr></thead><tbody id="bh-bericht-kostenstellen"></tbody></table></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="page" id="pg-kreditoren">
   <div class="topbar">
     <div class="topbar-title" id="kred-title">Kreditoren</div>
     <div class="topbar-right">
@@ -1390,6 +1455,13 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
                   <div><label style="font-size:11px;color:#6B7280;display:block;margin-bottom:3px">E-Mail</label><input id="cfg-email" type="email" style="width:100%;padding:8px;border:1.5px solid #E5E7EB;border-radius:7px;font-size:13px;outline:none" placeholder="info@gemeinde.ch"></div>
                   <div><label style="font-size:11px;color:#6B7280;display:block;margin-bottom:3px">Telefon</label><input id="cfg-tel" style="width:100%;padding:8px;border:1.5px solid #E5E7EB;border-radius:7px;font-size:13px;outline:none" placeholder="+41 44 123 45 67"></div>
                   <div><label style="font-size:11px;color:#6B7280;display:block;margin-bottom:3px">Website</label><input id="cfg-web" style="width:100%;padding:8px;border:1.5px solid #E5E7EB;border-radius:7px;font-size:13px;outline:none" placeholder="www.gemeinde.ch"></div>
+                  <div style="border-top:1px dashed #E5E7EB;margin-top:6px;padding-top:12px">
+                    <div style="font-size:12px;font-weight:600;color:#1A3560;margin-bottom:8px">Bankverbindung (für QR-Rechnungen)</div>
+                    <label style="font-size:11px;color:#6B7280;display:block;margin-bottom:3px">IBAN oder QR-IBAN</label>
+                    <input id="cfg-iban" style="width:100%;padding:8px;border:1.5px solid #E5E7EB;border-radius:7px;font-size:13px;outline:none;font-family:monospace" placeholder="CH00 0000 0000 0000 0000 0">
+                    <span style="font-size:10.5px;color:#9CA3AF">QR-IBAN erkennst du an den Ziffern 5-9 zwischen 30000-31999 (von deiner Bank erhältlich).</span>
+                  </div>
+                  <div><label style="font-size:11px;color:#6B7280;display:block;margin-bottom:3px">Kontoinhaber (falls abweichend vom Gemeindenamen)</label><input id="cfg-kontoinhaber" style="width:100%;padding:8px;border:1.5px solid #E5E7EB;border-radius:7px;font-size:13px;outline:none" placeholder="Leer lassen = Gemeindename wird verwendet"></div>
                 </div>
               </div>
               <!-- Datensicherung -->
@@ -1524,6 +1596,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
     <div class="kcap">Mitgliederkarte</div>
     <div style="display:flex;gap:6px;margin-left:auto">
       <button class="tbtn tbtn-navy" style="font-size:11px" onclick="genQuittung()">Spendenbescheinigung</button>
+      <button style="padding:5px 11px;border-radius:7px;font-size:11px;background:#EFF6FF;color:#2563EB;border:1px solid #BFDBFE;cursor:pointer;font-family:inherit" onclick="openQRRechnungMo()">📄 QR-Rechnung</button>
       <div class="kclose" onclick="closeKarte()"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>
     </div>
   </div>
@@ -2856,7 +2929,7 @@ function closeMo(id){document.getElementById(id).classList.remove('open');}
 function tIA(id){document.getElementById(id).classList.toggle('open');}
 function zwB(w){return{twint:'<span style="background:#E0F2FE;color:#0369A1;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">TWINT</span>',bar:'<span style="background:#DCFCE7;color:#16A34A;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">Bar</span>',ueberweisung:'<span style="background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">Überweisung</span>'}[w]||w;}
 
-const PT={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben',ki:'KI-Assistent'};
+const PT={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben',ki:'KI-Assistent',buchhaltung:'Buchhaltung'};
 
 
 
@@ -3406,6 +3479,364 @@ async function startJahresabschluss(){
   document.getElementById('ja-result-skip').textContent = skipped.length;
 
   toast(`Jahresabschluss ${jahr}: ${ok} gesendet, ${fail} fehlgeschlagen, ${skipped.length} übersprungen`);
+}
+
+// ═══════════════════════════════════════════
+// BUCHHALTUNG (Kassenbuch) — Kontenplan, Kostenstellen, Buchungen, Berichte
+// ═══════════════════════════════════════════
+let konten = [], kostenstellen = [], buchungen = [], buchungenFilt = [], bhLoaded = false;
+
+function sTabBH(name, el){
+  document.querySelectorAll('#pg-buchhaltung .ktab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('#pg-buchhaltung .tpane').forEach(t=>t.classList.remove('on'));
+  if(el) el.classList.add('on');
+  const tp = document.getElementById(name); if(tp) tp.classList.add('on');
+  if(name==='bh-tab-berichte') rndrBerichte();
+}
+
+async function loadBuchhaltung(){
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid) return;
+  const [kRes, ksRes, bRes] = await Promise.all([
+    sb.from('konten').select('*').eq('mandant_id',mid).order('nummer'),
+    sb.from('kostenstellen').select('*').eq('mandant_id',mid).order('nummer'),
+    sb.from('buchungen').select('*').eq('mandant_id',mid).order('datum',{ascending:false})
+  ]);
+  konten = kRes.data || [];
+  kostenstellen = ksRes.data || [];
+  buchungen = bRes.data || [];
+  bhLoaded = true;
+
+  // Falls noch kein Kontenplan existiert: sinnvolle Standard-Konten fuer Kirchgemeinden vorschlagen
+  if(!konten.length){
+    const standardKonten = [
+      {nummer:'3000', name:'Spenden allgemein', typ:'einnahme'},
+      {nummer:'3010', name:'Kollekte', typ:'einnahme'},
+      {nummer:'3020', name:'Vermietung/Raumnutzung', typ:'einnahme'},
+      {nummer:'4000', name:'Miete/Nebenkosten', typ:'ausgabe'},
+      {nummer:'4010', name:'Personal/Löhne', typ:'ausgabe'},
+      {nummer:'4020', name:'Material & Anschaffungen', typ:'ausgabe'},
+      {nummer:'4030', name:'Veranstaltungen', typ:'ausgabe'},
+      {nummer:'4040', name:'Verwaltung & Diverses', typ:'ausgabe'},
+    ];
+    toast('Kein Kontenplan vorhanden — Vorschlag mit Standard-Konten wird geladen. Unter "Kontenplan" kannst du das anpassen.');
+    for(const k of standardKonten){
+      const saved = await dbSave('konten', k);
+      if(saved) konten.push(saved);
+    }
+  }
+
+  populateBHDropdowns();
+  filterBuchungen();
+  rndrKonten();
+  rndrKostenstellen();
+}
+
+function populateBHDropdowns(){
+  const jahre = [...new Set(buchungen.map(b=>b.datum?.slice(0,4)).filter(Boolean))];
+  const curYear = String(new Date().getFullYear());
+  if(!jahre.includes(curYear)) jahre.push(curYear);
+  jahre.sort((a,b)=>b.localeCompare(a));
+
+  const jahrSel = document.getElementById('bh-filter-jahr');
+  if(jahrSel){ jahrSel.innerHTML = jahre.map(j=>`<option value="${j}">${j}</option>`).join(''); jahrSel.value = curYear; }
+  const berichtJahrSel = document.getElementById('bh-bericht-jahr');
+  if(berichtJahrSel){ berichtJahrSel.innerHTML = jahre.map(j=>`<option value="${j}">${j}</option>`).join(''); berichtJahrSel.value = curYear; }
+
+  const kontoSel = document.getElementById('bh-filter-konto');
+  if(kontoSel) kontoSel.innerHTML = '<option value="">Alle Konten</option>' + konten.map(k=>`<option value="${k.id}">${k.nummer} · ${k.name}</option>`).join('');
+  const ksSel = document.getElementById('bh-filter-kostenstelle');
+  if(ksSel) ksSel.innerHTML = '<option value="">Alle Kostenstellen</option>' + kostenstellen.map(k=>`<option value="${k.id}">${k.nummer ? k.nummer+' · ' : ''}${k.name}</option>`).join('');
+
+  const buchKontoSel = document.getElementById('buch-konto');
+  if(buchKontoSel) buchKontoSel.innerHTML = konten.filter(k=>k.aktiv!==false).map(k=>`<option value="${k.id}">${k.nummer} · ${k.name} (${k.typ==='einnahme'?'Einnahme':'Ausgabe'})</option>`).join('');
+  const buchKsSel = document.getElementById('buch-kostenstelle');
+  if(buchKsSel) buchKsSel.innerHTML = '<option value="">— Keine —</option>' + kostenstellen.filter(k=>k.aktiv!==false).map(k=>`<option value="${k.id}">${k.nummer ? k.nummer+' · ' : ''}${k.name}</option>`).join('');
+}
+
+function filterBuchungen(){
+  const jahr = document.getElementById('bh-filter-jahr')?.value;
+  const kontoF = document.getElementById('bh-filter-konto')?.value;
+  const ksF = document.getElementById('bh-filter-kostenstelle')?.value;
+  buchungenFilt = buchungen.filter(b=>{
+    if(jahr && !(b.datum||'').startsWith(jahr)) return false;
+    if(kontoF && b.konto_id !== kontoF) return false;
+    if(ksF && b.kostenstelle_id !== ksF) return false;
+    return true;
+  });
+  rndrBuchungen();
+}
+
+function rndrBuchungen(){
+  const tb = document.getElementById('bh-tbody');
+  if(!buchungenFilt.length){ tb.innerHTML = '<tr><td colspan="6" class="aempty">Keine Buchungen gefunden</td></tr>'; }
+  else {
+    tb.innerHTML = buchungenFilt.map(b=>{
+      const konto = konten.find(k=>k.id===b.konto_id);
+      const ks = kostenstellen.find(k=>k.id===b.kostenstelle_id);
+      const istEinnahme = konto?.typ === 'einnahme';
+      return `<tr>
+        <td style="font-size:12px">${fD(b.datum)}</td>
+        <td style="font-size:12px">${konto ? konto.nummer+' · '+konto.name : '—'}</td>
+        <td style="font-size:12px;color:#9CA3AF">${ks ? ks.name : '—'}</td>
+        <td style="font-size:12px">${b.beschreibung||''}</td>
+        <td style="text-align:right;font-weight:600;font-size:12.5px;color:${istEinnahme?'#16A34A':'#DC2626'}">${istEinnahme?'+':'-'} CHF ${parseFloat(b.betrag).toLocaleString('de-CH',{minimumFractionDigits:2})}</td>
+        <td><button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteBuchung('${b.id}')">Löschen</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  let einnahmen = 0, ausgaben = 0;
+  buchungenFilt.forEach(b=>{
+    const konto = konten.find(k=>k.id===b.konto_id);
+    if(konto?.typ === 'einnahme') einnahmen += parseFloat(b.betrag||0);
+    else ausgaben += parseFloat(b.betrag||0);
+  });
+  document.getElementById('bh-einnahmen').textContent = `CHF ${einnahmen.toLocaleString('de-CH')}`;
+  document.getElementById('bh-ausgaben').textContent = `CHF ${ausgaben.toLocaleString('de-CH')}`;
+  const saldo = einnahmen - ausgaben;
+  const saldoEl = document.getElementById('bh-saldo');
+  saldoEl.textContent = `CHF ${saldo.toLocaleString('de-CH')}`;
+  saldoEl.style.color = saldo >= 0 ? '#16A34A' : '#DC2626';
+}
+
+function rndrKonten(){
+  const tb = document.getElementById('bh-konten-tbody');
+  if(!konten.length){ tb.innerHTML = '<tr><td colspan="5" class="aempty">Keine Konten</td></tr>'; return; }
+  tb.innerHTML = konten.map(k=>`<tr>
+    <td style="font-size:12px;font-family:monospace">${k.nummer||'—'}</td>
+    <td style="font-size:12.5px;font-weight:500">${k.name}</td>
+    <td><span style="padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500;${k.typ==='einnahme'?'background:#DCFCE7;color:#16A34A':'background:#FEE2E2;color:#DC2626'}">${k.typ==='einnahme'?'Einnahme':'Ausgabe'}</span></td>
+    <td><span style="padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500;${k.aktiv!==false?'background:#DCFCE7;color:#16A34A':'background:#F4F5F7;color:#9CA3AF'}">${k.aktiv!==false?'Aktiv':'Inaktiv'}</span></td>
+    <td><button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteKonto('${k.id}')">Löschen</button></td>
+  </tr>`).join('');
+}
+
+function rndrKostenstellen(){
+  const tb = document.getElementById('bh-kostenstellen-tbody');
+  if(!kostenstellen.length){ tb.innerHTML = '<tr><td colspan="5" class="aempty">Keine Kostenstellen</td></tr>'; return; }
+  tb.innerHTML = kostenstellen.map(k=>`<tr>
+    <td style="font-size:12px;font-family:monospace">${k.nummer||'—'}</td>
+    <td style="font-size:12.5px;font-weight:500">${k.name}</td>
+    <td style="font-size:12px;color:#9CA3AF">${k.beschreibung||''}</td>
+    <td><span style="padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500;${k.aktiv!==false?'background:#DCFCE7;color:#16A34A':'background:#F4F5F7;color:#9CA3AF'}">${k.aktiv!==false?'Aktiv':'Inaktiv'}</span></td>
+    <td><button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteKostenstelle('${k.id}')">Löschen</button></td>
+  </tr>`).join('');
+}
+
+function rndrBerichte(){
+  const jahr = document.getElementById('bh-bericht-jahr')?.value;
+  const buchungenJahr = buchungen.filter(b=>(b.datum||'').startsWith(jahr));
+
+  const proKonto = {};
+  buchungenJahr.forEach(b=>{
+    const konto = konten.find(k=>k.id===b.konto_id);
+    if(!konto) return;
+    if(!proKonto[konto.id]) proKonto[konto.id] = {name:`${konto.nummer} · ${konto.name}`, typ:konto.typ, ein:0, aus:0};
+    if(konto.typ==='einnahme') proKonto[konto.id].ein += parseFloat(b.betrag||0);
+    else proKonto[konto.id].aus += parseFloat(b.betrag||0);
+  });
+  const tbKonten = document.getElementById('bh-bericht-konten');
+  const kontoRows = Object.values(proKonto);
+  tbKonten.innerHTML = kontoRows.length ? kontoRows.map(r=>`<tr><td style="font-size:12px">${r.name}</td><td style="text-align:right;font-size:12px;color:#16A34A">${r.ein?'CHF '+r.ein.toLocaleString('de-CH'):'—'}</td><td style="text-align:right;font-size:12px;color:#DC2626">${r.aus?'CHF '+r.aus.toLocaleString('de-CH'):'—'}</td></tr>`).join('') : '<tr><td colspan="3" class="aempty">Keine Buchungen in diesem Jahr</td></tr>';
+
+  const proKs = {};
+  buchungenJahr.forEach(b=>{
+    if(!b.kostenstelle_id) return;
+    const ks = kostenstellen.find(k=>k.id===b.kostenstelle_id);
+    if(!ks) return;
+    const konto = konten.find(k=>k.id===b.konto_id);
+    if(!proKs[ks.id]) proKs[ks.id] = {name:ks.name, ein:0, aus:0};
+    if(konto?.typ==='einnahme') proKs[ks.id].ein += parseFloat(b.betrag||0);
+    else proKs[ks.id].aus += parseFloat(b.betrag||0);
+  });
+  const tbKs = document.getElementById('bh-bericht-kostenstellen');
+  const ksRows = Object.values(proKs);
+  tbKs.innerHTML = ksRows.length ? ksRows.map(r=>`<tr><td style="font-size:12px">${r.name}</td><td style="text-align:right;font-size:12px;color:#16A34A">${r.ein?'CHF '+r.ein.toLocaleString('de-CH'):'—'}</td><td style="text-align:right;font-size:12px;color:#DC2626">${r.aus?'CHF '+r.aus.toLocaleString('de-CH'):'—'}</td></tr>`).join('') : '<tr><td colspan="3" class="aempty">Keine Kostenstellen-Buchungen in diesem Jahr</td></tr>';
+}
+
+// ── Buchungen CRUD ──
+function openNBuchung(){
+  document.getElementById('buch-datum').value = new Date().toISOString().split('T')[0];
+  document.getElementById('buch-betrag').value = '';
+  document.getElementById('buch-beschreibung').value = '';
+  document.getElementById('mo-nbuchung').classList.add('open');
+}
+
+async function saveBuchung(){
+  const datum = document.getElementById('buch-datum').value;
+  const konto_id = document.getElementById('buch-konto').value;
+  const betrag = parseFloat(document.getElementById('buch-betrag').value);
+  if(!datum || !konto_id || !betrag || betrag<=0){ toast('Datum, Konto und Betrag sind Pflicht'); return; }
+  const payload = {
+    datum, konto_id,
+    kostenstelle_id: document.getElementById('buch-kostenstelle').value || null,
+    betrag,
+    beschreibung: document.getElementById('buch-beschreibung').value
+  };
+  const saved = await dbSave('buchungen', payload);
+  if(saved){
+    buchungen.unshift(saved);
+    populateBHDropdowns();
+    filterBuchungen();
+    closeMo('mo-nbuchung');
+    toast('Buchung erfasst ✓');
+  }
+}
+
+async function deleteBuchung(id){
+  if(!confirm('Buchung löschen?')) return;
+  const ok = await dbDelete('buchungen', id);
+  if(ok){ buchungen = buchungen.filter(b=>b.id!==id); populateBHDropdowns(); filterBuchungen(); toast('Gelöscht'); }
+}
+
+// ── Konten CRUD ──
+function openNKonto(){
+  document.getElementById('konto-nummer').value = '';
+  document.getElementById('konto-name').value = '';
+  document.getElementById('konto-typ').value = 'einnahme';
+  document.getElementById('mo-nkonto').classList.add('open');
+}
+
+async function saveKonto(){
+  const name = document.getElementById('konto-name').value.trim();
+  if(!name){ toast('Name ist Pflicht'); return; }
+  const payload = {
+    nummer: document.getElementById('konto-nummer').value,
+    name,
+    typ: document.getElementById('konto-typ').value,
+    aktiv: true
+  };
+  const saved = await dbSave('konten', payload);
+  if(saved){
+    konten.push(saved);
+    populateBHDropdowns();
+    rndrKonten();
+    closeMo('mo-nkonto');
+    toast('Konto angelegt ✓');
+  }
+}
+
+async function deleteKonto(id){
+  if(!confirm('Konto löschen? Bereits gebuchte Beträge auf diesem Konto bleiben in der Datenbank, verlieren aber die Zuordnung.')) return;
+  const ok = await dbDelete('konten', id);
+  if(ok){ konten = konten.filter(k=>k.id!==id); populateBHDropdowns(); rndrKonten(); toast('Gelöscht'); }
+}
+
+// ── Kostenstellen CRUD ──
+function openNKostenstelle(){
+  document.getElementById('ks-nummer').value = '';
+  document.getElementById('ks-name').value = '';
+  document.getElementById('ks-beschreibung').value = '';
+  document.getElementById('mo-nkostenstelle').classList.add('open');
+}
+
+async function saveKostenstelle(){
+  const name = document.getElementById('ks-name').value.trim();
+  if(!name){ toast('Name ist Pflicht'); return; }
+  const payload = {
+    nummer: document.getElementById('ks-nummer').value,
+    name,
+    beschreibung: document.getElementById('ks-beschreibung').value,
+    aktiv: true
+  };
+  const saved = await dbSave('kostenstellen', payload);
+  if(saved){
+    kostenstellen.push(saved);
+    populateBHDropdowns();
+    rndrKostenstellen();
+    closeMo('mo-nkostenstelle');
+    toast('Kostenstelle angelegt ✓');
+  }
+}
+
+async function deleteKostenstelle(id){
+  if(!confirm('Kostenstelle löschen?')) return;
+  const ok = await dbDelete('kostenstellen', id);
+  if(ok){ kostenstellen = kostenstellen.filter(k=>k.id!==id); populateBHDropdowns(); rndrKostenstellen(); toast('Gelöscht'); }
+}
+
+async function openQRRechnungMo(){
+  if(!activeId) return;
+  const branding = await getGemeindeBranding();
+  const {data} = await sb.from('mandanten').select('iban').eq('id', _S?.working_mandant_id||_S?.mandant_id).single();
+  document.getElementById('qr-no-iban-warn').style.display = data?.iban ? 'none' : 'block';
+  document.getElementById('qr-betrag').value = '';
+  document.getElementById('qr-zweck').value = '';
+  document.getElementById('mo-qr-rechnung').classList.add('open');
+}
+
+async function buildQRRechnungForActiveMember(){
+  const m = members.find(x=>x.id===activeId);
+  if(!m) throw new Error('Mitglied nicht gefunden');
+  const betrag = parseFloat(document.getElementById('qr-betrag').value);
+  if(!betrag || betrag<=0) throw new Error('Bitte einen gültigen Betrag eingeben');
+  const zweck = document.getElementById('qr-zweck').value;
+
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  const {data: mand} = await sb.from('mandanten').select('name,adresse,iban,kontoinhaber').eq('id',mid).single();
+  if(!mand?.iban) throw new Error('Keine IBAN für diese Gemeinde hinterlegt (Einrichtung → Bankverbindung)');
+
+  // Adresse der Gemeinde grob aufsplitten (Format: "Strasse Nr, PLZ Ort")
+  const addrParts = (mand.adresse||'').split(',');
+  const strassenTeil = (addrParts[0]||'').trim();
+  const ortTeil = (addrParts[1]||'').trim();
+  const strassenMatch = strassenTeil.match(/^(.*?)(\d+\w*)?$/);
+  const plzOrtMatch = ortTeil.match(/^(\d{4,5})?\s*(.*)$/);
+
+  const pdfBase64 = await buildQRRechnungPDF({
+    iban: mand.iban,
+    creditorName: mand.kontoinhaber || mand.name,
+    creditorStreet: strassenMatch ? strassenMatch[1].trim() : strassenTeil,
+    creditorNr: strassenMatch ? (strassenMatch[2]||'') : '',
+    creditorPlz: plzOrtMatch ? (plzOrtMatch[1]||'') : '',
+    creditorOrt: plzOrtMatch ? (plzOrtMatch[2]||'') : '',
+    amount: betrag,
+    debtorName: `${m.anrede||''} ${m.vorname} ${m.nachname}`.trim(),
+    debtorStreet: m.strasse||'', debtorNr:'',
+    debtorPlz: m.plz||'', debtorOrt: m.ort||'',
+    message: zweck,
+    titel: 'Zahlungsaufforderung / Spende',
+    referenzSeed: `${mid}${m.id}${Date.now()}`.replace(/\D/g,'')
+  });
+  return { pdfBase64, betrag, zweck, m };
+}
+
+async function downloadQRRechnung(){
+  try {
+    const { pdfBase64, m } = await buildQRRechnungForActiveMember();
+    const link = document.createElement('a');
+    link.href = 'data:application/pdf;base64,'+pdfBase64;
+    link.download = `QR-Rechnung_${m.nachname}.pdf`;
+    link.click();
+    toast('✅ QR-Rechnung heruntergeladen');
+  } catch(e){ toast('Fehler: '+e.message); }
+}
+
+async function sendQRRechnungPerMail(){
+  try {
+    const { pdfBase64, betrag, zweck, m } = await buildQRRechnungForActiveMember();
+    if(!m.email){ toast('Kein E-Mail beim Mitglied hinterlegt — bitte PDF herunterladen'); return; }
+    const branding = await getGemeindeBranding();
+    const result = await sendEmail('qrrechnung', m.email, {
+      name: `${m.anrede||''} ${m.vorname} ${m.nachname}`,
+      gemeinde: branding.name,
+      gemeindeAdresse: branding.adresse,
+      logoUrl: branding.logoUrl,
+      betrag: betrag.toFixed(2),
+      zweck: zweck || 'Spende'
+    }, {
+      name: `QR-Rechnung_${m.nachname}.pdf`,
+      content: pdfBase64
+    });
+    if(result.success){
+      toast('✅ QR-Rechnung an ' + m.email + ' gesendet');
+      closeMo('mo-qr-rechnung');
+    } else {
+      toast('⚠ Versand fehlgeschlagen — PDF wird stattdessen heruntergeladen');
+      downloadQRRechnung();
+    }
+  } catch(e){ toast('Fehler: '+e.message); }
 }
 
 async function genQuittung(){
@@ -4751,7 +5182,7 @@ function navTo(p,el2){
   document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
   const pg=document.getElementById('pg-'+p);if(pg)pg.classList.add('on');
   if(el2)el2.classList.add('active');
-  const titles={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',volunteer:'Freiwillige',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',artikel:'Artikel',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben',ki:'KI-Assistent'};
+  const titles={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',volunteer:'Freiwillige',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',artikel:'Artikel',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben',ki:'KI-Assistent',buchhaltung:'Buchhaltung'};
   document.getElementById('tb-title').textContent=titles[p]||p;
   const isM=p==='mitglieder';
   document.getElementById('vt-wrap').style.display=isM?'block':'none';
@@ -4816,6 +5247,11 @@ function navTo(p,el2){
     if(!maLoaded){loadMitarbeiter();}else{filterMA();}
   }
   if(p==='aufgaben'){loadAufgaben();}
+  if(p==='buchhaltung'){
+    const midBh=_S?.working_mandant_id||_S?.mandant_id;
+    if(!midBh){toast('Bitte zuerst Gemeinde wählen (Arbeiten als)');return;}
+    if(!bhLoaded){loadBuchhaltung();}else{filterBuchungen();}
+  }
 }
 
 
@@ -4992,7 +5428,183 @@ async function toggleTeamUserAktiv(userId, current){
   toast(!current ? 'Benutzer freigeschaltet' : 'Benutzer gesperrt');
 }
 
-// ── Instagram Integration ──
+// ═══════════════════════════════════════════
+// SCHWEIZER QR-RECHNUNG (Swiss QR-Bill / SPC)
+// ═══════════════════════════════════════════
+
+// Prüft, ob eine IBAN eine QR-IBAN ist (Institutionen-ID Ziffer 5-9 zwischen 30000-31999)
+function isQRIBAN(iban){
+  const clean = (iban||'').replace(/\s/g,'').toUpperCase();
+  if(clean.length < 9) return false;
+  const iid = parseInt(clean.substring(4,9), 10);
+  return iid >= 30000 && iid <= 31999;
+}
+
+// Modulo-10-rekursiv Prüfziffer (fuer QRR-Referenznummern) — offizieller Schweizer Algorithmus
+const MOD10_TABLE = [
+  [0,9,4,6,8,2,7,5,3,1],[9,4,6,8,2,7,5,3,1,0],[4,6,8,2,7,5,3,1,0,9],
+  [6,8,2,7,5,3,1,0,9,4],[8,2,7,5,3,1,0,9,4,6],[2,7,5,3,1,0,9,4,6,8],
+  [7,5,3,1,0,9,4,6,8,2],[5,3,1,0,9,4,6,8,2,7],[3,1,0,9,4,6,8,2,7,5],
+  [1,0,9,4,6,8,2,7,5,3]
+];
+function mod10CheckDigit(digits){
+  let carry = 0;
+  for(let i=0;i<digits.length;i++){ carry = MOD10_TABLE[carry][parseInt(digits[i],10)]; }
+  return (10 - carry) % 10;
+}
+
+// Generiert eine gueltige 27-stellige QRR-Referenznummer (26 Ziffern + Pruefziffer)
+function generateQRRReferenz(seed){
+  const base = (seed || (Date.now()+Math.floor(Math.random()*1000))).toString().replace(/\D/g,'');
+  const padded = base.padStart(26,'0').slice(-26);
+  const check = mod10CheckDigit(padded);
+  return padded + check;
+}
+// Formatiert eine QRR-Referenz in 5er-Gruppen fuer die Anzeige
+function formatQRRReferenz(ref){
+  return ref.replace(/(.{2})(.{5})(.{5})(.{5})(.{5})(.{5})/, '$1 $2 $3 $4 $5 $6');
+}
+
+// Baut den offiziellen SPC-Text-Payload fuers QR-Code (Swiss Payment Standards)
+function buildSwissQRPayload(o){
+  const L = (s) => (s||'').toString();
+  const lines = [
+    'SPC', '0200', '1',
+    L(o.iban),
+    'S', L(o.creditorName), L(o.creditorStreet), L(o.creditorNr), L(o.creditorPlz), L(o.creditorOrt), 'CH',
+    '', '', '', '', '', '', '', // Ultimate Creditor (deprecated, leer)
+    o.amount ? parseFloat(o.amount).toFixed(2) : '', 'CHF',
+    o.debtorName ? 'S' : '', L(o.debtorName), L(o.debtorStreet), L(o.debtorNr), L(o.debtorPlz), L(o.debtorOrt), o.debtorName ? 'CH' : '',
+    o.refType || 'NON', L(o.reference), L(o.message).slice(0,140),
+    'EPD'
+  ];
+  return lines.join('\r\n');
+}
+
+// Rendert den QR-Code in eine (unsichtbare) DOM-Zelle und liefert eine Daten-URL zurueck
+async function renderQRCodeDataURL(text){
+  const holder = document.createElement('div');
+  holder.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
+  document.body.appendChild(holder);
+  // eslint-disable-next-line no-undef
+  new QRCode(holder, { text, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.M });
+  await new Promise(r => setTimeout(r, 60));
+  let dataUrl = null;
+  const canvas = holder.querySelector('canvas');
+  if(canvas) dataUrl = canvas.toDataURL('image/png');
+  else {
+    const img = holder.querySelector('img');
+    if(img) dataUrl = img.src;
+  }
+  document.body.removeChild(holder);
+  return dataUrl;
+}
+
+// Baut das komplette QR-Rechnung PDF (Empfangsschein + Zahlteil, nach Schweizer Layout-Vorgaben)
+async function buildQRRechnungPDF(o){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const iban = (o.iban||'').replace(/\s/g,'').toUpperCase();
+  const refType = isQRIBAN(iban) ? 'QRR' : (o.reference ? 'SCOR' : 'NON');
+  const reference = refType === 'QRR' ? generateQRRReferenz(o.referenzSeed) : (o.reference || '');
+
+  const payload = buildSwissQRPayload({
+    iban, creditorName: o.creditorName, creditorStreet: o.creditorStreet, creditorNr: o.creditorNr,
+    creditorPlz: o.creditorPlz, creditorOrt: o.creditorOrt,
+    amount: o.amount, debtorName: o.debtorName, debtorStreet: o.debtorStreet, debtorNr: o.debtorNr,
+    debtorPlz: o.debtorPlz, debtorOrt: o.debtorOrt, refType, reference, message: o.message
+  });
+  const qrDataUrl = await renderQRCodeDataURL(payload);
+
+  // ── Optional: Rechnungskopf (freier Bereich oberhalb des Zahlteils) ──
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(20,20,20);
+  doc.text(o.creditorName || '', 15, 20);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(80,80,80);
+  doc.text(`${o.creditorStreet||''} ${o.creditorNr||''}`, 15, 26);
+  doc.text(`${o.creditorPlz||''} ${o.creditorOrt||''}`, 15, 31);
+  doc.setFontSize(11); doc.setTextColor(20,20,20);
+  doc.text(o.titel || 'Zahlungsaufforderung', 15, 45);
+  if(o.message){
+    doc.setFontSize(10); doc.setTextColor(60,60,60);
+    doc.text(doc.splitTextToSize(o.message, 180), 15, 53);
+  }
+
+  // ── QR-Rechnung: fixe Position unten auf der Seite (105mm ab unten, wie in den Layout-Vorgaben) ──
+  const qrY = 297 - 105; // 105mm hoher Bereich am Seitenende
+  doc.setDrawColor(0,0,0); doc.setLineWidth(0.2);
+  doc.line(0, qrY, 210, qrY); // Trennlinie oben
+
+  // Empfangsschein (linkes Drittel, 62mm breit)
+  doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.text('Empfangsschein', 5, qrY+8);
+  doc.setFont('helvetica','bold'); doc.setFontSize(6);
+  doc.text('Konto / Zahlbar an', 5, qrY+15);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text([formatIBANDisplay(iban), o.creditorName||'', `${o.creditorStreet||''} ${o.creditorNr||''}`, `${o.creditorPlz||''} ${o.creditorOrt||''}`].filter(Boolean), 5, qrY+18);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(6);
+  doc.text('Referenz', 5, qrY+38);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text(refType==='QRR' ? formatQRRReferenz(reference) : (reference||'—'), 5, qrY+41);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(6);
+  doc.text('Zahlbar durch', 5, qrY+48);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text([o.debtorName||'—', o.debtorName?`${o.debtorStreet||''} ${o.debtorNr||''}`:'', o.debtorName?`${o.debtorPlz||''} ${o.debtorOrt||''}`:''].filter(Boolean), 5, qrY+51);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(6);
+  doc.text('Währung', 5, qrY+68); doc.text('Betrag', 20, qrY+68);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text('CHF', 5, qrY+72); doc.text(o.amount ? parseFloat(o.amount).toFixed(2) : '', 20, qrY+72);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(6);
+  doc.text('Annahmestelle', 5, qrY+95);
+
+  // Zahlteil (rechte zwei Drittel)
+  doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.text('Zahlteil', 67, qrY+8);
+
+  if(qrDataUrl){
+    doc.addImage(qrDataUrl, 'PNG', 67, qrY+12, 46, 46);
+    // Schweizer Kreuz in der Mitte des QR-Codes
+    const cx = 67+23, cy = qrY+12+23;
+    doc.setFillColor(0,0,0); doc.rect(cx-3.5, cy-3.5, 7, 7, 'F');
+    doc.setFillColor(255,255,255);
+    doc.rect(cx-2.2, cy-0.6, 4.4, 1.2, 'F');
+    doc.rect(cx-0.6, cy-2.2, 1.2, 4.4, 'F');
+  }
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.text('Währung', 118, qrY+15); doc.text('Betrag', 140, qrY+15);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.text('CHF', 118, qrY+20); doc.text(o.amount ? parseFloat(o.amount).toFixed(2) : '', 140, qrY+20);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.text('Konto / Zahlbar an', 118, qrY+30);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.text([formatIBANDisplay(iban), o.creditorName||'', `${o.creditorStreet||''} ${o.creditorNr||''}`, `${o.creditorPlz||''} ${o.creditorOrt||''}`].filter(Boolean), 118, qrY+34);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.text('Referenz', 118, qrY+56);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.text(refType==='QRR' ? formatQRRReferenz(reference) : (reference||'—'), 118, qrY+60);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.text('Zusätzliche Informationen', 118, qrY+66);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.text(doc.splitTextToSize(o.message||'', 75), 118, qrY+70);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.text('Zahlbar durch', 118, qrY+85);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.text([o.debtorName||'—', o.debtorName?`${o.debtorStreet||''} ${o.debtorNr||''}`:'', o.debtorName?`${o.debtorPlz||''} ${o.debtorOrt||''}`:''].filter(Boolean), 118, qrY+89);
+
+  return doc.output('datauristring').split(',')[1];
+}
+
+function formatIBANDisplay(iban){
+  return (iban||'').replace(/(.{4})/g,'$1 ').trim();
+}
 async function loadInstagramStatus(){
   const mid = _S?.working_mandant_id || _S?.mandant_id;
   const box = document.getElementById('ig-status-box');
@@ -5059,11 +5671,12 @@ async function publishInstagramReel(){
 async function loadGemeindeDaten(){
   const mid = _S?.working_mandant_id || _S?.mandant_id;
   if(!mid) return;
-  const {data,error} = await sb.from('mandanten').select('name,email,adresse,telefon,website,logo_url').eq('id',mid).single();
+  const {data,error} = await sb.from('mandanten').select('name,email,adresse,telefon,website,logo_url,iban,kontoinhaber').eq('id',mid).single();
   if(error || !data) return;
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
   set('cfg-name',data.name); set('cfg-email',data.email); set('cfg-addr',data.adresse);
   set('cfg-tel',data.telefon); set('cfg-web',data.website);
+  set('cfg-iban',data.iban); set('cfg-kontoinhaber',data.kontoinhaber);
   const prev=document.getElementById('cfg-logo-preview');
   if(prev){
     if(data.logo_url) prev.innerHTML=`<img src="${data.logo_url}" style="width:100%;height:100%;object-fit:contain">`;
@@ -5101,7 +5714,9 @@ function saveGemeindeDaten(){
       email: document.getElementById('cfg-email')?.value||'',
       adresse: document.getElementById('cfg-addr')?.value||'',
       telefon: document.getElementById('cfg-tel')?.value||'',
-      website: document.getElementById('cfg-web')?.value||''
+      website: document.getElementById('cfg-web')?.value||'',
+      iban: (document.getElementById('cfg-iban')?.value||'').replace(/\s/g,'').toUpperCase(),
+      kontoinhaber: document.getElementById('cfg-kontoinhaber')?.value||''
     });
     _S.mandant_name=name;
     if(_S.working_mandant_id) _S.working_mandant_name=name;
@@ -7027,6 +7642,7 @@ const MODULE_PERMISSIONS = {
   dokumente: 'Dokumente',
   einrichtung: 'Einrichtung',
   ki: 'KI-Assistent',
+  buchhaltung: 'Buchhaltung',
 };
 
 // Vordefinierte Rollen-Pakete (Schnellauswahl) — koennen danach frei angepasst werden
@@ -7886,6 +8502,63 @@ async function doRegister() {
       <div id="map-zugang-content"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- MODAL: NEUE BUCHUNG -->
+<div class="mo" id="mo-nbuchung">
+  <div class="modal" style="max-width:460px">
+    <div class="mh"><div class="mt2">💰 Neue Buchung</div><div class="mx" onclick="closeMo('mo-nbuchung')">✕</div></div>
+    <div class="mb2">
+      <div class="fgg"><label class="fl">Datum *</label><input class="fi" id="buch-datum" type="date"></div>
+      <div class="fgg"><label class="fl">Konto *</label><select class="fs" id="buch-konto"></select></div>
+      <div class="fgg"><label class="fl">Kostenstelle (optional)</label><select class="fs" id="buch-kostenstelle"><option value="">— Keine —</option></select></div>
+      <div class="fgg"><label class="fl">Betrag (CHF) *</label><input class="fi" id="buch-betrag" type="number" min="0.01" step="0.01"></div>
+      <div class="fgg full"><label class="fl">Beschreibung</label><input class="fi" id="buch-beschreibung" placeholder="z.B. Stromrechnung Januar"></div>
+    </div>
+    <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-nbuchung')">Abbrechen</button><button class="tbtn tbtn-navy" onclick="saveBuchung()">Speichern</button></div>
+  </div>
+</div>
+
+<!-- MODAL: NEUES KONTO -->
+<div class="mo" id="mo-nkonto">
+  <div class="modal" style="max-width:400px">
+    <div class="mh"><div class="mt2">📋 Neues Konto</div><div class="mx" onclick="closeMo('mo-nkonto')">✕</div></div>
+    <div class="mb2">
+      <div class="fgg"><label class="fl">Kontonummer</label><input class="fi" id="konto-nummer" placeholder="z.B. 3000"></div>
+      <div class="fgg"><label class="fl">Name *</label><input class="fi" id="konto-name" placeholder="z.B. Spenden allgemein"></div>
+      <div class="fgg"><label class="fl">Typ</label><select class="fs" id="konto-typ"><option value="einnahme">Einnahme</option><option value="ausgabe">Ausgabe</option></select></div>
+    </div>
+    <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-nkonto')">Abbrechen</button><button class="tbtn tbtn-navy" onclick="saveKonto()">Speichern</button></div>
+  </div>
+</div>
+
+<!-- MODAL: NEUE KOSTENSTELLE -->
+<div class="mo" id="mo-nkostenstelle">
+  <div class="modal" style="max-width:400px">
+    <div class="mh"><div class="mt2">🏷 Neue Kostenstelle</div><div class="mx" onclick="closeMo('mo-nkostenstelle')">✕</div></div>
+    <div class="mb2">
+      <div class="fgg"><label class="fl">Nummer</label><input class="fi" id="ks-nummer" placeholder="z.B. K100"></div>
+      <div class="fgg"><label class="fl">Name *</label><input class="fi" id="ks-name" placeholder="z.B. Bauprojekt 2026"></div>
+      <div class="fgg full"><label class="fl">Beschreibung</label><input class="fi" id="ks-beschreibung" placeholder="Optional"></div>
+    </div>
+    <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-nkostenstelle')">Abbrechen</button><button class="tbtn tbtn-navy" onclick="saveKostenstelle()">Speichern</button></div>
+  </div>
+</div>
+
+<!-- MODAL: QR-RECHNUNG -->
+<div class="mo" id="mo-qr-rechnung">
+  <div class="modal" style="max-width:440px">
+    <div class="mh"><div class="mt2">📄 QR-Rechnung erstellen</div><div class="mx" onclick="closeMo('mo-qr-rechnung')">✕</div></div>
+    <div class="mb2">
+      <div id="qr-no-iban-warn" style="display:none;background:#FEF3C7;border:1px solid #fde68a;border-radius:8px;padding:12px;margin-bottom:12px;font-size:12.5px;color:#92400e">
+        ⚠ Für diese Gemeinde ist noch keine IBAN hinterlegt. Bitte zuerst unter <strong>Einrichtung → Bankverbindung</strong> nachtragen.
+      </div>
+      <div class="fgg"><label class="fl">Betrag (CHF) *</label><input class="fi" id="qr-betrag" type="number" min="0.05" step="0.05" placeholder="50.00"></div>
+      <div class="fgg"><label class="fl">Verwendungszweck / Nachricht</label><input class="fi" id="qr-zweck" maxlength="140" placeholder="z.B. Spende Bauprojekt 2026"></div>
+      <p style="font-size:11px;color:#9CA3AF;margin-top:8px">Die Rechnung wird auf den Namen und die Adresse des Mitglieds als Zahlungspflichtige/r ausgestellt.</p>
+    </div>
+    <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="downloadQRRechnung()">⬇ PDF herunterladen</button><button class="tbtn tbtn-navy" onclick="sendQRRechnungPerMail()">📧 Per E-Mail senden</button></div>
   </div>
 </div>
 
