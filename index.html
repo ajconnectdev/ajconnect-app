@@ -122,7 +122,24 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
 .sb-gemlbl{font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
 .sb-gemname{font-size:13px;color:white;font-weight:500}
 .sb-plan{display:inline-block;background:rgba(200,148,26,0.2);color:#e8b84b;font-size:10px;padding:2px 8px;border-radius:4px;margin-top:4px}
-.sb-sec{padding:14px 10px 3px;font-size:10px;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1.2px}
+.sb-sec{padding:14px 10px 3px;font-size:10px;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1.2px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none}
+.sb-sec:hover{color:rgba(255,255,255,0.5)}
+.sb-sec-arrow{width:12px;height:12px;fill:currentColor;transition:transform 0.15s}
+.sb-group.collapsed .sb-sec-arrow{transform:rotate(-90deg)}
+.sb-group-items{overflow:hidden;max-height:600px;transition:max-height 0.2s ease}
+.sb-group.collapsed .sb-group-items{max-height:0}
+.sb-search-trigger{display:flex;align-items:center;gap:8px;margin:10px 14px 2px;padding:8px 10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;cursor:pointer;color:rgba(255,255,255,0.5);font-size:12.5px}
+.sb-search-trigger:hover{background:rgba(255,255,255,0.1)}
+.sb-search-kbd{margin-left:auto;font-size:10px;background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;color:rgba(255,255,255,0.4)}
+.search-palette-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:2000;align-items:flex-start;justify-content:center;padding-top:80px}
+.search-palette-ov.open{display:flex}
+.search-palette{background:white;border-radius:14px;width:100%;max-width:560px;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden}
+.search-palette-input{width:100%;border:none;outline:none;padding:18px 20px;font-size:15px;border-bottom:1px solid #EEE}
+.search-palette-results{max-height:400px;overflow-y:auto;padding:8px}
+.search-result-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13.5px}
+.search-result-item:hover,.search-result-item.hl{background:#F4F5F7}
+.search-result-icon{width:28px;height:28px;border-radius:7px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.search-result-sub{font-size:11px;color:#9CA3AF;margin-left:auto}
 .sb-item{display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:7px;margin:1px 6px;cursor:pointer;color:rgba(255,255,255,0.5);font-size:12px;user-select:none;transition:all 0.15s}
 .sb-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.85)}
 .sb-item.active{background:rgba(200,148,26,0.18);color:#e8b84b}
@@ -765,28 +782,49 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
         <div class="sb-gemname" id="sb-gname">Gemeinde</div>
         <span class="sb-plan" id="sb-gplan">Professional</span>
       </div>
-      <div class="sb-sec">Übersicht</div>
-      <div class="sb-item active" onclick="navTo('dashboard',this)"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</div>
-      <div class="sb-item" onclick="navTo('aufgaben',this)"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Meine Aufgaben</div>
-      <div class="sb-sec">Gemeinde</div>
+      <div class="sb-search-trigger" onclick="openSearchPalette()">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:rgba(255,255,255,0.4)"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <span>Suchen...</span>
+        <span class="sb-search-kbd">Ctrl K</span>
+      </div>
+      <div class="sb-group">
+      <div class="sb-sec" onclick="toggleSbGroup(this)">Übersicht<svg class="sb-sec-arrow" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></div>
+      <div class="sb-group-items">
+        <div class="sb-item active" onclick="navTo('dashboard',this)"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</div>
+        <div class="sb-item" onclick="navTo('aufgaben',this)"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Meine Aufgaben</div>
+      </div></div>
+      <div class="sb-group">
+      <div class="sb-sec" onclick="toggleSbGroup(this)">Gemeinde<svg class="sb-sec-arrow" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></div>
+      <div class="sb-group-items">
       <div class="sb-item" onclick="navTo('mitglieder',this)"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>Mitglieder</div>
       <div class="sb-item" onclick="navTo('kontakte',this)"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>Kontakte</div>
       <div class="sb-item" onclick="navTo('groups',this)"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg>Small Groups</div>
-      <div class="sb-sec">Gottesdienst</div>
+      </div></div>
+      <div class="sb-group">
+      <div class="sb-sec" onclick="toggleSbGroup(this)">Gottesdienst<svg class="sb-sec-arrow" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></div>
+      <div class="sb-group-items">
       <div class="sb-item" onclick="navTo('gottesdienste',this)"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13z"/></svg>Gottesdienste</div>
       <div class="sb-item" onclick="navTo('volunteer',this)"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>Freiwillige</div>
       <div class="sb-item" onclick="navTo('worship',this)"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>Worship</div>
       <div class="sb-item" onclick="navTo('events',this)"><svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2z"/></svg>Veranstaltungen</div>
-      <div class="sb-sec">Finanzen</div>
+      </div></div>
+      <div class="sb-group">
+      <div class="sb-sec" onclick="toggleSbGroup(this)">Finanzen<svg class="sb-sec-arrow" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></div>
+      <div class="sb-group-items">
       <div class="sb-item" onclick="navTo('spenden',this)"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2z"/></svg>Twint & Spenden</div>
+      <div class="sb-item" onclick="navTo('verkauf',this)"><svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L20.9 4H5.21l-.94-2H1zm16 18c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>Verkauf</div>
       <div class="sb-item" onclick="navTo('buchhaltung',this)"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>Buchhaltung</div>
       <div class="sb-item" onclick="navTo('artikel',this)"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 17.82 9.64 17 12 17s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>Artikel</div>
       <div class="sb-item" onclick="navTo('kreditoren',this)"><svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>Kreditoren</div>
-      <div class="sb-sec">Verwaltung</div>
+      </div></div>
+      <div class="sb-group">
+      <div class="sb-sec" onclick="toggleSbGroup(this)">Verwaltung<svg class="sb-sec-arrow" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></div>
+      <div class="sb-group-items">
       <div class="sb-item" onclick="navTo('mitarbeiter',this)"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>Mitarbeiter</div>
       <div class="sb-item" onclick="navTo('ki',this)"><svg viewBox="0 0 24 24"><path d="M12 2a1 1 0 011 1v1.07A7.002 7.002 0 0119 11v2a7.002 7.002 0 01-6 6.93V21a1 1 0 01-2 0v-1.07A7.002 7.002 0 015 13v-2a7.002 7.002 0 016-6.93V3a1 1 0 011-1zm0 4a5 5 0 00-5 5v2a5 5 0 0010 0v-2a5 5 0 00-5-5zm-2 5.5a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z"/></svg>KI-Assistent</div>
       <div class="sb-item" onclick="navTo('dokumente',this)"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>Dokumente</div>
       <div class="sb-item" onclick="navTo('einrichtung',this)"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58z"/></svg>Einrichtung</div>
+      </div></div>
       <div class="sb-foot">
         <div class="sb-user" onclick="doLogout()" title="Abmelden">
           <div class="sb-av" id="sb-av">AJ</div>
@@ -1233,6 +1271,31 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
             </div>
           </div>
         </div>
+        <!-- VERKAUF: OFFERTEN & RECHNUNGEN -->
+        <div class="page" id="pg-verkauf">
+          <div class="topbar">
+            <div class="topbar-title">Verkauf</div>
+          </div>
+          <p style="font-size:12.5px;color:#9CA3AF;margin:-8px 0 16px">Offerten und Verkaufsrechnungen mit Logo — Rechnungen inkl. Schweizer QR-Zahlteil.</p>
+          <div class="ktabs" style="margin-bottom:16px">
+            <div class="ktab on" onclick="sTabVK('vk-tab-offerten',this)">Offerten</div>
+            <div class="ktab" onclick="sTabVK('vk-tab-rechnungen',this)">Rechnungen</div>
+          </div>
+
+          <div class="tpane on" id="vk-tab-offerten">
+            <div class="tcard">
+              <div class="tcardh"><div style="font-size:13px;color:#6B7280">Angebote an Kunden (z.B. Pastoren, externe Anlässe)</div><button class="tbtn tbtn-navy" style="margin-left:auto" onclick="openNVerkauf('offerte')">+ Neue Offerte</button></div>
+              <div style="overflow-x:auto"><table><thead><tr><th>Nr.</th><th>Datum</th><th>Kunde</th><th>Gültig bis</th><th style="text-align:right">Total</th><th>Status</th><th style="width:120px"></th></tr></thead><tbody id="vk-offerten-tbody"><tr><td colspan="7" class="aempty">Lädt...</td></tr></tbody></table></div>
+            </div>
+          </div>
+
+          <div class="tpane" id="vk-tab-rechnungen">
+            <div class="tcard">
+              <div class="tcardh"><div style="font-size:13px;color:#6B7280">Verkaufsrechnungen mit QR-Zahlteil</div><button class="tbtn tbtn-navy" style="margin-left:auto" onclick="openNVerkauf('rechnung')">+ Neue Rechnung</button></div>
+              <div style="overflow-x:auto"><table><thead><tr><th>Nr.</th><th>Datum</th><th>Kunde</th><th>Fällig am</th><th style="text-align:right">Total</th><th>Status</th><th style="width:120px"></th></tr></thead><tbody id="vk-rechnungen-tbody"><tr><td colspan="7" class="aempty">Lädt...</td></tr></tbody></table></div>
+            </div>
+          </div>
+        </div>
         <div class="page" id="pg-kreditoren">
   <div class="topbar">
     <div class="topbar-title" id="kred-title">Kreditoren</div>
@@ -1498,6 +1561,19 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
                 </div>
               </div>
               <!-- Team & Berechtigungen (nur sichtbar fuer Rolle "Super") -->
+              <!-- Nummernkreise fuer Verkaufsdokumente -->
+              <div class="card">
+                <div class="cardh"><div class="cardtitle" style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#7C3AED;display:inline-block"></span>Nummernkreise (Offerten & Rechnungen)</div><button class="tbtn tbtn-navy" style="font-size:11px" onclick="saveNummernkreise()">Speichern</button></div>
+                <div class="cardbody" style="display:flex;flex-direction:column;gap:12px">
+                  <p style="font-size:11.5px;color:#9CA3AF;margin:0">Jede Nummer wird nur einmal vergeben, auch bei gleichzeitigen Zugriffen. Änderungen wirken sich nur auf zukünftige Belege aus.</p>
+                  <div class="fg2">
+                    <div class="fgg"><label class="fl">Präfix Offerten</label><input class="fi" id="nk-offerte-prefix" placeholder="OFF"></div>
+                    <div class="fgg"><label class="fl">Nächste Nummer</label><input class="fi" id="nk-offerte-naechste" type="number" min="1"></div>
+                    <div class="fgg"><label class="fl">Präfix Rechnungen</label><input class="fi" id="nk-rechnung-prefix" placeholder="RG"></div>
+                    <div class="fgg"><label class="fl">Nächste Nummer</label><input class="fi" id="nk-rechnung-naechste" type="number" min="1"></div>
+                  </div>
+                </div>
+              </div>
               <div class="card" id="einrichtung-team-card" style="display:none">
                 <div class="cardh"><div class="cardtitle" style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#7C3AED;display:inline-block"></span>Team & Berechtigungen</div><button class="tbtn tbtn-navy" style="font-size:11px" onclick="openNMA_team()">+ Benutzer einladen</button></div>
                 <div class="cardbody" style="display:flex;flex-direction:column;gap:8px">
@@ -2398,6 +2474,7 @@ async function loadUserAndShow(user) {
         initAppUI();
         applySidebarPermissions();
         initAppLang();
+        restoreSbGroupState();
         showPage('app');
         updStats();loadDashboardLive();showDailyBibelvers();
         const adminBtn = document.getElementById('admin-btn-wrap');
@@ -2415,6 +2492,7 @@ async function loadUserAndShow(user) {
     initAppUI();
     applySidebarPermissions();
     initAppLang();
+    restoreSbGroupState();
     showPage('app');
     updStats();loadDashboardLive();showDailyBibelvers();
   } catch(e) {
@@ -2488,6 +2566,22 @@ document.addEventListener('keydown', e => {
 // ═══════════════════════════════════════════
 // APP UI INIT
 // ═══════════════════════════════════════════
+// ── Sidebar: Ein-/Ausklappbare Bereiche ──
+function toggleSbGroup(secEl){
+  const group = secEl.closest('.sb-group');
+  if(!group) return;
+  group.classList.toggle('collapsed');
+  const collapsed = [...document.querySelectorAll('.sb-group.collapsed .sb-sec')].map(s=>(s.dataset.de||s.childNodes[0].textContent).trim());
+  localStorage.setItem('aj-sb-collapsed', JSON.stringify(collapsed));
+}
+function restoreSbGroupState(){
+  const saved = JSON.parse(localStorage.getItem('aj-sb-collapsed')||'[]');
+  document.querySelectorAll('.sb-sec').forEach(sec=>{
+    const label = (sec.dataset.de||sec.childNodes[0].textContent).trim();
+    if(saved.includes(label)) sec.closest('.sb-group')?.classList.add('collapsed');
+  });
+}
+
 function initAppUI() {
   if (!_S) return;
   const el = id => document.getElementById(id);
@@ -2933,7 +3027,7 @@ function closeMo(id){document.getElementById(id).classList.remove('open');}
 function tIA(id){document.getElementById(id).classList.toggle('open');}
 function zwB(w){return{twint:'<span style="background:#E0F2FE;color:#0369A1;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">TWINT</span>',bar:'<span style="background:#DCFCE7;color:#16A34A;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">Bar</span>',ueberweisung:'<span style="background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">Überweisung</span>'}[w]||w;}
 
-const PT={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben',ki:'KI-Assistent',buchhaltung:'Buchhaltung'};
+const PT={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben',ki:'KI-Assistent',buchhaltung:'Buchhaltung',verkauf:'Verkauf'};
 
 
 
@@ -3496,8 +3590,391 @@ async function startJahresabschluss(){
 }
 
 // ═══════════════════════════════════════════
-// BUCHHALTUNG (Kassenbuch) — Kontenplan, Kostenstellen, Buchungen, Berichte
+// VERKAUF — Offerten & Rechnungen (mit Logo + Schweizer QR-Zahlteil)
 // ═══════════════════════════════════════════
+let verkaufsdokumente = [], vkLoaded = false, _vkTyp = 'offerte', _vkPositionenTemp = [];
+
+function sTabVK(name, el){
+  document.querySelectorAll('#pg-verkauf .ktab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('#pg-verkauf .tpane').forEach(t=>t.classList.remove('on'));
+  if(el) el.classList.add('on');
+  document.getElementById(name)?.classList.add('on');
+}
+
+async function loadVerkauf(){
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid) return;
+  const {data} = await sb.from('verkaufsdokumente').select('*').eq('mandant_id',mid).order('datum',{ascending:false});
+  verkaufsdokumente = data || [];
+  vkLoaded = true;
+  rndrVerkauf();
+}
+
+const VK_STATUS_CSS = {entwurf:'background:#F4F5F7;color:#6B7280', versendet:'background:#DBEAFE;color:#2563EB', akzeptiert:'background:#DCFCE7;color:#16A34A', bezahlt:'background:#DCFCE7;color:#16A34A', storniert:'background:#FEE2E2;color:#DC2626'};
+const VK_STATUS_LABEL = {entwurf:'Entwurf', versendet:'Versendet', akzeptiert:'Akzeptiert', bezahlt:'Bezahlt', storniert:'Storniert'};
+
+function rndrVerkauf(){
+  const offerten = verkaufsdokumente.filter(d=>d.typ==='offerte');
+  const rechnungen = verkaufsdokumente.filter(d=>d.typ==='rechnung');
+  const rowHtml = (d) => `<tr>
+    <td style="font-size:12px;font-family:monospace">${d.nummer||'—'}</td>
+    <td style="font-size:12px">${fD(d.datum)}</td>
+    <td style="font-size:12.5px">${d.kunde_name}</td>
+    <td style="font-size:12px">${fD(d.faellig_bis)}</td>
+    <td style="text-align:right;font-weight:600;font-size:12.5px">CHF ${parseFloat(d.gesamtbetrag||0).toLocaleString('de-CH',{minimumFractionDigits:2})}</td>
+    <td><span style="padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500;${VK_STATUS_CSS[d.status]||''}">${VK_STATUS_LABEL[d.status]||d.status}</span></td>
+    <td style="display:flex;gap:4px">
+      <button class="aaction-btn" onclick="downloadVerkaufsPDF('${d.id}')">PDF</button>
+      <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteVerkaufsdokument('${d.id}')">🗑</button>
+    </td>
+  </tr>`;
+  document.getElementById('vk-offerten-tbody').innerHTML = offerten.length ? offerten.map(rowHtml).join('') : '<tr><td colspan="7" class="aempty">Keine Offerten</td></tr>';
+  document.getElementById('vk-rechnungen-tbody').innerHTML = rechnungen.length ? rechnungen.map(rowHtml).join('') : '<tr><td colspan="7" class="aempty">Keine Rechnungen</td></tr>';
+}
+
+function openNVerkauf(typ){
+  _vkTyp = typ;
+  _vkPositionenTemp = [];
+  document.getElementById('vk-modal-title').textContent = typ==='offerte' ? '📄 Neue Offerte' : '🧾 Neue Rechnung';
+  document.getElementById('vk-datum2-label').textContent = typ==='offerte' ? 'Gültig bis' : 'Fällig am';
+  document.getElementById('vk-kunde-name').value = '';
+  document.getElementById('vk-kunde-email').value = '';
+  document.getElementById('vk-kunde-adresse').value = '';
+  document.getElementById('vk-datum').value = new Date().toISOString().split('T')[0];
+  const d2 = new Date(); d2.setDate(d2.getDate() + 30);
+  document.getElementById('vk-datum2').value = d2.toISOString().split('T')[0];
+  document.getElementById('vk-notiz').value = '';
+  rndrVerkaufPositionen();
+  document.getElementById('mo-nverkauf').classList.add('open');
+}
+
+function addVerkaufPosition(){
+  _vkPositionenTemp.push({beschreibung:'', menge:1, einzelpreis:0});
+  rndrVerkaufPositionen();
+}
+function removeVerkaufPosition(idx){
+  _vkPositionenTemp.splice(idx,1);
+  rndrVerkaufPositionen();
+}
+// Aktualisiert nur den Wert + die Summenzeile, OHNE die ganze Tabelle neu zu zeichnen
+// (sonst würde der Cursor bei jedem Tastendruck aus dem Eingabefeld springen)
+function updateVerkaufPosition(idx, field, value){
+  _vkPositionenTemp[idx][field] = field==='beschreibung' ? value : (parseFloat(value)||0);
+  const p = _vkPositionenTemp[idx];
+  const total = (p.menge||0) * (p.einzelpreis||0);
+  const totalCell = document.getElementById('vk-pos-total-'+idx);
+  if(totalCell) totalCell.textContent = total.toFixed(2);
+  const gesamt = _vkPositionenTemp.reduce((s,pp)=>s+(pp.menge||0)*(pp.einzelpreis||0),0);
+  document.getElementById('vk-gesamtbetrag').textContent = gesamt.toLocaleString('de-CH',{minimumFractionDigits:2});
+}
+function rndrVerkaufPositionen(){
+  const tb = document.getElementById('vk-positionen-body');
+  if(!_vkPositionenTemp.length){
+    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#9CA3AF;font-size:12px;padding:10px">Noch keine Position — "+ Position hinzufügen" klicken</td></tr>';
+  } else {
+    tb.innerHTML = _vkPositionenTemp.map((p,i)=>{
+      const total = (p.menge||0) * (p.einzelpreis||0);
+      return `<tr>
+        <td><input class="fi" style="padding:5px" value="${p.beschreibung}" oninput="updateVerkaufPosition(${i},'beschreibung',this.value)"></td>
+        <td><input class="fi" style="padding:5px" type="number" min="0" step="0.5" value="${p.menge}" oninput="updateVerkaufPosition(${i},'menge',this.value)"></td>
+        <td><input class="fi" style="padding:5px" type="number" min="0" step="0.05" value="${p.einzelpreis}" oninput="updateVerkaufPosition(${i},'einzelpreis',this.value)"></td>
+        <td style="text-align:right;font-size:12.5px;padding-top:8px" id="vk-pos-total-${i}">${total.toFixed(2)}</td>
+        <td><button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5;padding:2px 6px" onclick="removeVerkaufPosition(${i})">✕</button></td>
+      </tr>`;
+    }).join('');
+  }
+  const gesamt = _vkPositionenTemp.reduce((s,p)=>s+(p.menge||0)*(p.einzelpreis||0),0);
+  document.getElementById('vk-gesamtbetrag').textContent = gesamt.toLocaleString('de-CH',{minimumFractionDigits:2});
+}
+
+// ── Nummernkreise (Offerten & Rechnungen) ──
+async function loadNummernkreise(){
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid) return;
+  const {data} = await sb.from('nummernkreise').select('*').eq('mandant_id',mid);
+  const offerte = (data||[]).find(n=>n.dokumenttyp==='offerte');
+  const rechnung = (data||[]).find(n=>n.dokumenttyp==='rechnung');
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
+  set('nk-offerte-prefix', offerte?.prefix || 'OFF');
+  set('nk-offerte-naechste', offerte?.naechste_nummer || 1);
+  set('nk-rechnung-prefix', rechnung?.prefix || 'RG');
+  set('nk-rechnung-naechste', rechnung?.naechste_nummer || 1);
+}
+
+async function saveNummernkreise(){
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid){ toast('Bitte zuerst Gemeinde wählen'); return; }
+  const jahr = new Date().getFullYear();
+  const rows = [
+    { mandant_id: mid, dokumenttyp: 'offerte', prefix: document.getElementById('nk-offerte-prefix').value || 'OFF', naechste_nummer: parseInt(document.getElementById('nk-offerte-naechste').value)||1, jahr_reset: true, letztes_jahr: jahr },
+    { mandant_id: mid, dokumenttyp: 'rechnung', prefix: document.getElementById('nk-rechnung-prefix').value || 'RG', naechste_nummer: parseInt(document.getElementById('nk-rechnung-naechste').value)||1, jahr_reset: true, letztes_jahr: jahr }
+  ];
+  const {error} = await sb.from('nummernkreise').upsert(rows, { onConflict: 'mandant_id,dokumenttyp' });
+  if(error){ toast('Fehler: '+error.message); return; }
+  toast('Nummernkreise gespeichert ✓');
+}
+
+async function saveVerkaufsdokument(){
+  const kundeName = document.getElementById('vk-kunde-name').value.trim();
+  if(!kundeName){ toast('Kunde ist Pflicht'); return; }
+  if(!_vkPositionenTemp.length){ toast('Bitte mindestens eine Position hinzufügen'); return; }
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  const gesamtbetrag = _vkPositionenTemp.reduce((s,p)=>s+(p.menge||0)*(p.einzelpreis||0),0);
+
+  const { data: nummer, error: nummerErr } = await sb.rpc('naechste_belegnummer', {
+    p_mandant_id: mid,
+    p_dokumenttyp: _vkTyp,
+    p_default_prefix: _vkTyp==='offerte' ? 'OFF' : 'RG'
+  });
+  if(nummerErr){ toast('Fehler bei der Nummernvergabe: '+nummerErr.message); return; }
+
+  const payload = {
+    typ: _vkTyp, nummer,
+    kunde_name: kundeName,
+    kunde_email: document.getElementById('vk-kunde-email').value,
+    kunde_adresse: document.getElementById('vk-kunde-adresse').value,
+    datum: document.getElementById('vk-datum').value,
+    faellig_bis: document.getElementById('vk-datum2').value,
+    gesamtbetrag,
+    status: 'entwurf',
+    notiz: document.getElementById('vk-notiz').value
+  };
+  const saved = await dbSave('verkaufsdokumente', payload);
+  if(!saved) return;
+
+  const posPayloads = _vkPositionenTemp.map(p=>({
+    mandant_id: mid, dokument_id: saved.id,
+    beschreibung: p.beschreibung, menge: p.menge, einzelpreis: p.einzelpreis
+  }));
+  await sb.from('verkaufspositionen').insert(posPayloads);
+
+  verkaufsdokumente.push(saved);
+  rndrVerkauf();
+  closeMo('mo-nverkauf');
+  toast(`${_vkTyp==='offerte'?'Offerte':'Rechnung'} ${nummer} erstellt ✓`);
+}
+
+async function deleteVerkaufsdokument(id){
+  if(!confirm('Dokument wirklich löschen?')) return;
+  await sb.from('verkaufspositionen').delete().eq('dokument_id', id);
+  const ok = await dbDelete('verkaufsdokumente', id);
+  if(ok){ verkaufsdokumente = verkaufsdokumente.filter(d=>d.id!==id); rndrVerkauf(); toast('Gelöscht'); }
+}
+
+async function downloadVerkaufsPDF(id){
+  const dok = verkaufsdokumente.find(d=>d.id===id);
+  if(!dok) return;
+  toast('PDF wird erstellt...');
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  const [{data: positionen}, branding, {data: mand}] = await Promise.all([
+    sb.from('verkaufspositionen').select('*').eq('dokument_id', id).order('created_at'),
+    getGemeindeBranding(),
+    sb.from('mandanten').select('iban,kontoinhaber').eq('id',mid).single()
+  ]);
+  const pdfBase64 = await buildVerkaufsPDF(dok, positionen||[], branding, mand);
+  const link = document.createElement('a');
+  link.href = 'data:application/pdf;base64,'+pdfBase64;
+  link.download = `${dok.nummer}_${dok.kunde_name}.pdf`;
+  link.click();
+}
+
+async function buildVerkaufsPDF(dok, positionen, branding, mand){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'mm', format:'a4'});
+  let y = 20;
+
+  if(branding.logoUrl){
+    const dataUri = await imageUrlToDataUri(branding.logoUrl);
+    if(dataUri){
+      try{
+        const img = await loadImageElement(dataUri);
+        const maxW=45, maxH=20;
+        let w=img.naturalWidth, h=img.naturalHeight;
+        const scale = Math.min(maxW/w, maxH/h);
+        w*=scale; h*=scale;
+        doc.addImage(dataUri, 15, y, w, h, undefined, 'FAST');
+      }catch(e){}
+    }
+  }
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(20,20,20);
+  doc.text(branding.name||'', 195, y+5, {align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(90,90,90);
+  if(branding.adresse) doc.text(branding.adresse, 195, y+11, {align:'right'});
+
+  y += 35;
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(20,20,20);
+  doc.text(dok.typ==='offerte' ? `Offerte ${dok.nummer}` : `Rechnung ${dok.nummer}`, 15, y);
+  y += 10;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(60,60,60);
+  doc.text(`Datum: ${fD(dok.datum)}`, 15, y);
+  doc.text((dok.typ==='offerte' ? 'Gültig bis: ' : 'Fällig am: ') + fD(dok.faellig_bis), 80, y);
+  y += 10;
+  doc.setFont('helvetica','bold'); doc.text('Kunde:', 15, y); y+=5;
+  doc.setFont('helvetica','normal');
+  doc.text([dok.kunde_name, dok.kunde_adresse||''].filter(Boolean), 15, y);
+  y += 18;
+
+  doc.setFillColor(250,250,250);
+  doc.rect(15, y-6, 180, 9, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(120,120,120);
+  doc.text('BESCHREIBUNG', 17, y);
+  doc.text('MENGE', 130, y, {align:'right'});
+  doc.text('EINZELPREIS', 160, y, {align:'right'});
+  doc.text('TOTAL', 193, y, {align:'right'});
+  y += 8;
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(40,40,40);
+  positionen.forEach(p=>{
+    if(y>250){ doc.addPage(); y=20; }
+    const total = parseFloat(p.menge||0)*parseFloat(p.einzelpreis||0);
+    doc.text(String(p.beschreibung||''), 17, y);
+    doc.text(String(p.menge), 130, y, {align:'right'});
+    doc.text(parseFloat(p.einzelpreis).toFixed(2), 160, y, {align:'right'});
+    doc.text(total.toFixed(2), 193, y, {align:'right'});
+    doc.setDrawColor(235,235,235); doc.line(15,y+3,195,y+3);
+    y+=8;
+  });
+
+  y+=8;
+  doc.setDrawColor(20,20,20); doc.setLineWidth(0.4); doc.line(120,y-6,195,y-6);
+  doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  doc.text('Total CHF', 160, y, {align:'right'});
+  doc.text(parseFloat(dok.gesamtbetrag).toFixed(2), 193, y, {align:'right'});
+
+  if(dok.notiz){
+    y+=14;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(90,90,90);
+    doc.text(doc.splitTextToSize(dok.notiz, 180), 15, y);
+  }
+
+  drawPdfFooter(doc, branding);
+
+  if(dok.typ === 'rechnung'){
+    doc.addPage();
+    if(!mand?.iban){
+      doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(200,50,50);
+      doc.text('Hinweis: Keine IBAN für diese Gemeinde hinterlegt — QR-Zahlteil konnte nicht erstellt werden.', 15, 30);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(90,90,90);
+      doc.text('Bitte unter Einrichtung → Bankverbindung nachtragen.', 15, 38);
+    } else {
+      const addrParts = (branding.adresse||'').split(',');
+      const strassenTeil = (addrParts[0]||'').trim();
+      const ortTeil = (addrParts[1]||'').trim();
+      const strassenMatch = strassenTeil.match(/^(.*?)(\d+\w*)?$/);
+      const plzOrtMatch = ortTeil.match(/^(\d{4,5})?\s*(.*)$/);
+      const kAdrParts = (dok.kunde_adresse||'').split(',');
+      const kStrasse = (kAdrParts[0]||'').trim();
+      const kOrtTeil = (kAdrParts[1]||'').trim();
+      const kPlzOrtMatch = kOrtTeil.match(/^(\d{4,5})?\s*(.*)$/);
+
+      await drawSwissQRSlip(doc, {
+        iban: mand.iban,
+        creditorName: mand.kontoinhaber || branding.name,
+        creditorStreet: strassenMatch ? strassenMatch[1].trim() : strassenTeil,
+        creditorNr: strassenMatch ? (strassenMatch[2]||'') : '',
+        creditorPlz: plzOrtMatch ? (plzOrtMatch[1]||'') : '',
+        creditorOrt: plzOrtMatch ? (plzOrtMatch[2]||'') : '',
+        amount: dok.gesamtbetrag,
+        debtorName: dok.kunde_name,
+        debtorStreet: kStrasse, debtorNr: '',
+        debtorPlz: kPlzOrtMatch ? (kPlzOrtMatch[1]||'') : '',
+        debtorOrt: kPlzOrtMatch ? (kPlzOrtMatch[2]||'') : '',
+        message: `Rechnung ${dok.nummer}`,
+        referenzSeed: (dok.nummer+dok.id).replace(/\D/g,'') || Date.now().toString()
+      });
+    }
+  }
+
+  return doc.output('datauristring').split(',')[1];
+}
+
+// ═══════════════════════════════════════════
+// GLOBALE SUCHE (Strg+K / Cmd+K) — wie in Business Central: Seite oder Aktion eingeben, direkt hinspringen
+// ═══════════════════════════════════════════
+const SEARCH_INDEX = [
+  {label:'Dashboard', icon:'🏠', keywords:'dashboard übersicht home start', action:()=>navTo('dashboard')},
+  {label:'Meine Aufgaben', icon:'✅', keywords:'aufgaben tasks todo', action:()=>navTo('aufgaben')},
+  {label:'Mitglieder', icon:'👥', keywords:'mitglieder members mitglied', action:()=>navTo('mitglieder')},
+  {label:'+ Neues Mitglied', icon:'➕', keywords:'neues mitglied anlegen erfassen', action:()=>{navTo('mitglieder');setTimeout(openNM,150);}},
+  {label:'Kontakte', icon:'📇', keywords:'kontakte contacts kontakt', action:()=>navTo('kontakte')},
+  {label:'+ Neuer Kontakt', icon:'➕', keywords:'neuer kontakt anlegen erfassen', action:()=>{navTo('kontakte');setTimeout(openNK,150);}},
+  {label:'Small Groups', icon:'🧑‍🤝‍🧑', keywords:'small groups kleingruppen gruppen', action:()=>navTo('groups')},
+  {label:'Gottesdienste', icon:'⛪', keywords:'gottesdienste gottesdienst services predigt', action:()=>navTo('gottesdienste')},
+  {label:'Freiwillige', icon:'🙋', keywords:'freiwillige volunteers dienstplan', action:()=>navTo('volunteer')},
+  {label:'Worship', icon:'🎵', keywords:'worship lobpreis musik', action:()=>navTo('worship')},
+  {label:'Veranstaltungen', icon:'📅', keywords:'veranstaltungen events termine kalender', action:()=>navTo('events')},
+  {label:'+ Neue Veranstaltung', icon:'➕', keywords:'neue veranstaltung event anlegen', action:()=>{navTo('events');setTimeout(openNEv,150);}},
+  {label:'Twint & Spenden', icon:'💝', keywords:'twint spenden donations spende', action:()=>navTo('spenden')},
+  {label:'+ Neue Spende', icon:'➕', keywords:'neue spende erfassen', action:()=>{navTo('spenden');setTimeout(openNS,150);}},
+  {label:'Verkauf — Offerten', icon:'📄', keywords:'verkauf offerte offerten angebot angebote quote verkaufsauftrag verkaufsaufträge', action:()=>{navTo('verkauf');setTimeout(()=>sTabVK('vk-tab-offerten',document.querySelector('#pg-verkauf .ktab')),150);}},
+  {label:'Verkauf — Rechnungen', icon:'🧾', keywords:'verkauf rechnung rechnungen verkaufsrechnung invoice fakturierung', action:()=>{navTo('verkauf');setTimeout(()=>sTabVK('vk-tab-rechnungen',document.querySelectorAll('#pg-verkauf .ktab')[1]),150);}},
+  {label:'+ Neue Offerte', icon:'➕', keywords:'neue offerte erstellen angebot', action:()=>{navTo('verkauf');setTimeout(()=>openNVerkauf('offerte'),150);}},
+  {label:'+ Neue Rechnung', icon:'➕', keywords:'neue rechnung erstellen verkaufsrechnung', action:()=>{navTo('verkauf');setTimeout(()=>openNVerkauf('rechnung'),150);}},
+  {label:'Buchhaltung', icon:'💰', keywords:'buchhaltung kassenbuch konten kostenstellen accounting buchungen', action:()=>navTo('buchhaltung')},
+  {label:'Artikel', icon:'📦', keywords:'artikel lager inventar articles stock', action:()=>navTo('artikel')},
+  {label:'Kreditoren', icon:'📥', keywords:'kreditoren lieferanten rechnungen eingehend creditors', action:()=>navTo('kreditoren')},
+  {label:'Mitarbeiter', icon:'🧑‍💼', keywords:'mitarbeiter personal hr staff team', action:()=>navTo('mitarbeiter')},
+  {label:'KI-Assistent', icon:'🤖', keywords:'ki assistent ai chatbot künstliche intelligenz', action:()=>navTo('ki')},
+  {label:'Dokumente', icon:'📁', keywords:'dokumente documents protokolle verträge', action:()=>navTo('dokumente')},
+  {label:'Einrichtung', icon:'⚙️', keywords:'einrichtung settings konfiguration stammdaten', action:()=>navTo('einrichtung')},
+];
+
+let _searchHlIdx = 0;
+let _searchResults = [];
+
+function openSearchPalette(){
+  document.getElementById('search-palette-ov').classList.add('open');
+  const input = document.getElementById('search-palette-input');
+  input.value = '';
+  filterSearchPalette();
+  setTimeout(()=>input.focus(), 50);
+}
+function closeSearchPalette(){
+  document.getElementById('search-palette-ov').classList.remove('open');
+}
+
+function filterSearchPalette(){
+  const q = document.getElementById('search-palette-input').value.trim().toLowerCase();
+  _searchResults = !q ? SEARCH_INDEX : SEARCH_INDEX.filter(item =>
+    item.label.toLowerCase().includes(q) || item.keywords.includes(q)
+  );
+  _searchHlIdx = 0;
+  rndrSearchResults();
+}
+
+function rndrSearchResults(){
+  const box = document.getElementById('search-palette-results');
+  if(!_searchResults.length){
+    box.innerHTML = '<div style="text-align:center;padding:24px;color:#9CA3AF;font-size:13px">Keine Treffer</div>';
+    return;
+  }
+  box.innerHTML = _searchResults.map((item,i) => `
+    <div class="search-result-item ${i===_searchHlIdx?'hl':''}" onclick="runSearchResult(${i})" onmouseover="_searchHlIdx=${i};rndrSearchResults()">
+      <div class="search-result-icon">${item.icon}</div>
+      <div>${item.label}</div>
+    </div>`).join('');
+}
+
+function runSearchResult(i){
+  const item = _searchResults[i];
+  if(!item) return;
+  closeSearchPalette();
+  item.action();
+}
+
+function searchPaletteKeydown(e){
+  if(e.key === 'ArrowDown'){ e.preventDefault(); _searchHlIdx = Math.min(_searchHlIdx+1, _searchResults.length-1); rndrSearchResults(); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); _searchHlIdx = Math.max(_searchHlIdx-1, 0); rndrSearchResults(); }
+  else if(e.key === 'Enter'){ e.preventDefault(); runSearchResult(_searchHlIdx); }
+  else if(e.key === 'Escape'){ closeSearchPalette(); }
+}
+
+document.addEventListener('keydown', function(e){
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k'){
+    e.preventDefault();
+    openSearchPalette();
+  }
+});
 let konten = [], kostenstellen = [], buchungen = [], buchungenFilt = [], bhLoaded = false;
 
 function sTabBH(name, el){
@@ -5196,7 +5673,7 @@ function navTo(p,el2){
   document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
   const pg=document.getElementById('pg-'+p);if(pg)pg.classList.add('on');
   if(el2)el2.classList.add('active');
-  const titles={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',volunteer:'Freiwillige',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',artikel:'Artikel',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben',ki:'KI-Assistent',buchhaltung:'Buchhaltung'};
+  const titles={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',volunteer:'Freiwillige',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',artikel:'Artikel',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben',ki:'KI-Assistent',buchhaltung:'Buchhaltung',verkauf:'Verkauf'};
   document.getElementById('tb-title').textContent=titles[p]||p;
   const isM=p==='mitglieder';
   document.getElementById('vt-wrap').style.display=isM?'block':'none';
@@ -5239,6 +5716,7 @@ function navTo(p,el2){
   if(p==='einrichtung'){
     loadGemeindeDaten();
     loadInstagramStatus();
+    loadNummernkreise();
     const teamCard = document.getElementById('einrichtung-team-card');
     if(teamCard){
       if(_S?.rolle==='super'){ teamCard.style.display='block'; loadTeamGemeinde(); }
@@ -5265,6 +5743,11 @@ function navTo(p,el2){
     const midBh=_S?.working_mandant_id||_S?.mandant_id;
     if(!midBh){toast('Bitte zuerst Gemeinde wählen (Arbeiten als)');return;}
     if(!bhLoaded){loadBuchhaltung();}else{filterBuchungen();}
+  }
+  if(p==='verkauf'){
+    const midVk=_S?.working_mandant_id||_S?.mandant_id;
+    if(!midVk){toast('Bitte zuerst Gemeinde wählen (Arbeiten als)');return;}
+    if(!vkLoaded){loadVerkauf();}else{rndrVerkauf();}
   }
 }
 
@@ -5518,17 +6001,6 @@ async function renderQRCodeDataURL(text){
 async function buildQRRechnungPDF(o){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-  const iban = (o.iban||'').replace(/\s/g,'').toUpperCase();
-  const refType = isQRIBAN(iban) ? 'QRR' : (o.reference ? 'SCOR' : 'NON');
-  const reference = refType === 'QRR' ? generateQRRReferenz(o.referenzSeed) : (o.reference || '');
-
-  const payload = buildSwissQRPayload({
-    iban, creditorName: o.creditorName, creditorStreet: o.creditorStreet, creditorNr: o.creditorNr,
-    creditorPlz: o.creditorPlz, creditorOrt: o.creditorOrt,
-    amount: o.amount, debtorName: o.debtorName, debtorStreet: o.debtorStreet, debtorNr: o.debtorNr,
-    debtorPlz: o.debtorPlz, debtorOrt: o.debtorOrt, refType, reference, message: o.message
-  });
-  const qrDataUrl = await renderQRCodeDataURL(payload);
 
   // ── Optional: Rechnungskopf (freier Bereich oberhalb des Zahlteils) ──
   doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(20,20,20);
@@ -5542,6 +6014,26 @@ async function buildQRRechnungPDF(o){
     doc.setFontSize(10); doc.setTextColor(60,60,60);
     doc.text(doc.splitTextToSize(o.message, 180), 15, 53);
   }
+
+  await drawSwissQRSlip(doc, o);
+  return doc.output('datauristring').split(',')[1];
+}
+
+// Zeichnet den kompletten Schweizer QR-Zahlteil (Empfangsschein + Zahlteil) auf der
+// AKTUELLEN Seite von `doc`, an der vorgeschriebenen Position (105mm-Bereich am Seitenende).
+// Wiederverwendbar fuer Spenden-QR-Rechnungen UND Verkaufsrechnungen.
+async function drawSwissQRSlip(doc, o){
+  const iban = (o.iban||'').replace(/\s/g,'').toUpperCase();
+  const refType = isQRIBAN(iban) ? 'QRR' : (o.reference ? 'SCOR' : 'NON');
+  const reference = refType === 'QRR' ? generateQRRReferenz(o.referenzSeed) : (o.reference || '');
+
+  const payload = buildSwissQRPayload({
+    iban, creditorName: o.creditorName, creditorStreet: o.creditorStreet, creditorNr: o.creditorNr,
+    creditorPlz: o.creditorPlz, creditorOrt: o.creditorOrt,
+    amount: o.amount, debtorName: o.debtorName, debtorStreet: o.debtorStreet, debtorNr: o.debtorNr,
+    debtorPlz: o.debtorPlz, debtorOrt: o.debtorOrt, refType, reference, message: o.message
+  });
+  const qrDataUrl = await renderQRCodeDataURL(payload);
 
   // ── QR-Rechnung: fixe Position unten auf der Seite (105mm ab unten, wie in den Layout-Vorgaben) ──
   const qrY = 297 - 105; // 105mm hoher Bereich am Seitenende
@@ -5612,8 +6104,6 @@ async function buildQRRechnungPDF(o){
   doc.text('Zahlbar durch', 118, qrY+85);
   doc.setFont('helvetica','normal'); doc.setFontSize(10);
   doc.text([o.debtorName||'—', o.debtorName?`${o.debtorStreet||''} ${o.debtorNr||''}`:'', o.debtorName?`${o.debtorPlz||''} ${o.debtorOrt||''}`:''].filter(Boolean), 118, qrY+89);
-
-  return doc.output('datauristring').split(',')[1];
 }
 
 function formatIBANDisplay(iban){
@@ -7739,6 +8229,7 @@ const MODULE_PERMISSIONS = {
   einrichtung: 'Einrichtung',
   ki: 'KI-Assistent',
   buchhaltung: 'Buchhaltung',
+  verkauf: 'Verkauf',
 };
 
 // Vordefinierte Rollen-Pakete (Schnellauswahl) — koennen danach frei angepasst werden
@@ -8598,6 +9089,38 @@ async function doRegister() {
       <div id="map-zugang-content"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- GLOBALE SUCHE (Strg+K) -->
+<div class="search-palette-ov" id="search-palette-ov" onclick="if(event.target===this)closeSearchPalette()">
+  <div class="search-palette">
+    <input type="text" class="search-palette-input" id="search-palette-input" placeholder="Seite oder Aktion suchen... (z.B. 'Rechnung', 'Kontakte', 'Neue Spende')" oninput="filterSearchPalette()" onkeydown="searchPaletteKeydown(event)">
+    <div class="search-palette-results" id="search-palette-results"></div>
+  </div>
+</div>
+
+<!-- MODAL: NEUE OFFERTE / RECHNUNG -->
+<div class="mo" id="mo-nverkauf">
+  <div class="modal" style="max-width:640px">
+    <div class="mh"><div class="mt2" id="vk-modal-title">📄 Neue Offerte</div><div class="mx" onclick="closeMo('mo-nverkauf')">✕</div></div>
+    <div class="mb2">
+      <div class="fg2">
+        <div class="fgg"><label class="fl">Kunde / Firma *</label><input class="fi" id="vk-kunde-name" placeholder="z.B. Pastor Müller / Firma XY GmbH"></div>
+        <div class="fgg"><label class="fl">E-Mail</label><input class="fi" id="vk-kunde-email" type="email"></div>
+        <div class="fgg full"><label class="fl">Adresse</label><input class="fi" id="vk-kunde-adresse" placeholder="Strasse, PLZ Ort"></div>
+        <div class="fgg"><label class="fl">Datum</label><input class="fi" id="vk-datum" type="date"></div>
+        <div class="fgg"><label class="fl" id="vk-datum2-label">Gültig bis</label><input class="fi" id="vk-datum2" type="date"></div>
+      </div>
+      <div style="margin-top:14px">
+        <label class="fl">Positionen</label>
+        <table style="width:100%;margin-top:6px"><thead><tr><th style="width:auto">Beschreibung</th><th style="width:70px">Menge</th><th style="width:100px">Einzelpreis</th><th style="width:100px;text-align:right">Total</th><th style="width:30px"></th></tr></thead><tbody id="vk-positionen-body"></tbody></table>
+        <button class="tbtn tbtn-ghost" style="font-size:12px;margin-top:8px" onclick="addVerkaufPosition()">+ Position hinzufügen</button>
+      </div>
+      <div style="text-align:right;margin-top:14px;font-size:15px;font-weight:700;color:#1A3560">Gesamtbetrag: CHF <span id="vk-gesamtbetrag">0.00</span></div>
+      <div class="fgg full" style="margin-top:10px"><label class="fl">Notiz (erscheint auf dem Dokument)</label><input class="fi" id="vk-notiz"></div>
+    </div>
+    <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-nverkauf')">Abbrechen</button><button class="tbtn tbtn-navy" onclick="saveVerkaufsdokument()">Speichern</button></div>
   </div>
 </div>
 
