@@ -821,7 +821,7 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
           </div>
           <button id="btn-exp" class="tbtn tbtn-ghost" style="display:none" onclick="exportCSV()">Export</button>
           <button id="btn-new" class="tbtn tbtn-navy" style="display:none" onclick="openNM()">+ Neues Mitglied</button>
-          <div class="lang-toggle-app"><button class="lang-btn-app active" id="app-btn-de" onclick="setAppLang('de')">DE</button><button class="lang-btn-app" id="app-btn-en" onclick="setAppLang('en')">EN</button></div>
+          <div class="lang-toggle-app"><button class="lang-btn-app active" id="app-btn-de" onclick="changeUserLanguage('de')">DE</button><button class="lang-btn-app" id="app-btn-en" onclick="changeUserLanguage('en')">EN</button><button class="lang-btn-app" id="app-btn-fr" onclick="changeUserLanguage('fr')">FR</button><button class="lang-btn-app" id="app-btn-it" onclick="changeUserLanguage('it')">IT</button></div>
           <div class="date-chip" id="date-chip"></div>
         </div>
       </div>
@@ -2380,8 +2380,10 @@ async function loadUserAndShow(user) {
       const { data: m } = await sb.from('mandanten').select('name,lizenz,aktiv').eq('id', p.mandant_id).single();
       if (!m || !m.aktiv) { await sb.auth.signOut(); showPage('login'); showErr('Keine aktive Lizenz. Kontakt: info@ajconnect.ch'); return; }
       _S = { id: user.id, email: user.email, name: p.name||user.email, rolle: p.rolle, mandant_id: p.mandant_id, mandant_name: m.name, lizenz: m.lizenz, berechtigungen: p.berechtigungen||null };
+      if(p.sprache){ _appLang = p.sprache; localStorage.setItem('aj-app-lang', p.sprache); }
     } else {
       _S = { id: user.id, email: user.email, name: p.name||user.email, rolle: p.rolle, mandant_id: null, mandant_name: 'AJ Connect', lizenz: 'professional', berechtigungen: p.berechtigungen||null };
+      if(p.sprache){ _appLang = p.sprache; localStorage.setItem('aj-app-lang', p.sprache); }
     }
     // For superadmin: check for saved mandant
     if (p.rolle === 'superadmin') {
@@ -2395,6 +2397,7 @@ async function loadUserAndShow(user) {
         await loadAllData();
         initAppUI();
         applySidebarPermissions();
+        initAppLang();
         showPage('app');
         updStats();loadDashboardLive();showDailyBibelvers();
         const adminBtn = document.getElementById('admin-btn-wrap');
@@ -2411,6 +2414,7 @@ async function loadUserAndShow(user) {
     await loadAllData();
     initAppUI();
     applySidebarPermissions();
+    initAppLang();
     showPage('app');
     updStats();loadDashboardLive();showDailyBibelvers();
   } catch(e) {
@@ -7226,204 +7230,275 @@ let _appLang = localStorage.getItem('aj-app-lang') || 'de';
 // Full translation dictionary DE → EN
 const APP_T = {
   // Sidebar sections
-  'Übersicht':'Overview','Gemeinde':'Church','Gottesdienst':'Services',
-  'Finanzen':'Finance','Verwaltung':'Administration',
+  'Übersicht':{en:'Overview',fr:'Aperçu',it:'Panoramica'},
+  'Gemeinde':{en:'Church',fr:'Paroisse',it:'Parrocchia'},
+  'Gottesdienst':{en:'Services',fr:'Cultes',it:'Funzioni'},
+  'Finanzen':{en:'Finance',fr:'Finances',it:'Finanze'},
+  'Verwaltung':{en:'Administration',fr:'Administration',it:'Amministrazione'},
   // Sidebar items
-  'Dashboard':'Dashboard','Mitglieder':'Members','Kontakte':'Contacts',
-  'Small Groups':'Small Groups','Gottesdienste':'Services',
-  'Freiwillige':'Volunteers','Worship':'Worship',
-  'Veranstaltungen':'Events','Twint & Spenden':'Donations',
-  'Artikel':'Articles','Kreditoren':'Creditors',
-  'Dokumente':'Documents','Einrichtung':'Settings',
+  'Dashboard':{en:'Dashboard',fr:'Tableau de bord',it:'Pannello'},
+  'Mitglieder':{en:'Members',fr:'Membres',it:'Membri'},
+  'Kontakte':{en:'Contacts',fr:'Contacts',it:'Contatti'},
+  'Small Groups':{en:'Small Groups',fr:'Petits groupes',it:'Piccoli gruppi'},
+  'Gottesdienste':{en:'Services',fr:'Cultes',it:'Funzioni'},
+  'Freiwillige':{en:'Volunteers',fr:'Bénévoles',it:'Volontari'},
+  'Worship':{en:'Worship',fr:'Louange',it:'Lode'},
+  'Veranstaltungen':{en:'Events',fr:'Événements',it:'Eventi'},
+  'Twint & Spenden':{en:'Donations',fr:'Dons',it:'Donazioni'},
+  'Artikel':{en:'Articles',fr:'Articles',it:'Articoli'},
+  'Kreditoren':{en:'Creditors',fr:'Créanciers',it:'Creditori'},
+  'Mitarbeiter':{en:'Staff',fr:'Collaborateurs',it:'Collaboratori'},
+  'Dokumente':{en:'Documents',fr:'Documents',it:'Documenti'},
+  'Einrichtung':{en:'Settings',fr:'Paramètres',it:'Impostazioni'},
+  'Meine Aufgaben':{en:'My Tasks',fr:'Mes tâches',it:'I miei compiti'},
+  'KI-Assistent':{en:'AI Assistant',fr:'Assistant IA',it:'Assistente IA'},
+  'Buchhaltung':{en:'Accounting',fr:'Comptabilité',it:'Contabilità'},
   // Stat labels
-  'Total':'Total','Aktiv':'Active','Besucher':'Visitors','Neu':'New',
-  'Total Kontakte':'Total Contacts','Offen / Interessenten':'Open / Prospects',
-  'Diesen Monat':'This month','Zu Mitglied geworden':'Converted to member',
-  'Gruppen total':'Total groups','Mitglieder total':'Total members',
-  'Nächstes Treffen':'Next meeting','Aktive Gruppen':'Active groups',
-  'Gottesdienste total':'Total services','Ø Besucher':'Avg. attendance',
-  'Nächster GD':'Next service','Lieder gespielt':'Songs played',
-  'Spenden April':'Donations April','Offene Aufgaben':'Open tasks',
-  'Spenden gesamt':'Total donations','Ø pro Spende':'Avg. per donation',
-  'Spender':'Donors','Diesen Monat':'This month',
-  'Offene Rechnungen':'Open invoices','Fällig diese Woche':'Due this week',
-  'Bezahlt (lfd. Monat)':'Paid (current month)','Kreditoren':'Creditors',
-  'Dokumente':'Documents','Gespeichert':'Stored',
-  'Protokolle':'Minutes','Verträge':'Contracts',
-  'Freiwillige total':'Total volunteers','Bestätigt diese Woche':'Confirmed this week',
-  'Angefragt / offen':'Requested / open','Dienst-Bereiche':'Service areas',
-  'Artikel total':'Total articles','Aktiv':'Active','Kategorien':'Categories',
-  'Favoriten':'Favourites',
+  'Total':{en:'Total',fr:'Total',it:'Totale'},
+  'Aktiv':{en:'Active',fr:'Actif',it:'Attivo'},
+  'Besucher':{en:'Visitors',fr:'Visiteurs',it:'Visitatori'},
+  'Neu':{en:'New',fr:'Nouveau',it:'Nuovo'},
+  'Total Kontakte':{en:'Total Contacts',fr:'Total contacts',it:'Totale contatti'},
+  'Offen / Interessenten':{en:'Open / Prospects',fr:'Ouvert / Prospects',it:'Aperto / Interessati'},
+  'Diesen Monat':{en:'This month',fr:'Ce mois',it:'Questo mese'},
+  'Zu Mitglied geworden':{en:'Converted to member',fr:'Devenu membre',it:'Diventato membro'},
+  'Gruppen total':{en:'Total groups',fr:'Total groupes',it:'Totale gruppi'},
+  'Mitglieder total':{en:'Total members',fr:'Total membres',it:'Totale membri'},
+  'Nächstes Treffen':{en:'Next meeting',fr:'Prochaine réunion',it:'Prossimo incontro'},
+  'Aktive Gruppen':{en:'Active groups',fr:'Groupes actifs',it:'Gruppi attivi'},
+  'Gottesdienste total':{en:'Total services',fr:'Total cultes',it:'Totale funzioni'},
+  'Ø Besucher':{en:'Avg. attendance',fr:'Fréquentation moy.',it:'Presenze medie'},
+  'Nächster GD':{en:'Next service',fr:'Prochain culte',it:'Prossima funzione'},
+  'Lieder gespielt':{en:'Songs played',fr:'Chants joués',it:'Canti eseguiti'},
+  'Offene Aufgaben':{en:'Open tasks',fr:'Tâches ouvertes',it:'Compiti aperti'},
+  'Spenden gesamt':{en:'Total donations',fr:'Total dons',it:'Totale donazioni'},
+  'Ø pro Spende':{en:'Avg. per donation',fr:'Moy. par don',it:'Media per donazione'},
+  'Spender':{en:'Donors',fr:'Donateurs',it:'Donatori'},
+  'Offene Rechnungen':{en:'Open invoices',fr:'Factures ouvertes',it:'Fatture aperte'},
+  'Fällig diese Woche':{en:'Due this week',fr:'Échéance cette semaine',it:'Scadenza questa settimana'},
+  'Bezahlt (lfd. Monat)':{en:'Paid (current month)',fr:'Payé (mois en cours)',it:'Pagato (mese corrente)'},
+  'Gespeichert':{en:'Stored',fr:'Enregistré',it:'Archiviato'},
+  'Protokolle':{en:'Minutes',fr:'Procès-verbaux',it:'Verbali'},
+  'Verträge':{en:'Contracts',fr:'Contrats',it:'Contratti'},
+  'Freiwillige total':{en:'Total volunteers',fr:'Total bénévoles',it:'Totale volontari'},
+  'Bestätigt diese Woche':{en:'Confirmed this week',fr:'Confirmé cette semaine',it:'Confermato questa settimana'},
+  'Angefragt / offen':{en:'Requested / open',fr:'Demandé / ouvert',it:'Richiesto / aperto'},
+  'Dienst-Bereiche':{en:'Service areas',fr:"Domaines de service",it:'Aree di servizio'},
+  'Artikel total':{en:'Total articles',fr:'Total articles',it:'Totale articoli'},
+  'Kategorien':{en:'Categories',fr:'Catégories',it:'Categorie'},
+  'Favoriten':{en:'Favourites',fr:'Favoris',it:'Preferiti'},
   // Table headers
-  'Name':'Name','E-Mail':'Email','Telefon':'Phone','Status':'Status',
-  'Aktionen':'Actions','Rolle':'Role','Erstkontakt':'First contact',
-  'Quelle':'Source','Datum':'Date','Titel / Thema':'Title / Topic',
-  'Prediger':'Speaker','Besucher':'Attendance','Typ':'Type',
-  'Verantwortlich':'Responsible','Anmeldungen':'Registrations',
-  'Fällig':'Due','Kreditor':'Creditor','Beschreibung':'Description',
-  'Betrag':'Amount','Bezahlt am':'Paid on','Zahlungsweg':'Payment method',
-  'Zweck':'Purpose','Notiz':'Note','Bereich':'Area',
-  'Freiwillige/r':'Volunteer','Zeit':'Time','Nummer':'Number',
-  'Bezeichnung':'Name','Einheit':'Unit','Preis':'Price','Bestand':'Stock',
-  'Kategorie':'Category','Nr.':'No.','Foto':'Photo',
-  'Name / E-Mail':'Name / Email','Lizenz':'Licence',
-  'Gemeinde':'Church','DATUM':'DATE','TITEL / THEMA':'TITLE / TOPIC',
-  'PREDIGER':'SPEAKER','BESUCHER':'ATTENDANCE',
+  'Name':{en:'Name',fr:'Nom',it:'Nome'},
+  'E-Mail':{en:'Email',fr:'E-mail',it:'E-mail'},
+  'Telefon':{en:'Phone',fr:'Téléphone',it:'Telefono'},
+  'Status':{en:'Status',fr:'Statut',it:'Stato'},
+  'Aktionen':{en:'Actions',fr:'Actions',it:'Azioni'},
+  'Rolle':{en:'Role',fr:'Rôle',it:'Ruolo'},
+  'Erstkontakt':{en:'First contact',fr:'Premier contact',it:'Primo contatto'},
+  'Quelle':{en:'Source',fr:'Source',it:'Fonte'},
+  'Datum':{en:'Date',fr:'Date',it:'Data'},
+  'Titel / Thema':{en:'Title / Topic',fr:'Titre / Sujet',it:'Titolo / Tema'},
+  'Prediger':{en:'Speaker',fr:'Prédicateur',it:'Predicatore'},
+  'Typ':{en:'Type',fr:'Type',it:'Tipo'},
+  'Verantwortlich':{en:'Responsible',fr:'Responsable',it:'Responsabile'},
+  'Anmeldungen':{en:'Registrations',fr:'Inscriptions',it:'Iscrizioni'},
+  'Fällig':{en:'Due',fr:'Échéance',it:'Scadenza'},
+  'Kreditor':{en:'Creditor',fr:'Créancier',it:'Creditore'},
+  'Beschreibung':{en:'Description',fr:'Description',it:'Descrizione'},
+  'Betrag':{en:'Amount',fr:'Montant',it:'Importo'},
+  'Bezahlt am':{en:'Paid on',fr:'Payé le',it:'Pagato il'},
+  'Zahlungsweg':{en:'Payment method',fr:'Mode de paiement',it:'Metodo di pagamento'},
+  'Zweck':{en:'Purpose',fr:'But',it:'Scopo'},
+  'Notiz':{en:'Note',fr:'Note',it:'Nota'},
+  'Bereich':{en:'Area',fr:'Domaine',it:'Area'},
+  'Freiwillige/r':{en:'Volunteer',fr:'Bénévole',it:'Volontario'},
+  'Zeit':{en:'Time',fr:'Heure',it:'Ora'},
+  'Nummer':{en:'Number',fr:'Numéro',it:'Numero'},
+  'Bezeichnung':{en:'Name',fr:'Désignation',it:'Denominazione'},
+  'Einheit':{en:'Unit',fr:'Unité',it:'Unità'},
+  'Preis':{en:'Price',fr:'Prix',it:'Prezzo'},
+  'Bestand':{en:'Stock',fr:'Stock',it:'Scorte'},
+  'Kategorie':{en:'Category',fr:'Catégorie',it:'Categoria'},
+  'Nr.':{en:'No.',fr:'N°',it:'N.'},
+  'Foto':{en:'Photo',fr:'Photo',it:'Foto'},
+  'Name / E-Mail':{en:'Name / Email',fr:'Nom / E-mail',it:'Nome / E-mail'},
+  'Lizenz':{en:'Licence',fr:'Licence',it:'Licenza'},
+  'DATUM':{en:'DATE',fr:'DATE',it:'DATA'},
+  'TITEL / THEMA':{en:'TITLE / TOPIC',fr:'TITRE / SUJET',it:'TITOLO / TEMA'},
+  'PREDIGER':{en:'SPEAKER',fr:'PRÉDICATEUR',it:'PREDICATORE'},
+  'BESUCHER':{en:'ATTENDANCE',fr:'FRÉQUENTATION',it:'PRESENZE'},
+  'Position':{en:'Position',fr:'Fonction',it:'Posizione'},
+  'Abteilung':{en:'Department',fr:'Département',it:'Reparto'},
+  'Pensum':{en:'Workload',fr:"Taux d'occupation",it:'Grado di occupazione'},
+  'Anstellung':{en:'Employment',fr:'Emploi',it:'Impiego'},
+  'Priorität':{en:'Priority',fr:'Priorité',it:'Priorità'},
   // Form labels
-  'Anrede':'Salutation','Vorname':'First name','Nachname':'Last name',
-  'Mobil':'Mobile','Geburtsdatum':'Date of birth',
-  'Strasse':'Street','PLZ / Ort':'Postcode / City',
-  'Eingetreten':'Joined','Small Group':'Small Group',
-  'Notizen':'Notes','Bemerkungen':'Remarks',
-  'Vorname *':'First name *','Nachname *':'Last name *','E-Mail *':'Email *',
-  'Nationalität':'Nationality','Sprache':'Language',
-  'Familienstand':'Marital status','Kanton':'Canton',
-  'Name *':'Name *','Leiter':'Leader','Ko-Leiter':'Co-leader',
-  'Tag':'Day','Uhrzeit':'Time','Ort':'Location','Ziel':'Goal',
-  'Bibeltext':'Bible text','Besucherzahl':'Attendance',
-  'Zahlungsweg':'Payment','Betrag (CHF)':'Amount (CHF)',
-  'Mitglied (optional)':'Member (optional)',
-  'Bezeichnung *':'Name *','Artikelnummer':'Article no.',
-  'Mindestbestand':'Min. stock','Barcode / EAN':'Barcode / EAN',
-  'Lieferant':'Supplier','Rechnungsnummer':'Invoice no.',
-  'Rechnungsdatum':'Invoice date','Fällig am':'Due date',
-  'IBAN':'IBAN','Adresse':'Address','Kontakt':'Contact',
+  'Anrede':{en:'Salutation',fr:'Civilité',it:'Titolo'},
+  'Vorname':{en:'First name',fr:'Prénom',it:'Nome'},
+  'Nachname':{en:'Last name',fr:'Nom de famille',it:'Cognome'},
+  'Mobil':{en:'Mobile',fr:'Mobile',it:'Cellulare'},
+  'Geburtsdatum':{en:'Date of birth',fr:'Date de naissance',it:'Data di nascita'},
+  'Strasse':{en:'Street',fr:'Rue',it:'Via'},
+  'PLZ / Ort':{en:'Postcode / City',fr:'NPA / Localité',it:'CAP / Località'},
+  'Eingetreten':{en:'Joined',fr:'Entré',it:'Iscritto'},
+  'Notizen':{en:'Notes',fr:'Notes',it:'Note'},
+  'Bemerkungen':{en:'Remarks',fr:'Remarques',it:'Osservazioni'},
+  'Vorname *':{en:'First name *',fr:'Prénom *',it:'Nome *'},
+  'Nachname *':{en:'Last name *',fr:'Nom *',it:'Cognome *'},
+  'E-Mail *':{en:'Email *',fr:'E-mail *',it:'E-mail *'},
+  'Nationalität':{en:'Nationality',fr:'Nationalité',it:'Nazionalità'},
+  'Sprache':{en:'Language',fr:'Langue',it:'Lingua'},
+  'Familienstand':{en:'Marital status',fr:'État civil',it:'Stato civile'},
+  'Kanton':{en:'Canton',fr:'Canton',it:'Cantone'},
+  'Name *':{en:'Name *',fr:'Nom *',it:'Nome *'},
+  'Leiter':{en:'Leader',fr:'Responsable',it:'Responsabile'},
+  'Ko-Leiter':{en:'Co-leader',fr:'Co-responsable',it:'Co-responsabile'},
+  'Tag':{en:'Day',fr:'Jour',it:'Giorno'},
+  'Uhrzeit':{en:'Time',fr:'Heure',it:'Ora'},
+  'Ort':{en:'Location',fr:'Lieu',it:'Luogo'},
+  'Ziel':{en:'Goal',fr:'Objectif',it:'Obiettivo'},
+  'Bibeltext':{en:'Bible text',fr:'Texte biblique',it:'Testo biblico'},
+  'Besucherzahl':{en:'Attendance',fr:'Fréquentation',it:'Presenze'},
+  'Betrag (CHF)':{en:'Amount (CHF)',fr:'Montant (CHF)',it:'Importo (CHF)'},
+  'Mitglied (optional)':{en:'Member (optional)',fr:'Membre (optionnel)',it:'Membro (opzionale)'},
+  'Bezeichnung *':{en:'Name *',fr:'Désignation *',it:'Denominazione *'},
+  'Artikelnummer':{en:'Article no.',fr:"N° d'article",it:"N. articolo"},
+  'Mindestbestand':{en:'Min. stock',fr:'Stock minimum',it:'Scorta minima'},
+  'Barcode / EAN':{en:'Barcode / EAN',fr:'Code-barres / EAN',it:'Codice a barre / EAN'},
+  'Lieferant':{en:'Supplier',fr:'Fournisseur',it:'Fornitore'},
+  'Rechnungsnummer':{en:'Invoice no.',fr:'N° de facture',it:'N. fattura'},
+  'Rechnungsdatum':{en:'Invoice date',fr:'Date de facture',it:'Data fattura'},
+  'Fällig am':{en:'Due date',fr:"Date d'échéance",it:'Data di scadenza'},
+  'IBAN':{en:'IBAN',fr:'IBAN',it:'IBAN'},
+  'Adresse':{en:'Address',fr:'Adresse',it:'Indirizzo'},
+  'Kontakt':{en:'Contact',fr:'Contact',it:'Contatto'},
   // Buttons
-  'Speichern':'Save','Abbrechen':'Cancel','Löschen':'Delete',
-  'Bearbeiten':'Edit','Schliessen':'Close','Export CSV':'Export CSV',
-  'Anlegen':'Create','Aktualisieren':'Update','Zurück':'Back',
-  '+ Neues Mitglied':'+ New member','+ Neuer Kontakt':'+ New contact',
-  '+ Neue Gruppe':'+ New group','+ Neuer GD':'+ New service',
-  '+ Neues Event':'+ New event','+ Neue Spende':'+ New donation',
-  '+ Kreditor':'+ Creditor','+ Rechnung':'+ Invoice',
-  '+ Dokument hochladen':'+ Upload document',
-  '+ Neuer Artikel':'+ New article','+ Einsatz planen':'+ Schedule',
-  '+ Bereich':'+ Area','Rechnungen':'Invoices',
-  'Export':'Export','Bezahlt':'Mark paid',
+  'Speichern':{en:'Save',fr:'Enregistrer',it:'Salva'},
+  'Abbrechen':{en:'Cancel',fr:'Annuler',it:'Annulla'},
+  'Löschen':{en:'Delete',fr:'Supprimer',it:'Elimina'},
+  'Bearbeiten':{en:'Edit',fr:'Modifier',it:'Modifica'},
+  'Schliessen':{en:'Close',fr:'Fermer',it:'Chiudi'},
+  'Export CSV':{en:'Export CSV',fr:'Exporter CSV',it:'Esporta CSV'},
+  'Anlegen':{en:'Create',fr:'Créer',it:'Crea'},
+  'Aktualisieren':{en:'Update',fr:'Mettre à jour',it:'Aggiorna'},
+  'Zurück':{en:'Back',fr:'Retour',it:'Indietro'},
+  '+ Neues Mitglied':{en:'+ New member',fr:'+ Nouveau membre',it:'+ Nuovo membro'},
+  '+ Neuer Kontakt':{en:'+ New contact',fr:'+ Nouveau contact',it:'+ Nuovo contatto'},
+  '+ Neue Gruppe':{en:'+ New group',fr:'+ Nouveau groupe',it:'+ Nuovo gruppo'},
+  '+ Neuer GD':{en:'+ New service',fr:'+ Nouveau culte',it:'+ Nuova funzione'},
+  '+ Neues Event':{en:'+ New event',fr:'+ Nouvel événement',it:'+ Nuovo evento'},
+  '+ Neue Spende':{en:'+ New donation',fr:'+ Nouveau don',it:'+ Nuova donazione'},
+  '+ Kreditor':{en:'+ Creditor',fr:'+ Créancier',it:'+ Creditore'},
+  '+ Rechnung':{en:'+ Invoice',fr:'+ Facture',it:'+ Fattura'},
+  '+ Dokument hochladen':{en:'+ Upload document',fr:'+ Charger un document',it:'+ Carica documento'},
+  '+ Neuer Artikel':{en:'+ New article',fr:'+ Nouvel article',it:'+ Nuovo articolo'},
+  '+ Einsatz planen':{en:'+ Schedule',fr:'+ Planifier',it:'+ Pianifica'},
+  '+ Bereich':{en:'+ Area',fr:'+ Domaine',it:'+ Area'},
+  'Rechnungen':{en:'Invoices',fr:'Factures',it:'Fatture'},
+  'Export':{en:'Export',fr:'Exporter',it:'Esporta'},
+  'Bezahlt':{en:'Mark paid',fr:'Marquer payé',it:'Segna pagato'},
   // Status badges
-  'aktiv':'active','inaktiv':'inactive','besucher':'visitor',
-  'geplant':'planned','durchgeführt':'completed','abgesagt':'cancelled',
-  'offen':'open','bezahlt':'paid','storniert':'cancelled',
-  'angefragt':'requested','bestaetigt':'confirmed','abgelehnt':'declined',
-  'angemeldet':'registered','warteliste':'waitlist','erschienen':'attended',
+  'aktiv':{en:'active',fr:'actif',it:'attivo'},
+  'inaktiv':{en:'inactive',fr:'inactif',it:'inattivo'},
+  'besucher':{en:'visitor',fr:'visiteur',it:'visitatore'},
+  'geplant':{en:'planned',fr:'planifié',it:'pianificato'},
+  'durchgeführt':{en:'completed',fr:'effectué',it:'completato'},
+  'abgesagt':{en:'cancelled',fr:'annulé',it:'annullato'},
+  'offen':{en:'open',fr:'ouvert',it:'aperto'},
+  'bezahlt':{en:'paid',fr:'payé',it:'pagato'},
+  'storniert':{en:'cancelled',fr:'annulé',it:'annullato'},
+  'angefragt':{en:'requested',fr:'demandé',it:'richiesto'},
+  'bestaetigt':{en:'confirmed',fr:'confirmé',it:'confermato'},
+  'abgelehnt':{en:'declined',fr:'refusé',it:'rifiutato'},
+  'angemeldet':{en:'registered',fr:'inscrit',it:'iscritto'},
+  'warteliste':{en:'waitlist',fr:"liste d'attente",it:'lista d\'attesa'},
+  'erschienen':{en:'attended',fr:'présent',it:'presente'},
   // Modal titles
-  'Neues Mitglied':'New member','Kontakt bearbeiten':'Edit contact',
-  'Neue Gruppe':'New group','Neuer Gottesdienst':'New service',
-  'Neue Spende erfassen':'Record donation',
-  'Kreditor erfassen':'Add creditor','Rechnung erfassen':'Add invoice',
-  'Neuer Artikel':'New article','Einsatz planen':'Schedule shift',
-  'Neuer Dienst-Bereich':'New service area','Neue Anmeldung':'New registration',
-  // Page topbar titles (used in navTo titles dict)
-  'Freiwillige & Dienstplan':'Volunteers & Schedule',
-  'Twint & Spenden':'Donations & Twint',
-  'Mitglieder':'Members','Kontakte':'Contacts',
-  'Veranstaltungen':'Events','Artikel':'Articles',
+  'Neues Mitglied':{en:'New member',fr:'Nouveau membre',it:'Nuovo membro'},
+  'Kontakt bearbeiten':{en:'Edit contact',fr:'Modifier le contact',it:'Modifica contatto'},
+  'Neue Gruppe':{en:'New group',fr:'Nouveau groupe',it:'Nuovo gruppo'},
+  'Neuer Gottesdienst':{en:'New service',fr:'Nouveau culte',it:'Nuova funzione'},
+  'Neue Spende erfassen':{en:'Record donation',fr:'Saisir un don',it:'Registra donazione'},
+  'Kreditor erfassen':{en:'Add creditor',fr:'Ajouter un créancier',it:'Aggiungi creditore'},
+  'Rechnung erfassen':{en:'Add invoice',fr:'Ajouter une facture',it:'Aggiungi fattura'},
+  'Neuer Artikel':{en:'New article',fr:'Nouvel article',it:'Nuovo articolo'},
+  'Einsatz planen':{en:'Schedule shift',fr:'Planifier un service',it:'Pianifica turno'},
+  'Neuer Dienst-Bereich':{en:'New service area',fr:'Nouveau domaine de service',it:'Nuova area di servizio'},
+  'Neue Anmeldung':{en:'New registration',fr:'Nouvelle inscription',it:'Nuova iscrizione'},
+  // Page topbar titles
+  'Freiwillige & Dienstplan':{en:'Volunteers & Schedule',fr:'Bénévoles & Planning',it:'Volontari & Pianificazione'},
   // Misc
-  'Alle':'All','Alle Bereiche':'All areas','Alle Status':'All statuses',
-  'Geplant':'Planned','Vergangen':'Past','Aktive':'Active',
-  'Listenansicht':'List view','Kartenansicht':'Card view',
-  'Wird erstellt...':'Creating...','Lädt...':'Loading...',
-  'Noch keine Daten':'No data yet',
-  'Ja':'Yes','Nein':'No','Pflicht':'Required',
+  'Alle':{en:'All',fr:'Tous',it:'Tutti'},
+  'Alle Bereiche':{en:'All areas',fr:'Tous les domaines',it:'Tutte le aree'},
+  'Alle Status':{en:'All statuses',fr:'Tous les statuts',it:'Tutti gli stati'},
+  'Geplant':{en:'Planned',fr:'Planifié',it:'Pianificato'},
+  'Vergangen':{en:'Past',fr:'Passé',it:'Passato'},
+  'Aktive':{en:'Active',fr:'Actif',it:'Attivo'},
+  'Listenansicht':{en:'List view',fr:'Vue liste',it:'Vista elenco'},
+  'Kartenansicht':{en:'Card view',fr:'Vue carte',it:'Vista scheda'},
+  'Wird erstellt...':{en:'Creating...',fr:'Création...',it:'Creazione...'},
+  'Lädt...':{en:'Loading...',fr:'Chargement...',it:'Caricamento...'},
+  'Noch keine Daten':{en:'No data yet',fr:'Pas encore de données',it:'Nessun dato ancora'},
+  'Ja':{en:'Yes',fr:'Oui',it:'Sì'},
+  'Nein':{en:'No',fr:'Non',it:'No'},
+  'Pflicht':{en:'Required',fr:'Obligatoire',it:'Obbligatorio'},
 };
 
-function t(de) {
-  return _appLang === 'en' ? (APP_T[de] || de) : de;
+function tLookup(deText, lang){
+  if(lang==='de' || !APP_T[deText]) return deText;
+  return APP_T[deText][lang] || deText;
 }
 
 function setAppLang(lang) {
   _appLang = lang;
   localStorage.setItem('aj-app-lang', lang);
 
-  // Update toggle buttons
-  document.getElementById('app-btn-de')?.classList.toggle('active', lang==='de');
-  document.getElementById('app-btn-en')?.classList.toggle('active', lang==='en');
-
-  // 1. Translate sidebar sections (.sb-sec)
-  document.querySelectorAll('.sb-sec').forEach(el => {
-    if(!el.dataset.de) el.dataset.de = el.textContent.trim();
-    el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
+  ['de','en','fr','it'].forEach(l => {
+    document.getElementById('app-btn-'+l)?.classList.toggle('active', lang===l);
   });
 
-  // 2. Translate sidebar items (last text node)
+  function tr(el){
+    if(!el.dataset.de) el.dataset.de = el.textContent.trim();
+    el.textContent = tLookup(el.dataset.de, lang);
+  }
+
+  // 1. Sidebar sections
+  document.querySelectorAll('.sb-sec').forEach(tr);
+
+  // 2. Sidebar items (last text node)
   document.querySelectorAll('.sb-item').forEach(el => {
     const nodes = [...el.childNodes].filter(n=>n.nodeType===3&&n.textContent.trim());
     if(nodes.length) {
       const n = nodes[nodes.length-1];
-      const txt = n.textContent.trim();
-      if(!el.dataset.de) el.dataset.de = txt;
-      n.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
+      if(!el.dataset.de) el.dataset.de = n.textContent.trim();
+      n.textContent = tLookup(el.dataset.de, lang);
     }
   });
 
-  // 3. Translate ALL text in stat labels (.sl)
-  document.querySelectorAll('.sl').forEach(el => {
-    if(!el.dataset.de) el.dataset.de = el.textContent.trim();
-    el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
-  });
-
-  // 4. Translate form labels (.fl)
-  document.querySelectorAll('.fl').forEach(el => {
-    if(!el.dataset.de) el.dataset.de = el.textContent.trim();
-    el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
-  });
-
-  // 5. Translate table headers (<th>)
-  document.querySelectorAll('th').forEach(el => {
-    if(!el.dataset.de) el.dataset.de = el.textContent.trim();
-    el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
-  });
-
-  // 6. Translate topbar title
-  const tt = document.getElementById('tb-title');
-  if(tt) {
-    if(!tt.dataset.de) tt.dataset.de = tt.textContent.trim();
-    tt.textContent = lang==='en' ? (APP_T[tt.dataset.de]||tt.dataset.de) : tt.dataset.de;
-  }
-
-  // 7. Translate all buttons (.tbtn) - only those without child elements
-  document.querySelectorAll('.tbtn').forEach(el => {
-    if(el.children.length === 0) {
-      if(!el.dataset.de) el.dataset.de = el.textContent.trim();
-      el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
-    }
-  });
-
-  // 8. Translate afs (filter selects) option text
-  document.querySelectorAll('.afs option').forEach(el => {
-    if(!el.dataset.de) el.dataset.de = el.textContent.trim();
-    el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
-  });
-
-  // 9. Translate modal headers (.mt2, .mh .mt)
-  document.querySelectorAll('.mt2, .modal .mt').forEach(el => {
-    if(el.children.length === 0) {
-      if(!el.dataset.de) el.dataset.de = el.textContent.trim();
-      el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
-    }
-  });
-
-  // 10. Translate .topbar-title elements
-  document.querySelectorAll('.topbar-title').forEach(el => {
-    if(el.id !== 'tb-title') {
-      if(!el.dataset.de) el.dataset.de = el.textContent.trim();
-      el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
-    }
-  });
-
-  // 11. Translate filter tab buttons (.ftab)
-  document.querySelectorAll('.ftab').forEach(el => {
-    if(!el.dataset.de) el.dataset.de = el.textContent.trim();
-    el.textContent = lang==='en' ? (APP_T[el.dataset.de]||el.dataset.de) : el.dataset.de;
-  });
-
-  // 12. Translate placeholders
+  // 3. Stat labels
+  document.querySelectorAll('.sl').forEach(tr);
+  // 4. Form labels
+  document.querySelectorAll('.fl').forEach(tr);
+  // 5. Table headers
+  document.querySelectorAll('th').forEach(tr);
+  // 6. Topbar title
+  const tt = document.getElementById('tb-title'); if(tt) tr(tt);
+  // 7. Buttons without child elements
+  document.querySelectorAll('.tbtn').forEach(el => { if(el.children.length === 0) tr(el); });
+  // 8. Filter-select option text
+  document.querySelectorAll('.afs option').forEach(tr);
+  // 9. Modal headers
+  document.querySelectorAll('.mt2, .modal .mt').forEach(el => { if(el.children.length === 0) tr(el); });
+  // 10. Topbar-title elements
+  document.querySelectorAll('.topbar-title').forEach(el => { if(el.id !== 'tb-title') tr(el); });
+  // 11. Filter tab buttons
+  document.querySelectorAll('.ftab').forEach(tr);
+  // 12. Placeholders
   document.querySelectorAll('[placeholder]').forEach(el => {
     if(!el.dataset.dePlaceholder) el.dataset.dePlaceholder = el.placeholder;
-    el.placeholder = lang==='en' ? (APP_T[el.dataset.dePlaceholder]||el.dataset.dePlaceholder) : el.dataset.dePlaceholder;
+    el.placeholder = tLookup(el.dataset.dePlaceholder, lang);
   });
 
-  // Update navTo titles dict for future navigation
   window._navTitlesDe = window._navTitlesDe || {
     dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',
     groups:'Small Groups',gottesdienste:'Gottesdienste',
@@ -7436,6 +7511,17 @@ function setAppLang(lang) {
 
 function initAppLang() {
   if(_appLang !== 'de') setAppLang(_appLang);
+}
+
+// Wird aufgerufen, wenn der Benutzer aktiv die Sprache wechselt (z.B. in der Einrichtung).
+// Speichert die Wahl dauerhaft im Benutzerprofil und lädt die Seite neu, damit WIRKLICH
+// alles (auch dynamisch erzeugte Inhalte) in der neuen Sprache erscheint.
+async function changeUserLanguage(lang){
+  localStorage.setItem('aj-app-lang', lang);
+  if(_S?.id){
+    await sb.from('profiles').update({ sprache: lang }).eq('id', _S.id);
+  }
+  location.reload();
 }
 
 // ══════════════════════════════════════════════════════════
