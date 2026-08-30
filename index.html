@@ -1102,7 +1102,16 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
             <div class="scard"><div class="sico" style="background:#FDF3DC"><svg viewBox="0 0 24 24" style="fill:#C8941A"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg></div><div><div class="sn" id="ev-anmeld">0</div><div class="sl">Anmeldungen</div></div></div>
             <div class="scard"><div class="sico" style="background:#FEF3C7"><svg viewBox="0 0 24 24" style="fill:#D97706"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2z"/></svg></div><div><div class="sn" id="ev-naechst">—</div><div class="sl">Nächstes Event</div></div></div>
           </div>
-          <div style="display:flex;gap:14px;flex-wrap:wrap">
+          <div style="display:flex;gap:8px;margin:12px 0">
+            <div class="ftabs">
+              <div class="ftab on" id="ev-view-liste" onclick="setEvView('liste')">📋 Liste</div>
+              <div class="ftab" id="ev-view-kalender" onclick="setEvView('kalender')">📅 Kalender</div>
+            </div>
+            <button class="tbtn tbtn-ghost" style="font-size:12px" onclick="openRaeumeMo()">🏛 Räume verwalten</button>
+          </div>
+
+          <!-- LISTENANSICHT -->
+          <div id="ev-liste-view" style="display:flex;gap:14px;flex-wrap:wrap">
             <div style="flex:1;min-width:300px;display:flex;flex-direction:column;gap:14px">
               <div class="tblwrap">
                 <div class="tbltop" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px">
@@ -1123,6 +1132,22 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
               <div class="card">
                 <div class="cardh"><div class="cardtitle" id="ev-cal-title">Kommende Events</div></div>
                 <div class="cardbody" id="ev-cal-body" style="font-size:12px"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- KALENDERANSICHT (Monatsraster) -->
+          <div id="ev-kalender-view" style="display:none">
+            <div class="card">
+              <div class="cardh" style="display:flex;align-items:center;gap:10px">
+                <button class="tbtn tbtn-ghost" style="padding:4px 10px" onclick="kalMonatNav(-1)">‹</button>
+                <div class="cardtitle" id="ev-kal-monatlabel" style="min-width:160px;text-align:center">Monat</div>
+                <button class="tbtn tbtn-ghost" style="padding:4px 10px" onclick="kalMonatNav(1)">›</button>
+                <button class="tbtn tbtn-ghost" style="font-size:12px" onclick="kalHeute()">Heute</button>
+                <button class="tbtn tbtn-navy" style="font-size:12px;margin-left:auto" onclick="openNEv()">+ Neues Event</button>
+              </div>
+              <div class="cardbody">
+                <div id="ev-kal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#E5E7EB;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden"></div>
               </div>
             </div>
           </div>
@@ -5091,6 +5116,77 @@ async function sendTerminAnMitarbeiter() {
   else toast(`⚠ ${ok} gesendet, ${fail} fehlgeschlagen`);
 }
 
+// ── Räume (Ressourcen) ──
+let raeume = [], raeumeLoaded = false;
+
+async function loadRaeume(){
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid) return;
+  const {data} = await sb.from('raeume').select('*').eq('mandant_id',mid).order('name');
+  raeume = data || [];
+  raeumeLoaded = true;
+  populateRaumDropdowns();
+}
+
+function populateRaumDropdowns(){
+  const opts = '<option value="">— Kein Raum —</option>' + raeume.map(r=>`<option value="${r.id}">${r.name}${r.kapazitaet?' (max. '+r.kapazitaet+')':''}</option>`).join('');
+  const sel1 = document.getElementById('ev-raum'); if(sel1) sel1.innerHTML = opts;
+}
+
+function rndrRaeumeListe(){
+  const box = document.getElementById('raeume-liste');
+  if(!box) return;
+  box.innerHTML = raeume.length ? raeume.map(r=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid #E5E7EB;border-radius:8px">
+      <div><div style="font-size:13px;font-weight:500">${r.name}</div>${r.kapazitaet?`<div style="font-size:11px;color:#9CA3AF">Kapazität: ${r.kapazitaet}</div>`:''}</div>
+      <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteRaum('${r.id}')">Löschen</button>
+    </div>`).join('') : '<div style="text-align:center;color:#9CA3AF;font-size:12.5px;padding:14px">Noch keine Räume erfasst</div>';
+}
+
+async function openRaeumeMo(){
+  if(!raeumeLoaded) await loadRaeume();
+  document.getElementById('raum-name').value = '';
+  document.getElementById('raum-kapazitaet').value = '';
+  rndrRaeumeListe();
+  document.getElementById('mo-raeume').classList.add('open');
+}
+
+async function saveRaum(){
+  const name = document.getElementById('raum-name').value.trim();
+  if(!name){ toast('Raumname ist Pflicht'); return; }
+  const payload = { name, kapazitaet: parseInt(document.getElementById('raum-kapazitaet').value)||null, aktiv: true };
+  const saved = await dbSave('raeume', payload);
+  if(saved){
+    raeume.push(saved);
+    populateRaumDropdowns();
+    rndrRaeumeListe();
+    document.getElementById('raum-name').value = '';
+    document.getElementById('raum-kapazitaet').value = '';
+    toast('Raum hinzugefügt ✓');
+  }
+}
+
+async function deleteRaum(id){
+  if(!confirm('Raum löschen?')) return;
+  const ok = await dbDelete('raeume', id);
+  if(ok){ raeume = raeume.filter(r=>r.id!==id); populateRaumDropdowns(); rndrRaeumeListe(); toast('Gelöscht'); }
+}
+
+// Prueft, ob ein Raum an einem Datum/Zeitraum bereits durch ein ANDERES Event belegt ist
+function findRaumKonflikt(datum, zeit, endZeit, raumId, excludeEventId){
+  if(!raumId) return null;
+  const zStart = zeit || '00:00';
+  const zEnd = endZeit || '23:59';
+  return events.find(ev => {
+    if(ev.id === excludeEventId) return false;
+    if(ev.raum_id !== raumId || ev.datum !== datum) return false;
+    if(ev.status === 'abgesagt') return false;
+    const evStart = ev.zeit || '00:00';
+    const evEnd = ev.end || '23:59';
+    return zStart < evEnd && evStart < zEnd; // Zeitueberschneidung
+  }) || null;
+}
+
 let events=[
   {id:'ev1',name:'Gemeindefest Sommer 2026',datum:'2026-07-05',zeit:'14:00',end:'20:00',typ:'Gemeindefest',ort:'Gemeindepark',verantw:'Anna Müller',max:200,anmeld:'ja',status:'geplant',desc:'Jährliches Gemeindefest mit Grill und Musik',anmeldungen:47},
   {id:'ev2',name:'Lobpreis-Abend',datum:'2026-05-08',zeit:'19:30',end:'21:30',typ:'Konzert',ort:'Hauptsaal',verantw:'Peter Keller',max:150,anmeld:'nein',status:'geplant',desc:'',anmeldungen:0},
@@ -5118,15 +5214,235 @@ function rndrEvents(){
   if(cal){const up=[...events].filter(x=>x.datum>=today).sort((a,b)=>a.datum.localeCompare(b.datum)).slice(0,6);cal.innerHTML=up.length?up.map(ev=>{const d=new Date(ev.datum);return'<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #E5E7EB;cursor:pointer" onclick="openEVP(\''+ev.id+'\')"><div style="width:38px;height:38px;background:#FDF3DC;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0"><div style="font-size:15px;font-weight:600;color:#C8941A;line-height:1">'+d.getDate()+'</div><div style="font-size:9px;color:#C8941A;text-transform:uppercase">'+['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'][d.getMonth()]+'</div></div><div><div style="font-size:13px;font-weight:500;color:#1A3560">'+ev.name+'</div><div style="font-size:11px;color:#9CA3AF">'+ev.zeit+' · '+(ev.ort||'')+'</div></div></div>';}).join(''):'<div style="color:#9CA3AF;font-size:12px;text-align:center;padding:16px">Keine kommenden Events</div>';}
 }
 function setEvTab(f,el2){evFilter=f;document.querySelectorAll('#pg-events .ftab').forEach(t=>t.classList.remove('on'));el2.classList.add('on');rndrEvents();}
-function openNEv(){const e=id=>document.getElementById(id);['ev-name','ev-ort','ev-verantw','ev-desc'].forEach(id=>{if(e(id))e(id).value='';});if(e('ev-datum'))e('ev-datum').value=new Date().toISOString().split('T')[0];if(e('ev-zeit'))e('ev-zeit').value='';if(e('ev-end'))e('ev-end').value='';if(e('ev-max'))e('ev-max').value='';if(e('ev-status'))e('ev-status').value='geplant';if(e('ev-anmeld'))e('ev-anmeld').value='nein';document.getElementById('mo-nev').classList.add('open');}
+function openNEv(){
+  const e=id=>document.getElementById(id);
+  ['ev-name','ev-ort','ev-verantw','ev-desc'].forEach(id=>{if(e(id))e(id).value='';});
+  if(e('ev-datum'))e('ev-datum').value=new Date().toISOString().split('T')[0];
+  if(e('ev-zeit'))e('ev-zeit').value='';
+  if(e('ev-end'))e('ev-end').value='';
+  if(e('ev-max'))e('ev-max').value='';
+  if(e('ev-status'))e('ev-status').value='geplant';
+  if(e('ev-anmeld'))e('ev-anmeld').value='nein';
+  if(e('ev-raum'))e('ev-raum').value='';
+  if(e('ev-wiederholung'))e('ev-wiederholung').value='keine';
+  if(e('ev-wiederholung-bis'))e('ev-wiederholung-bis').value='';
+  if(e('ev-wiederholung-max'))e('ev-wiederholung-max').value='26';
+  toggleWiederholungFelder();
+  if(!raeumeLoaded) loadRaeume();
+  document.getElementById('mo-nev').classList.add('open');
+}
+
+function toggleWiederholungFelder(){
+  const val = document.getElementById('ev-wiederholung').value;
+  document.getElementById('ev-wiederholung-details').style.display = val==='keine' ? 'none' : 'block';
+}
+
+// Berechnet alle Termin-Daten fuer eine Wiederholung (taeglich/woechentlich/monatlich)
+function berechneWiederholungsdaten(startDatum, typ, bisDatum, maxAnzahl){
+  const daten = [startDatum];
+  if(typ === 'keine') return daten;
+  let cur = new Date(startDatum+'T00:00:00');
+  const grenze = bisDatum ? new Date(bisDatum+'T00:00:00') : null;
+  const maxN = Math.min(maxAnzahl || 26, 52);
+  while(daten.length < maxN){
+    if(typ==='taeglich') cur.setDate(cur.getDate()+1);
+    else if(typ==='woechentlich') cur.setDate(cur.getDate()+7);
+    else if(typ==='monatlich') cur.setMonth(cur.getMonth()+1);
+    if(grenze && cur > grenze) break;
+    if(!grenze && daten.length >= maxN) break;
+    daten.push(cur.toISOString().split('T')[0]);
+  }
+  return daten;
+}
+
 async function saveEv(){
   const name=document.getElementById('ev-name').value.trim(),datum=document.getElementById('ev-datum').value;
   if(!name||!datum){toast('Name und Datum Pflicht');return;}
-  const p={name,datum,zeit:document.getElementById('ev-zeit').value,end_zeit:document.getElementById('ev-end').value,typ:document.getElementById('ev-typ').value,ort:document.getElementById('ev-ort').value,verantwortlicher:document.getElementById('ev-verantw').value,max_teilnehmer:parseInt(document.getElementById('ev-max').value)||0,anmeldung_erforderlich:document.getElementById('ev-anmeld').value==='ja',status:document.getElementById('ev-status').value,beschreibung:document.getElementById('ev-desc').value,anmeldungen:0};
-  const saved=await dbSave('events',p);
-  events.unshift({id:saved?.id||('ev'+(evIdSeq++)),_dbId:saved?.id,name,datum,zeit:p.zeit,end:p.end_zeit,typ:p.typ,ort:p.ort,verantw:p.verantwortlicher,max:p.max_teilnehmer,anmeld:p.anmeldung_erforderlich?'ja':'nein',status:p.status,desc:p.beschreibung,anmeldungen:0});
-  closeMo('mo-nev');rndrEvents();toast(name+' erstellt');
+  const zeit = document.getElementById('ev-zeit').value;
+  const endZeit = document.getElementById('ev-end').value;
+  const raumId = document.getElementById('ev-raum').value || null;
+  const wiederholungTyp = document.getElementById('ev-wiederholung').value;
+  const wiederholungBis = document.getElementById('ev-wiederholung-bis').value;
+  const wiederholungMax = parseInt(document.getElementById('ev-wiederholung-max').value) || 26;
+
+  const basisPayload = {
+    name, zeit, end_zeit: endZeit,
+    typ: document.getElementById('ev-typ').value,
+    raum_id: raumId,
+    ort: document.getElementById('ev-ort').value,
+    verantwortlicher: document.getElementById('ev-verantw').value,
+    max_teilnehmer: parseInt(document.getElementById('ev-max').value)||0,
+    anmeldung_erforderlich: document.getElementById('ev-anmeld').value==='ja',
+    status: document.getElementById('ev-status').value,
+    beschreibung: document.getElementById('ev-desc').value,
+    anmeldungen: 0
+  };
+
+  const alleDaten = berechneWiederholungsdaten(datum, wiederholungTyp, wiederholungBis, wiederholungMax);
+  const serieId = alleDaten.length > 1 ? crypto.randomUUID() : null;
+
+  // Konflikte vorab pruefen (nur warnen, nicht blockieren)
+  let konflikte = 0;
+  if(raumId){
+    alleDaten.forEach(d => { if(findRaumKonflikt(d, zeit, endZeit, raumId, null)) konflikte++; });
+  }
+
+  let erstellt = 0;
+  for(const einzelDatum of alleDaten){
+    const payload = { ...basisPayload, datum: einzelDatum, serie_id: serieId };
+    const saved = await dbSave('events', payload);
+    if(saved){
+      events.unshift({ id: saved.id, _dbId: saved.id, name, datum: einzelDatum, zeit, end: endZeit, typ: payload.typ, raum_id: raumId, ort: payload.ort, verantw: payload.verantwortlicher, max: payload.max_teilnehmer, anmeld: payload.anmeldung_erforderlich?'ja':'nein', status: payload.status, desc: payload.beschreibung, anmeldungen: 0, serie_id: serieId });
+      erstellt++;
+    }
+  }
+
+  closeMo('mo-nev');
+  rndrEvents();
+  if(document.getElementById('ev-kalender-view')?.style.display !== 'none') rndrEventKalender();
+  if(erstellt > 1) toast(`✅ ${erstellt} Termine der Serie "${name}" erstellt`);
+  else toast(name+' erstellt');
+  if(konflikte > 0) toast(`⚠ Achtung: bei ${konflikte} Termin(en) ist der gewählte Raum zeitgleich bereits belegt`);
 }
+
+// ── Kalenderansicht (Monatsraster) ──
+let _kalJahr = new Date().getFullYear(), _kalMonat = new Date().getMonth();
+const MONATSNAMEN_KAL = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+function setEvView(view){
+  document.getElementById('ev-view-liste').classList.toggle('on', view==='liste');
+  document.getElementById('ev-view-kalender').classList.toggle('on', view==='kalender');
+  document.getElementById('ev-liste-view').style.display = view==='liste' ? 'flex' : 'none';
+  document.getElementById('ev-kalender-view').style.display = view==='kalender' ? 'block' : 'none';
+  if(view==='kalender') rndrEventKalender();
+}
+
+function kalMonatNav(delta){
+  _kalMonat += delta;
+  if(_kalMonat < 0){ _kalMonat = 11; _kalJahr--; }
+  if(_kalMonat > 11){ _kalMonat = 0; _kalJahr++; }
+  rndrEventKalender();
+}
+function kalHeute(){
+  const heute = new Date();
+  _kalJahr = heute.getFullYear(); _kalMonat = heute.getMonth();
+  rndrEventKalender();
+}
+
+function rndrEventKalender(){
+  document.getElementById('ev-kal-monatlabel').textContent = `${MONATSNAMEN_KAL[_kalMonat]} ${_kalJahr}`;
+  const grid = document.getElementById('ev-kal-grid');
+  const heuteStr = new Date().toISOString().split('T')[0];
+
+  const wochentage = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+  let html = wochentage.map(w=>`<div style="background:#F9FAFB;padding:6px;text-align:center;font-size:10.5px;font-weight:600;color:#9CA3AF">${w}</div>`).join('');
+
+  const ersterTag = new Date(_kalJahr, _kalMonat, 1);
+  const letzterTag = new Date(_kalJahr, _kalMonat+1, 0);
+  let startOffset = ersterTag.getDay() - 1; if(startOffset < 0) startOffset = 6; // Montag = 0
+
+  for(let i=0; i<startOffset; i++) html += `<div style="background:white;min-height:90px"></div>`;
+
+  for(let tag=1; tag<=letzterTag.getDate(); tag++){
+    const dStr = `${_kalJahr}-${String(_kalMonat+1).padStart(2,'0')}-${String(tag).padStart(2,'0')}`;
+    const tagesEvents = events.filter(e=>e.datum===dStr).sort((a,b)=>(a.zeit||'').localeCompare(b.zeit||''));
+    const istHeute = dStr === heuteStr;
+    const pills = tagesEvents.slice(0,3).map(ev => `<div onclick="event.stopPropagation();openEVP('${ev.id}')" style="background:${evSC[ev.status]?.includes('DC2626')?'#FEE2E2':'#EFF6FF'};color:#2563EB;font-size:10px;padding:1px 5px;border-radius:4px;margin-top:2px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${ev.name}">${ev.zeit?ev.zeit+' ':''}${ev.name}</div>`).join('');
+    const mehr = tagesEvents.length > 3 ? `<div style="font-size:9.5px;color:#9CA3AF;margin-top:2px">+${tagesEvents.length-3} mehr</div>` : '';
+    html += `<div style="background:white;min-height:90px;padding:6px;cursor:pointer" onclick="kalTagKlick('${dStr}')">
+      <div style="font-size:11.5px;font-weight:600;color:${istHeute?'#C8941A':'#1A1A1A'};${istHeute?'background:#FDF3DC;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center':''}">${tag}</div>
+      ${pills}${mehr}
+    </div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function kalTagKlick(datum){
+  const tagesEvents = events.filter(e=>e.datum===datum);
+  if(tagesEvents.length === 1){ openEVP(tagesEvents[0].id); return; }
+  if(tagesEvents.length > 1){ openEVP(tagesEvents[0].id); return; }
+  openNEv();
+  setTimeout(()=>{ const d = document.getElementById('ev-datum'); if(d) d.value = datum; }, 50);
+}
+
+// ── Echte Anmeldungen (Teilnehmer) ──
+let eventAnmeldungen = [];
+
+async function loadAnmeldungenFuerEvent(eventId){
+  const {data} = await sb.from('event_anmeldungen').select('*').eq('event_id', eventId).order('created_at');
+  eventAnmeldungen = data || [];
+  rndrTeilnehmerListe();
+}
+
+function rndrTeilnehmerListe(){
+  const ev = events.find(x=>x.id===activeEVP);
+  const box = document.getElementById('evp-teilnehmer-liste');
+  if(!box || !ev) return;
+  const aktive = eventAnmeldungen.filter(a=>a.status!=='abgesagt');
+  const angemeldet = aktive.filter(a=>a.status==='angemeldet');
+  const warteliste = aktive.filter(a=>a.status==='warteliste');
+
+  document.getElementById('evp-teiln-count').textContent = angemeldet.length;
+  document.getElementById('evp-teiln-max').textContent = ev.max || '∞';
+  document.getElementById('evp-teiln-warteliste-info').textContent = warteliste.length ? ` · ${warteliste.length} auf Warteliste` : '';
+
+  if(!aktive.length){
+    box.innerHTML = '<div style="text-align:center;color:#9CA3AF;font-size:12.5px;padding:14px">Noch keine Anmeldungen</div>';
+    return;
+  }
+  box.innerHTML = aktive.map(a => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border:1px solid #E5E7EB;border-radius:7px">
+      <div>
+        <div style="font-size:12.5px;font-weight:500">${a.name}${a.status==='warteliste'?' <span style=\"color:#D97706;font-size:10.5px\">(Warteliste)</span>':''}</div>
+        ${a.email?`<div style="font-size:11px;color:#9CA3AF">${a.email}</div>`:''}
+      </div>
+      <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteAnmeldung('${a.id}')">Entfernen</button>
+    </div>`).join('');
+}
+
+function openNAnmeldung(){
+  const sel = document.getElementById('anm-mitglied');
+  sel.innerHTML = '<option value="">— Gast / Extern —</option>' + members.map(m=>`<option value="${m.id}">${m.vorname} ${m.nachname}</option>`).join('');
+  document.getElementById('anm-name').value = '';
+  document.getElementById('anm-email').value = '';
+  document.getElementById('mo-nanmeldung').classList.add('open');
+}
+
+function anmMitgliedGewaehlt(){
+  const id = document.getElementById('anm-mitglied').value;
+  if(!id){ return; }
+  const m = members.find(x=>x.id===id);
+  if(m){
+    document.getElementById('anm-name').value = `${m.vorname} ${m.nachname}`;
+    document.getElementById('anm-email').value = m.email || '';
+  }
+}
+
+async function saveAnmeldung(){
+  const ev = events.find(x=>x.id===activeEVP);
+  if(!ev) return;
+  const name = document.getElementById('anm-name').value.trim();
+  if(!name){ toast('Name ist Pflicht'); return; }
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  const mitgliedId = document.getElementById('anm-mitglied').value || null;
+
+  const aktive = eventAnmeldungen.filter(a=>a.status!=='abgesagt' && a.status==='angemeldet');
+  const istVoll = ev.max > 0 && aktive.length >= ev.max;
+
+  const payload = {
+    mandant_id: mid, event_id: activeEVP, mitglied_id: mitgliedId,
+    name, email: document.getElementById('anm-email').value,
+    status: istVoll ? 'warteliste' : 'angemeldet'
+  };
+  const {data, error} = await sb.from('event_anmeldungen').insert(payload).select().single();
+  if(error){ toast('Fehler: '+error.message); return; }
+  eventAnmeldungen.push(data);
+  rndrTeilnehmerListe();
+  closeMo('mo-nanmeldung');
+  toast(istVoll ? `${name} steht auf der Warteliste (Event voll)` : `${name} angemeldet ✓`);
+}
+
 function openEVP(id){
   const ev=events.find(x=>x.id===id);if(!ev)return;activeEVP=id;
   document.querySelectorAll('#ev-tbody tr').forEach(r=>r.style.background='');
@@ -5148,6 +5464,7 @@ function openEVP(id){
   document.querySelectorAll('#ev-panel .cse').forEach(b=>{b.textContent='Bearbeiten';b.style.color='';});
   const del=document.getElementById('ev-panel-del-wrap');if(del)del.style.display=(_S&&['superadmin','admin'].includes(_S.rolle))?'block':'none';
   document.getElementById('ev-ov').classList.add('open');document.getElementById('ev-panel').classList.add('open');
+  loadAnmeldungenFuerEvent(ev._dbId || id);
 }
 function closeEVP(){document.getElementById('ev-ov').classList.remove('open');document.getElementById('ev-panel').classList.remove('open');document.querySelectorAll('#ev-tbody tr').forEach(r=>r.style.background='');activeEVP=null;}
 function tEditEVP(secId,btn){
@@ -5709,7 +6026,7 @@ function navTo(p,el2){
   if(p==='groups'){rndrSGGrid();}
   if(p==='gottesdienste'){rndrGD();}
   if(p==='worship'){rndrWorship();}
-  if(p==='events'){rndrEvents();}
+  if(p==='events'){rndrEvents();if(!raeumeLoaded)loadRaeume();}
   if(p==='spenden'){if(!spenden.length)loadSpenden();else filterSpenden();}
   if(p==='kreditoren'){if(!kreditoren.length)loadKreditoren();else{rndrKreditoren();filterRechnungen();}}
   if(p==='dokumente'){if(!_dokLoaded){loadDokumente();}else filterDok();}
@@ -7429,108 +7746,6 @@ function exportEinsaetze() {
   toast('Exportiert ✓');
 }
 
-// ══════════════════════════════════════════════════════════
-// EVENT ANMELDUNGEN
-// ══════════════════════════════════════════════════════════
-let eventAnmeldungen=[], activeEventForAnm=null;
-
-async function loadEventAnmeldungen(eventId) {
-  const {data} = await sb.from('event_anmeldungen').select('*').eq('event_id', eventId).eq('mandant_id', _S?.working_mandant_id||_S?.mandant_id);
-  return (data||[]).map(a=>({...a,_dbId:a.id}));
-}
-
-async function showEvAnmeldungen() {
-  // Open anmeldungen panel for selected event
-  if(!activeEventForAnm) { toast('Bitte erst ein Event öffnen'); return; }
-  const anm = await loadEventAnmeldungen(activeEventForAnm._dbId||activeEventForAnm.id);
-  const ev = activeEventForAnm;
-  // Show in modal
-  const total = anm.length;
-  const erschienen = anm.filter(a=>a.status==='erschienen').length;
-  const warteliste = anm.filter(a=>a.status==='warteliste').length;
-  document.getElementById('anm-ev-title').textContent = ev.name;
-  document.getElementById('anm-ev-stats').textContent = `${total} Anmeldungen · ${erschienen} erschienen · ${warteliste} Warteliste`;
-  const max = ev.max||0;
-  document.getElementById('anm-ev-cap').textContent = max ? `Kapazität: ${total}/${max}` : '';
-  // Render list
-  const tb = document.getElementById('anm-tbody');
-  const statusBadge = s=>({angemeldet:'background:#DBEAFE;color:#2563EB',warteliste:'background:#FEF3C7;color:#D97706',erschienen:'background:#DCFCE7;color:#16A34A',storniert:'background:#FEE2E2;color:#DC2626'}[s]||'');
-  tb.innerHTML = anm.length ? anm.map(a=>`<tr>
-    <td style="font-size:13px;font-weight:500;color:#1A3560">${a.vorname} ${a.nachname}</td>
-    <td>${a.email?`<a href="mailto:${a.email}" style="color:#2563EB;text-decoration:none">${a.email}</a>`:'—'}</td>
-    <td style="font-size:12px;color:#6B7280">${a.telefon||'—'}</td>
-    <td style="text-align:center;font-size:13px">${a.anzahl_personen||1}</td>
-    <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;${statusBadge(a.status)}">${a.status}</span></td>
-    <td style="display:flex;gap:4px">
-      ${a.status!=='erschienen'?`<button class="aaction-btn" style="background:#DCFCE7;color:#16A34A;border-color:#86efac" onclick="markErschienen('${a._dbId}')">✓ Erschienen</button>`:''}
-      <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="storniereAnm('${a._dbId}')">Stornieren</button>
-    </td>
-  </tr>`).join('') : '<tr><td colspan="6" class="aempty">Noch keine Anmeldungen</td></tr>';
-  document.getElementById('mo-anm').classList.add('open');
-}
-
-function openNAnmeldung(ev) {
-  activeEventForAnm = ev;
-  ['na-vn','na-nn','na-email','na-tel','na-notiz'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('na-anzahl').value='1';
-  // Pre-fill from member if selected
-  const sel = document.getElementById('na-mitglied');
-  if(sel) sel.innerHTML='<option value="">— Ohne Mitgliedskonto —</option>'+[...members].sort((a,b)=>(a.nachname||'').localeCompare(b.nachname||'')).map(m=>`<option value="${m._dbId||m.id}">${m.vorname} ${m.nachname}</option>`).join('');
-  document.getElementById('mo-na').classList.add('open');
-}
-
-document.addEventListener('change', function(e) {
-  if(e.target.id === 'na-mitglied' && e.target.value) {
-    const m = members.find(x=>x._dbId===e.target.value||String(x.id)===e.target.value);
-    if(m) {
-      document.getElementById('na-vn').value = m.vorname;
-      document.getElementById('na-nn').value = m.nachname;
-      document.getElementById('na-email').value = m.email||'';
-      document.getElementById('na-tel').value = m.mobil||'';
-    }
-  }
-});
-
-async function saveAnmeldung() {
-  const vn = document.getElementById('na-vn').value.trim();
-  const nn = document.getElementById('na-nn').value.trim();
-  if(!vn||!nn) { toast('Name Pflicht'); return; }
-  if(!activeEventForAnm) { toast('Kein Event ausgewählt'); return; }
-  const ev = activeEventForAnm;
-  const evId = ev._dbId || ev.id;
-  // Check capacity
-  const existing = await loadEventAnmeldungen(evId);
-  const angemeldet = existing.filter(a=>a.status!=='storniert').reduce((s,a)=>s+(a.anzahl_personen||1),0);
-  const max = ev.max||0;
-  const anzahl = parseInt(document.getElementById('na-anzahl').value)||1;
-  const status = (max>0 && angemeldet+anzahl>max) ? 'warteliste' : 'angemeldet';
-  const mitglied_id = document.getElementById('na-mitglied').value||null;
-  const m = mitglied_id ? members.find(x=>x._dbId===mitglied_id||String(x.id)===mitglied_id) : null;
-  const payload = { event_id: evId, mitglied_id: m?._dbId||mitglied_id||null, vorname: vn, nachname: nn, email: document.getElementById('na-email').value, telefon: document.getElementById('na-tel').value, anzahl_personen: anzahl, status, notiz: document.getElementById('na-notiz').value };
-  const saved = await dbSave('event_anmeldungen', payload);
-  if(saved) {
-    closeMo('mo-na');
-    if(status==='warteliste') toast('⚠ Event ausgebucht — auf Warteliste gesetzt');
-    else toast('Anmeldung gespeichert ✓');
-    // Update event anmeldungen count in UI
-    const evRow = document.getElementById('evr-'+evId);
-    if(evRow) { const countCell=evRow.querySelector('td:nth-child(6)'); if(countCell) countCell.textContent=(angemeldet+anzahl)+(max?'/'+max:''); }
-  }
-}
-
-async function markErschienen(id) {
-  await dbUpdate('event_anmeldungen', id, {status:'erschienen'});
-  toast('Als erschienen markiert ✓');
-  if(activeEventForAnm) showEvAnmeldungen();
-}
-
-async function storniereAnm(id) {
-  if(!confirm('Anmeldung stornieren?')) return;
-  await dbUpdate('event_anmeldungen', id, {status:'storniert'});
-  toast('Storniert');
-  if(activeEventForAnm) showEvAnmeldungen();
-}
-
 function toggleVolView() {
   const btn = document.getElementById('vol-view-btn');
   if(btn) btn.textContent = btn.textContent==='Kalender'?'Liste':'Kalender';
@@ -8798,12 +9013,30 @@ async function doRegister() {
       <div class="fgg"><label class="fl">Uhrzeit</label><input class="fi" id="ev-zeit" type="time"></div>
       <div class="fgg"><label class="fl">Ende</label><input class="fi" id="ev-end" type="time"></div>
       <div class="fgg"><label class="fl">Typ</label><select class="fs" id="ev-typ"><option>Gemeindefest</option><option>Konzert</option><option>Seminar</option><option>Retreat</option><option>Jugend-Event</option><option>Kinder-Event</option><option>Gottesdienst</option><option>Trauung</option><option>Beerdigung</option><option>Taufe</option><option>Ausflug</option><option>Konferenz</option></select></div>
-      <div class="fgg"><label class="fl">Ort</label><input class="fi" id="ev-ort" placeholder="Gemeindehaus / Adresse"></div>
+      <div class="fgg"><label class="fl">Raum</label><select class="fs" id="ev-raum"><option value="">— Kein Raum —</option></select></div>
+      <div class="fgg"><label class="fl">Ort (falls kein Raum)</label><input class="fi" id="ev-ort" placeholder="Gemeindehaus / Adresse"></div>
       <div class="fgg"><label class="fl">Verantwortlicher</label><input class="fi" id="ev-verantw" placeholder="Name"></div>
       <div class="fgg"><label class="fl">Max. Teilnehmer</label><input class="fi" id="ev-max" type="number" placeholder="Unbegrenzt"></div>
       <div class="fgg"><label class="fl">Anmeldung erforderlich</label><select class="fs" id="ev-anmeld"><option value="nein">Nein</option><option value="ja">Ja</option></select></div>
       <div class="fgg"><label class="fl">Status</label><select class="fs" id="ev-status"><option value="geplant">In Planung</option><option value="bestaetigt">Bestätigt</option><option value="abgesagt">Abgesagt</option></select></div>
       <div class="fgg full"><label class="fl">Beschreibung / Programm</label><textarea class="fta" id="ev-desc" placeholder="Beschreibung, Programm, wichtige Infos..."></textarea></div>
+
+      <div class="fgg full" style="border-top:1px dashed #E5E7EB;padding-top:12px;margin-top:4px">
+        <label class="fl">Wiederholung</label>
+        <select class="fs" id="ev-wiederholung" onchange="toggleWiederholungFelder()">
+          <option value="keine">Keine (einmalig)</option>
+          <option value="taeglich">Täglich</option>
+          <option value="woechentlich">Wöchentlich</option>
+          <option value="monatlich">Monatlich (gleicher Tag)</option>
+        </select>
+      </div>
+      <div class="fgg full" id="ev-wiederholung-details" style="display:none;background:#F9FAFB;border-radius:8px;padding:12px">
+        <div class="fg2">
+          <div class="fgg"><label class="fl">Wiederholen bis</label><input class="fi" id="ev-wiederholung-bis" type="date"></div>
+          <div class="fgg"><label class="fl">Max. Anzahl Termine</label><input class="fi" id="ev-wiederholung-max" type="number" value="26" min="1" max="52"></div>
+        </div>
+        <span style="font-size:10.5px;color:#9CA3AF">Es werden einzelne Termine angelegt (max. 52), die du später auch einzeln bearbeiten oder löschen kannst.</span>
+      </div>
     </div></div>
     <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-nev')">Abbrechen</button><button class="tbtn tbtn-navy" onclick="saveEv()">Erstellen</button></div>
   </div>
@@ -8909,6 +9142,45 @@ async function doRegister() {
         <div class="frow"><span class="flbl">Beschreibung</span><span class="fval"><span class="fvt" id="evp-desc">—</span><input class="fvi" id="evp-desc-i"></span></div>
       </div>
     </div>
+
+    <div class="cs" id="evp-sec-teilnehmer">
+      <div class="csh"><div class="cst"><div class="csdot" style="background:#16A34A"></div>Teilnehmer / Anmeldungen</div></div>
+      <div class="csb">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:12.5px;color:#6B7280"><span id="evp-teiln-count" style="font-weight:600;color:#1A3560">0</span> / <span id="evp-teiln-max">∞</span> angemeldet<span id="evp-teiln-warteliste-info"></span></div>
+          <button class="tbtn tbtn-navy" style="font-size:11px" onclick="openNAnmeldung()">+ Person hinzufügen</button>
+        </div>
+        <div id="evp-teilnehmer-liste" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: RÄUME VERWALTEN -->
+<div class="mo" id="mo-raeume">
+  <div class="modal" style="max-width:480px">
+    <div class="mh"><div class="mt2">🏛 Räume verwalten</div><div class="mx" onclick="closeMo('mo-raeume')">✕</div></div>
+    <div class="mb2">
+      <div class="fg2" style="margin-bottom:14px">
+        <div class="fgg"><label class="fl">Raumname *</label><input class="fi" id="raum-name" placeholder="z.B. Hauptsaal"></div>
+        <div class="fgg"><label class="fl">Kapazität</label><input class="fi" id="raum-kapazitaet" type="number" min="0" placeholder="z.B. 200"></div>
+      </div>
+      <button class="tbtn tbtn-navy" style="width:100%;margin-bottom:14px" onclick="saveRaum()">+ Raum hinzufügen</button>
+      <div id="raeume-liste" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PERSON ZU EVENT ANMELDEN -->
+<div class="mo" id="mo-nanmeldung">
+  <div class="modal" style="max-width:420px">
+    <div class="mh"><div class="mt2">➕ Person anmelden</div><div class="mx" onclick="closeMo('mo-nanmeldung')">✕</div></div>
+    <div class="mb2">
+      <div class="fgg"><label class="fl">Mitglied auswählen (optional)</label><select class="fs" id="anm-mitglied" onchange="anmMitgliedGewaehlt()"><option value="">— Gast / Extern —</option></select></div>
+      <div class="fgg"><label class="fl">Name *</label><input class="fi" id="anm-name"></div>
+      <div class="fgg"><label class="fl">E-Mail</label><input class="fi" id="anm-email" type="email"></div>
+    </div>
+    <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-nanmeldung')">Abbrechen</button><button class="tbtn tbtn-navy" onclick="saveAnmeldung()">Anmelden</button></div>
   </div>
 </div>
 
@@ -9476,60 +9748,6 @@ async function doRegister() {
     <div class="mfoot">
       <button class="tbtn tbtn-ghost" onclick="closeMo('mo-nb')">Abbrechen</button>
       <button class="tbtn tbtn-navy" onclick="saveBereich()">Erstellen</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: EVENT ANMELDUNGEN ÜBERSICHT -->
-<div class="mo" id="mo-anm" style="z-index:900">
-  <div class="modal" style="max-width:800px;width:95vw">
-    <div class="mh">
-      <div>
-        <div class="mt2" id="anm-ev-title">Anmeldungen</div>
-        <div style="font-size:12px;color:#9CA3AF;margin-top:2px" id="anm-ev-stats"></div>
-        <div style="font-size:11px;color:#C8941A;font-weight:500" id="anm-ev-cap"></div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="tbtn tbtn-navy" onclick="openNAnmeldung(activeEventForAnm)" style="font-size:12px">+ Anmeldung</button>
-        <div class="mx" onclick="closeMo('mo-anm')">✕</div>
-      </div>
-    </div>
-    <div class="mb2">
-      <div style="overflow-x:auto">
-        <table>
-          <thead><tr><th>Name</th><th>E-Mail</th><th>Telefon</th><th style="width:60px">Pers.</th><th>Status</th><th style="width:180px">Aktionen</th></tr></thead>
-          <tbody id="anm-tbody"><tr><td colspan="6" class="aempty">Lädt...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="mfoot">
-      <button class="tbtn tbtn-ghost" onclick="closeMo('mo-anm')">Schliessen</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: NEUE ANMELDUNG -->
-<div class="mo" id="mo-na" style="z-index:950">
-  <div class="modal" style="max-width:500px">
-    <div class="mh"><div class="mt2">📋 Neue Anmeldung</div><div class="mx" onclick="closeMo('mo-na')">✕</div></div>
-    <div class="mb2">
-      <div class="fgg"><label class="fl">Mitglied (optional)</label>
-        <select class="fs" id="na-mitglied"><option value="">— Ohne Mitgliedskonto —</option></select>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="fgg"><label class="fl">Vorname *</label><input type="text" class="fs" id="na-vn" placeholder="Vorname"></div>
-        <div class="fgg"><label class="fl">Nachname *</label><input type="text" class="fs" id="na-nn" placeholder="Nachname"></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="fgg"><label class="fl">E-Mail</label><input type="email" class="fs" id="na-email" placeholder="email@beispiel.ch"></div>
-        <div class="fgg"><label class="fl">Telefon</label><input type="tel" class="fs" id="na-tel" placeholder="+41 ..."></div>
-      </div>
-      <div class="fgg"><label class="fl">Anzahl Personen</label><input type="number" class="fs" id="na-anzahl" value="1" min="1" max="20"></div>
-      <div class="fgg"><label class="fl">Notiz</label><input type="text" class="fs" id="na-notiz" placeholder="Besondere Wünsche, Anmerkungen..."></div>
-    </div>
-    <div class="mfoot">
-      <button class="tbtn tbtn-ghost" onclick="closeMo('mo-na')">Abbrechen</button>
-      <button class="tbtn tbtn-navy" onclick="saveAnmeldung()">Anmelden</button>
     </div>
   </div>
 </div>
