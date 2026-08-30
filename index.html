@@ -1160,6 +1160,13 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
       <button class="tbtn tbtn-navy" onclick="openNS()">+ Neue Spende</button>
     </div>
   </div>
+
+  <div class="ktabs" style="margin-bottom:16px">
+    <div class="ktab on" onclick="sTabSP('sp-tab-spenden',this)">Spenden</div>
+    <div class="ktab" onclick="sTabSP('sp-tab-pledges',this)">Spendenversprechen</div>
+  </div>
+
+  <div class="tpane on" id="sp-tab-spenden">
   <!-- Stats -->
   <div class="sgrid4" style="margin-bottom:16px">
     <div class="scard"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></div><div><div class="sn" id="sp-total">CHF 0</div><div class="sl">Dieses Jahr</div></div></div>
@@ -1195,6 +1202,28 @@ td{padding:10px 14px;font-size:13px;vertical-align:middle}
         <thead><tr><th>Datum</th><th>Mitglied</th><th>Betrag</th><th>Zahlungsweg</th><th>Zweck</th><th>Notiz</th><th style="width:80px"></th></tr></thead>
         <tbody id="sp-tbody"><tr><td colspan="7" class="aempty">Lädt...</td></tr></tbody>
       </table>
+    </div>
+  </div>
+  </div>
+
+  <!-- TAB: SPENDENVERSPRECHEN (Pledge-Tracking) -->
+  <div class="tpane" id="sp-tab-pledges">
+    <p style="font-size:12.5px;color:#9CA3AF;margin:0 0 16px">Soll-Ist-Vergleich pro Spendenzweck, basierend auf abgegebenen Versprechen und den tatsächlich erfassten Spenden dieses Jahres.</p>
+    <div class="card" style="margin-bottom:16px">
+      <div class="cardh"><div class="cardtitle">Soll-Ist-Übersicht <span id="pledge-jahr-label" style="font-weight:400;color:#9CA3AF"></span></div></div>
+      <div class="cardbody" id="pledge-sollist-body" style="display:flex;flex-direction:column;gap:12px"></div>
+    </div>
+    <div class="tcard">
+      <div class="tcardh">
+        <div style="font-size:13px;color:#6B7280">Erfasste Spendenversprechen</div>
+        <button class="tbtn tbtn-navy" style="margin-left:auto" onclick="openNPledge()">+ Neues Versprechen</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Name</th><th>Zweck</th><th>Betrag</th><th>Frequenz</th><th>Zeitraum</th><th>Status</th><th style="width:70px"></th></tr></thead>
+          <tbody id="pledge-tbody"><tr><td colspan="7" class="aempty">Lädt...</td></tr></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -3619,6 +3648,141 @@ async function startJahresabschluss(){
 // VERKAUF — Offerten & Rechnungen (mit Logo + Schweizer QR-Zahlteil)
 // ═══════════════════════════════════════════
 let verkaufsdokumente = [], vkLoaded = false, _vkTyp = 'offerte', _vkPositionenTemp = [];
+
+// ═══════════════════════════════════════════
+// SPENDENVERSPRECHEN — Soll-Ist-Vergleich pro Zweck
+// ═══════════════════════════════════════════
+const PLEDGE_ZWECKE = ['Gemeinde allgemein','Mission','Bauprojekt','Jugend','Diakonie','Sonstiges'];
+let pledges = [], pledgesLoaded = false;
+
+function sTabSP(name, el){
+  document.querySelectorAll('#pg-spenden .ktab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('#pg-spenden .tpane').forEach(t=>t.classList.remove('on'));
+  if(el) el.classList.add('on');
+  document.getElementById(name)?.classList.add('on');
+  if(name==='sp-tab-pledges' && !pledgesLoaded) loadPledges();
+}
+
+async function loadPledges(){
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid) return;
+  const {data} = await sb.from('spendenversprechen').select('*').eq('mandant_id',mid).order('created_at',{ascending:false});
+  pledges = data || [];
+  pledgesLoaded = true;
+  rndrPledgeListe();
+  rndrSollIst();
+}
+
+const PLEDGE_STATUS_CSS = {aktiv:'background:#DCFCE7;color:#16A34A', abgeschlossen:'background:#F4F5F7;color:#6B7280', storniert:'background:#FEE2E2;color:#DC2626'};
+const PLEDGE_FREQ_LABEL = {jaehrlich:'Jährlich', monatlich:'Monatlich', einmalig:'Einmalig'};
+
+function rndrPledgeListe(){
+  const tb = document.getElementById('pledge-tbody');
+  if(!pledges.length){ tb.innerHTML = '<tr><td colspan="7" class="aempty">Noch keine Spendenversprechen erfasst</td></tr>'; return; }
+  tb.innerHTML = pledges.map(p => `<tr>
+    <td style="font-size:12.5px;font-weight:500">${p.name}</td>
+    <td style="font-size:12px">${p.zweck}</td>
+    <td style="font-size:12.5px;font-weight:600">CHF ${parseFloat(p.betrag).toLocaleString('de-CH')}</td>
+    <td style="font-size:12px">${PLEDGE_FREQ_LABEL[p.frequenz]||p.frequenz}</td>
+    <td style="font-size:11.5px;color:#9CA3AF">${fD(p.von)}${p.bis?' – '+fD(p.bis):''}</td>
+    <td><span style="padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500;${PLEDGE_STATUS_CSS[p.status]||''}">${p.status}</span></td>
+    <td><button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deletePledge('${p.id}')">🗑</button></td>
+  </tr>`).join('');
+}
+
+// Rechnet den effektiven Jahres-Sollbetrag eines Versprechens aus (abhaengig von der Frequenz)
+function pledgeJahresbetrag(p, jahr){
+  if(p.status === 'storniert') return 0;
+  const vonJahr = p.von ? parseInt(p.von.slice(0,4)) : jahr;
+  const bisJahr = p.bis ? parseInt(p.bis.slice(0,4)) : jahr;
+  if(jahr < vonJahr || jahr > bisJahr) return 0;
+  if(p.frequenz === 'monatlich') return parseFloat(p.betrag) * 12;
+  if(p.frequenz === 'einmalig') return (vonJahr === jahr) ? parseFloat(p.betrag) : 0;
+  return parseFloat(p.betrag); // jaehrlich
+}
+
+function rndrSollIst(){
+  const jahr = new Date().getFullYear();
+  document.getElementById('pledge-jahr-label').textContent = `(${jahr})`;
+  const box = document.getElementById('pledge-sollist-body');
+
+  const rows = PLEDGE_ZWECKE.map(zweck => {
+    const soll = pledges.filter(p=>p.zweck===zweck).reduce((s,p)=>s+pledgeJahresbetrag(p,jahr),0);
+    const ist = (spenden||[]).filter(s=>s.zweck===zweck && s.datum && s.datum.startsWith(String(jahr))).reduce((s,x)=>s+parseFloat(x.betrag||0),0);
+    return { zweck, soll, ist };
+  }).filter(r => r.soll > 0 || r.ist > 0);
+
+  if(!rows.length){
+    box.innerHTML = '<div style="text-align:center;color:#9CA3AF;font-size:12.5px;padding:20px">Noch keine Versprechen oder Spenden mit Zweck erfasst</div>';
+    return;
+  }
+
+  box.innerHTML = rows.map(r => {
+    const diff = r.ist - r.soll;
+    const pct = r.soll > 0 ? Math.min(100, Math.round((r.ist/r.soll)*100)) : (r.ist>0 ? 100 : 0);
+    const barColor = pct >= 100 ? '#16A34A' : (pct >= 60 ? '#C8941A' : '#DC2626');
+    return `<div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span style="font-weight:500">${r.zweck}</span>
+        <span style="color:#6B7280">CHF ${r.ist.toLocaleString('de-CH')} / ${r.soll ? r.soll.toLocaleString('de-CH') : '—'} ${r.soll ? `<span style="color:${diff>=0?'#16A34A':'#DC2626'};font-weight:600">(${diff>=0?'+':''}${diff.toLocaleString('de-CH')})</span>` : ''}</span>
+      </div>
+      <div style="background:#F4F5F7;border-radius:6px;height:8px;overflow:hidden">
+        <div style="background:${barColor};height:100%;width:${pct}%"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openNPledge(){
+  const sel = document.getElementById('pledge-mitglied');
+  sel.innerHTML = '<option value="">— Name frei eintragen —</option>' + members.map(m=>`<option value="${m.id}">${m.vorname} ${m.nachname}</option>`).join('');
+  document.getElementById('pledge-name').value = '';
+  document.getElementById('pledge-zweck').value = 'Gemeinde allgemein';
+  document.getElementById('pledge-betrag').value = '';
+  document.getElementById('pledge-frequenz').value = 'jaehrlich';
+  document.getElementById('pledge-von').value = new Date().toISOString().split('T')[0];
+  document.getElementById('pledge-bis').value = '';
+  document.getElementById('pledge-notiz').value = '';
+  document.getElementById('mo-npledge').classList.add('open');
+}
+
+function pledgeMitgliedGewaehlt(){
+  const id = document.getElementById('pledge-mitglied').value;
+  if(!id) return;
+  const m = members.find(x=>x.id===id);
+  if(m) document.getElementById('pledge-name').value = `${m.vorname} ${m.nachname}`;
+}
+
+async function savePledge(){
+  const name = document.getElementById('pledge-name').value.trim();
+  const betrag = parseFloat(document.getElementById('pledge-betrag').value);
+  if(!name){ toast('Name ist Pflicht'); return; }
+  if(!betrag || betrag<=0){ toast('Bitte einen gültigen Betrag eingeben'); return; }
+  const mitgliedSel = document.getElementById('pledge-mitglied').value || null;
+  const payload = {
+    mitglied_id: mitgliedSel, name,
+    zweck: document.getElementById('pledge-zweck').value,
+    betrag, frequenz: document.getElementById('pledge-frequenz').value,
+    von: document.getElementById('pledge-von').value || null,
+    bis: document.getElementById('pledge-bis').value || null,
+    status: 'aktiv',
+    notiz: document.getElementById('pledge-notiz').value
+  };
+  const saved = await dbSave('spendenversprechen', payload);
+  if(saved){
+    pledges.unshift(saved);
+    rndrPledgeListe();
+    rndrSollIst();
+    closeMo('mo-npledge');
+    toast('Spendenversprechen erfasst ✓');
+  }
+}
+
+async function deletePledge(id){
+  if(!confirm('Spendenversprechen löschen?')) return;
+  const ok = await dbDelete('spendenversprechen', id);
+  if(ok){ pledges = pledges.filter(p=>p.id!==id); rndrPledgeListe(); rndrSollIst(); toast('Gelöscht'); }
+}
 
 function sTabVK(name, el){
   document.querySelectorAll('#pg-verkauf .ktab').forEach(t=>t.classList.remove('on'));
@@ -6111,7 +6275,7 @@ function navTo(p,el2){
   if(p==='gottesdienste'){rndrGD();}
   if(p==='worship'){rndrWorship();}
   if(p==='events'){rndrEvents();if(!raeumeLoaded)loadRaeume();}
-  if(p==='spenden'){if(!spenden.length)loadSpenden();else filterSpenden();}
+  if(p==='spenden'){if(!spenden.length)loadSpenden();else filterSpenden();if(!pledgesLoaded)loadPledges();}
   if(p==='kreditoren'){if(!kreditoren.length)loadKreditoren();else{rndrKreditoren();filterRechnungen();}}
   if(p==='dokumente'){if(!_dokLoaded){loadDokumente();}else filterDok();}
   if(p==='einrichtung'){
@@ -9311,6 +9475,32 @@ async function doRegister() {
         <button class="tbtn tbtn-ghost" style="margin-top:10px" onclick="copyKiSummary()">📋 Kopieren</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- MODAL: NEUES SPENDENVERSPRECHEN -->
+<div class="mo" id="mo-npledge">
+  <div class="modal" style="max-width:460px">
+    <div class="mh"><div class="mt2">🤝 Neues Spendenversprechen</div><div class="mx" onclick="closeMo('mo-npledge')">✕</div></div>
+    <div class="mb2">
+      <div class="fgg"><label class="fl">Mitglied (optional)</label><select class="fs" id="pledge-mitglied" onchange="pledgeMitgliedGewaehlt()"><option value="">— Name frei eintragen —</option></select></div>
+      <div class="fgg"><label class="fl">Name *</label><input class="fi" id="pledge-name" placeholder="z.B. Familie Meier"></div>
+      <div class="fgg"><label class="fl">Zweck *</label><select class="fs" id="pledge-zweck">
+        <option>Gemeinde allgemein</option><option>Mission</option><option>Bauprojekt</option><option>Jugend</option><option>Diakonie</option><option>Sonstiges</option>
+      </select></div>
+      <div class="fg2">
+        <div class="fgg"><label class="fl">Betrag (CHF) *</label><input class="fi" id="pledge-betrag" type="number" min="0" step="0.05"></div>
+        <div class="fgg"><label class="fl">Frequenz</label><select class="fs" id="pledge-frequenz">
+          <option value="jaehrlich">Jährlich (gesamter Betrag)</option>
+          <option value="monatlich">Monatlich (× 12 pro Jahr)</option>
+          <option value="einmalig">Einmalig</option>
+        </select></div>
+        <div class="fgg"><label class="fl">Von</label><input class="fi" id="pledge-von" type="date"></div>
+        <div class="fgg"><label class="fl">Bis (optional)</label><input class="fi" id="pledge-bis" type="date"></div>
+      </div>
+      <div class="fgg full"><label class="fl">Notiz</label><input class="fi" id="pledge-notiz" placeholder="Optional"></div>
+    </div>
+    <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-npledge')">Abbrechen</button><button class="tbtn tbtn-navy" onclick="savePledge()">Speichern</button></div>
   </div>
 </div>
 
