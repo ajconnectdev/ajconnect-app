@@ -5238,6 +5238,12 @@ function toggleWiederholungFelder(){
 }
 
 // Berechnet alle Termin-Daten fuer eine Wiederholung (taeglich/woechentlich/monatlich)
+// Formatiert ein Datum in lokaler Zeit (KEIN UTC/toISOString — das verursachte den Zeitzonen-Bug,
+// bei dem wiederkehrende Termine einen Tag zu frueh gelandet sind)
+function formatDatumLokal(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 function berechneWiederholungsdaten(startDatum, typ, bisDatum, maxAnzahl){
   const daten = [startDatum];
   if(typ === 'keine') return daten;
@@ -5250,10 +5256,12 @@ function berechneWiederholungsdaten(startDatum, typ, bisDatum, maxAnzahl){
     else if(typ==='monatlich') cur.setMonth(cur.getMonth()+1);
     if(grenze && cur > grenze) break;
     if(!grenze && daten.length >= maxN) break;
-    daten.push(cur.toISOString().split('T')[0]);
+    daten.push(formatDatumLokal(cur));
   }
   return daten;
 }
+
+let _pendingEventSave = null;
 
 async function saveEv(){
   const name=document.getElementById('ev-name').value.trim(),datum=document.getElementById('ev-datum').value;
@@ -5281,28 +5289,56 @@ async function saveEv(){
   const alleDaten = berechneWiederholungsdaten(datum, wiederholungTyp, wiederholungBis, wiederholungMax);
   const serieId = alleDaten.length > 1 ? crypto.randomUUID() : null;
 
-  // Konflikte vorab pruefen (nur warnen, nicht blockieren)
-  let konflikte = 0;
+  // Konflikte vorab pruefen — bei Treffern erscheint ein echtes Bestaetigungs-Popup (siehe unten),
+  // KEIN automatisches Speichern mehr
+  const konfliktListe = [];
   if(raumId){
-    alleDaten.forEach(d => { if(findRaumKonflikt(d, zeit, endZeit, raumId, null)) konflikte++; });
+    alleDaten.forEach(d => {
+      const k = findRaumKonflikt(d, zeit, endZeit, raumId, null);
+      if(k) konfliktListe.push({ datum: d, mitEvent: k.name });
+    });
   }
 
+  _pendingEventSave = { basisPayload, alleDaten, serieId, name };
+
+  if(konfliktListe.length){
+    const raumName = raeume.find(r=>r.id===raumId)?.name || 'Der gewählte Raum';
+    document.getElementById('ev-konflikt-text').innerHTML =
+      `<strong>${raumName}</strong> ist an ${konfliktListe.length} von ${alleDaten.length} Termin(en) bereits belegt:<br><br>` +
+      konfliktListe.map(k=>`• ${fD(k.datum)} — bereits belegt durch "${k.mitEvent}"`).join('<br>');
+    document.getElementById('mo-ev-konflikt').classList.add('open');
+  } else {
+    await wirklichEventSpeichern();
+  }
+}
+
+// Wird nach Bestaetigung eines Konflikts ("Trotzdem erstellen") ODER direkt (falls kein Konflikt) aufgerufen
+async function wirklichEventSpeichern(){
+  if(!_pendingEventSave) return;
+  const { basisPayload, alleDaten, serieId, name } = _pendingEventSave;
   let erstellt = 0;
   for(const einzelDatum of alleDaten){
     const payload = { ...basisPayload, datum: einzelDatum, serie_id: serieId };
     const saved = await dbSave('events', payload);
     if(saved){
-      events.unshift({ id: saved.id, _dbId: saved.id, name, datum: einzelDatum, zeit, end: endZeit, typ: payload.typ, raum_id: raumId, ort: payload.ort, verantw: payload.verantwortlicher, max: payload.max_teilnehmer, anmeld: payload.anmeldung_erforderlich?'ja':'nein', status: payload.status, desc: payload.beschreibung, anmeldungen: 0, serie_id: serieId });
+      events.unshift({ id: saved.id, _dbId: saved.id, name, datum: einzelDatum, zeit: basisPayload.zeit, end: basisPayload.end_zeit, typ: basisPayload.typ, raum_id: basisPayload.raum_id, ort: basisPayload.ort, verantw: basisPayload.verantwortlicher, max: basisPayload.max_teilnehmer, anmeld: basisPayload.anmeldung_erforderlich?'ja':'nein', status: basisPayload.status, desc: basisPayload.beschreibung, anmeldungen: 0, serie_id: serieId });
       erstellt++;
     }
   }
-
+  _pendingEventSave = null;
+  closeMo('mo-ev-konflikt');
   closeMo('mo-nev');
   rndrEvents();
   if(document.getElementById('ev-kalender-view')?.style.display !== 'none') rndrEventKalender();
   if(erstellt > 1) toast(`✅ ${erstellt} Termine der Serie "${name}" erstellt`);
   else toast(name+' erstellt');
-  if(konflikte > 0) toast(`⚠ Achtung: bei ${konflikte} Termin(en) ist der gewählte Raum zeitgleich bereits belegt`);
+}
+
+// "Abbrechen" im Konflikt-Popup: NUR das Popup schliessen — das Neues-Event-Formular
+// bleibt offen mit allen bereits eingegebenen Daten, damit man weiter bearbeiten kann
+function abbrechenEventKonflikt(){
+  closeMo('mo-ev-konflikt');
+  _pendingEventSave = null;
 }
 
 // ── Kalenderansicht (Monatsraster) ──
@@ -5403,19 +5439,24 @@ function rndrTeilnehmerListe(){
 
 function openNAnmeldung(){
   const sel = document.getElementById('anm-mitglied');
-  sel.innerHTML = '<option value="">— Gast / Extern —</option>' + members.map(m=>`<option value="${m.id}">${m.vorname} ${m.nachname}</option>`).join('');
+  const mitgliederOpts = members.map(m=>`<option value="m:${m.id}">${m.vorname} ${m.nachname}</option>`).join('');
+  const kontakteOpts = (kontakte||[]).map(k=>`<option value="k:${k.id}">${k.vorname} ${k.nachname}</option>`).join('');
+  sel.innerHTML = '<option value="">— Gast / Extern (frei eintragen) —</option>'
+    + (mitgliederOpts ? `<optgroup label="Mitglieder">${mitgliederOpts}</optgroup>` : '')
+    + (kontakteOpts ? `<optgroup label="Kontakte">${kontakteOpts}</optgroup>` : '');
   document.getElementById('anm-name').value = '';
   document.getElementById('anm-email').value = '';
   document.getElementById('mo-nanmeldung').classList.add('open');
 }
 
 function anmMitgliedGewaehlt(){
-  const id = document.getElementById('anm-mitglied').value;
-  if(!id){ return; }
-  const m = members.find(x=>x.id===id);
-  if(m){
-    document.getElementById('anm-name').value = `${m.vorname} ${m.nachname}`;
-    document.getElementById('anm-email').value = m.email || '';
+  const val = document.getElementById('anm-mitglied').value;
+  if(!val){ return; }
+  const [quelle, id] = val.split(':');
+  const person = quelle === 'm' ? members.find(x=>x.id===id) : (kontakte||[]).find(x=>x.id===id);
+  if(person){
+    document.getElementById('anm-name').value = `${person.vorname} ${person.nachname}`;
+    document.getElementById('anm-email').value = person.email || '';
   }
 }
 
@@ -5425,7 +5466,10 @@ async function saveAnmeldung(){
   const name = document.getElementById('anm-name').value.trim();
   if(!name){ toast('Name ist Pflicht'); return; }
   const mid = _S?.working_mandant_id || _S?.mandant_id;
-  const mitgliedId = document.getElementById('anm-mitglied').value || null;
+  const anmSelWert = document.getElementById('anm-mitglied').value || '';
+  const [anmQuelle, anmId] = anmSelWert.split(':');
+  // Nur echte Mitglieder werden verknuepft (mitglied_id) — Kontakte/Gaeste nur mit Name+E-Mail gespeichert
+  const mitgliedId = anmQuelle === 'm' ? anmId : null;
 
   const aktive = eventAnmeldungen.filter(a=>a.status!=='abgesagt' && a.status==='angemeldet');
   const istVoll = ev.max > 0 && aktive.length >= ev.max;
@@ -9004,6 +9048,21 @@ async function doRegister() {
 </div>
 
 <!-- EVENT MODAL -->
+<!-- MODAL: RAUM-KONFLIKT BESTAETIGUNG -->
+<div class="mo" id="mo-ev-konflikt" style="z-index:1200">
+  <div class="modal" style="max-width:440px">
+    <div class="mh"><div class="mt2">⚠ Raum bereits belegt</div><div class="mx" onclick="abbrechenEventKonflikt()">✕</div></div>
+    <div class="mb2">
+      <div id="ev-konflikt-text" style="font-size:13.5px;line-height:1.7;color:#444"></div>
+      <p style="font-size:12px;color:#9CA3AF;margin-top:14px">Willst du die Termine trotzdem erstellen, oder zurück zur Bearbeitung?</p>
+    </div>
+    <div class="mfoot">
+      <button class="tbtn tbtn-ghost" onclick="abbrechenEventKonflikt()">Zurück zur Bearbeitung</button>
+      <button class="tbtn tbtn-navy" style="background:#D97706" onclick="wirklichEventSpeichern()">Trotzdem erstellen</button>
+    </div>
+  </div>
+</div>
+
 <div class="mo" id="mo-nev">
   <div class="modal modal-lg">
     <div class="mh"><div class="mt2">Neues Event / Veranstaltung</div><div class="mx" onclick="closeMo('mo-nev')">✕</div></div>
