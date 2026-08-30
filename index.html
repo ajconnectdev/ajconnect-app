@@ -2443,6 +2443,7 @@ async function loadAllData() {
         name: e.name, datum: e.datum,
         zeit: e.zeit||'', end: e.end_zeit||'',
         typ: e.typ||'Gemeindefest', ort: e.ort||'',
+        raum_id: e.raum_id||null, serie_id: e.serie_id||null,
         verantw: e.verantwortlicher||'',
         max: e.max_teilnehmer||0,
         anmeld: e.anmeldung_erforderlich ? 'ja' : 'nein',
@@ -5172,17 +5173,24 @@ async function deleteRaum(id){
   if(ok){ raeume = raeume.filter(r=>r.id!==id); populateRaumDropdowns(); rndrRaeumeListe(); toast('Gelöscht'); }
 }
 
+// Wandelt "HH:MM" in Minuten seit Mitternacht um (robuster als Text-Vergleich)
+function zeitZuMinuten(t){
+  if(!t) return null;
+  const [h,m] = t.split(':').map(Number);
+  return (h||0)*60 + (m||0);
+}
+
 // Prueft, ob ein Raum an einem Datum/Zeitraum bereits durch ein ANDERES Event belegt ist
 function findRaumKonflikt(datum, zeit, endZeit, raumId, excludeEventId){
   if(!raumId) return null;
-  const zStart = zeit || '00:00';
-  const zEnd = endZeit || '23:59';
+  const zStart = zeitZuMinuten(zeit) ?? 0;
+  const zEnd = zeitZuMinuten(endZeit) ?? 1439; // 23:59
   return events.find(ev => {
     if(ev.id === excludeEventId) return false;
     if(ev.raum_id !== raumId || ev.datum !== datum) return false;
     if(ev.status === 'abgesagt') return false;
-    const evStart = ev.zeit || '00:00';
-    const evEnd = ev.end || '23:59';
+    const evStart = zeitZuMinuten(ev.zeit) ?? 0;
+    const evEnd = zeitZuMinuten(ev.end) ?? 1439;
     return zStart < evEnd && evStart < zEnd; // Zeitueberschneidung
   }) || null;
 }
@@ -5527,7 +5535,39 @@ function tEditEVP(secId,btn){
     sec.classList.remove('editing');btn.textContent='Bearbeiten';btn.style.color='';toast('Gespeichert');
   }else{sec.classList.add('editing');btn.textContent='Fertig';btn.style.color='#16A34A';}
 }
-async function deleteEV(){if(!activeEVP||!confirm('Löschen?'))return;const ev=events.find(x=>x.id===activeEVP);if(ev?._dbId)await dbDelete('events',ev._dbId);events=events.filter(x=>x.id!==activeEVP);closeEVP();rndrEvents();toast('Gelöscht');}
+async function deleteEV(){
+  if(!activeEVP) return;
+  const ev = events.find(x=>x.id===activeEVP);
+  if(!ev) return;
+  if(ev.serie_id){
+    document.getElementById('mo-ev-delete-serie').classList.add('open');
+  } else {
+    if(!confirm('Diesen Termin wirklich löschen?')) return;
+    await deleteEvAusfuehren('einzeln');
+  }
+}
+
+// Wird von den Buttons im "Serie löschen?"-Popup aufgerufen
+async function deleteEvAusfuehren(modus){
+  const ev = events.find(x=>x.id===activeEVP);
+  if(!ev) return;
+  closeMo('mo-ev-delete-serie');
+  if(modus === 'serie' && ev.serie_id){
+    const serienEvents = events.filter(x=>x.serie_id === ev.serie_id);
+    for(const se of serienEvents){
+      if(se._dbId) await dbDelete('events', se._dbId);
+    }
+    events = events.filter(x=>x.serie_id !== ev.serie_id);
+    toast(`${serienEvents.length} Termine der Serie gelöscht`);
+  } else {
+    if(ev._dbId) await dbDelete('events', ev._dbId);
+    events = events.filter(x=>x.id !== activeEVP);
+    toast('Gelöscht');
+  }
+  closeEVP();
+  rndrEvents();
+  if(document.getElementById('ev-kalender-view')?.style.display !== 'none') rndrEventKalender();
+}
 
 // ═══════════════════════════════════════════
 // MITARBEITER (HR) — Vollständiges Personalmanagement
@@ -9048,6 +9088,21 @@ async function doRegister() {
 </div>
 
 <!-- EVENT MODAL -->
+<!-- MODAL: SERIE LÖSCHEN? -->
+<div class="mo" id="mo-ev-delete-serie" style="z-index:1200">
+  <div class="modal" style="max-width:420px">
+    <div class="mh"><div class="mt2">🗑 Termin löschen</div><div class="mx" onclick="closeMo('mo-ev-delete-serie')">✕</div></div>
+    <div class="mb2">
+      <p style="font-size:13.5px;color:#444">Dieser Termin gehört zu einer wiederkehrenden Serie. Was möchtest du löschen?</p>
+    </div>
+    <div class="mfoot" style="flex-direction:column;gap:8px;align-items:stretch">
+      <button class="tbtn tbtn-navy" onclick="deleteEvAusfuehren('einzeln')">Nur diesen Termin löschen</button>
+      <button class="tbtn tbtn-navy" style="background:#DC2626" onclick="deleteEvAusfuehren('serie')">Ganze Serie löschen (alle Termine)</button>
+      <button class="tbtn tbtn-ghost" onclick="closeMo('mo-ev-delete-serie')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: RAUM-KONFLIKT BESTAETIGUNG -->
 <div class="mo" id="mo-ev-konflikt" style="z-index:1200">
   <div class="modal" style="max-width:440px">
