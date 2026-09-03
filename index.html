@@ -109,7 +109,7 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
 
 /* === APP (ERP) === */
 #pg-app{display:none;height:100vh;overflow:hidden;background:#F4F5F7}
-.app-wrap{display:flex;height:100vh;overflow:hidden}
+.app-wrap{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .sidebar{width:240px;background:#0F1F3D;display:flex;flex-direction:column;flex-shrink:0;height:100vh;overflow-y:auto;scrollbar-width:none}
 .sidebar::-webkit-scrollbar{display:none}
 .sb-logo{padding:14px 16px;border-bottom:1px solid rgba(200,148,26,0.2);display:flex;align-items:center;gap:12px;background:rgba(0,0,0,0.15)}
@@ -122,6 +122,43 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
 .sb-gemlbl{font-size:11.5px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
 .sb-gemname{font-size:14.5px;color:white;font-weight:500}
 .sb-plan{display:inline-block;background:rgba(200,148,26,0.2);color:#e8b84b;font-size:11.5px;padding:2px 8px;border-radius:4px;margin-top:4px}
+/* ── NEUE TOP-NAVIGATION (Schritt 1 UI-Umbau) ── */
+.topnav-1{background:#17284D;height:52px;display:flex;align-items:center;padding:0 18px;gap:16px;flex-shrink:0}
+.tn-logo{display:flex;align-items:center;gap:8px}
+.tn-logo-icon{width:26px;height:26px;border-radius:6px;background:#C8941A;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#17284D}
+.tn-logo-text{font-size:14px;font-weight:600;color:white;white-space:nowrap}
+.tn-gemname{font-size:12px;color:rgba(255,255,255,0.55);white-space:nowrap;display:none}
+@media(min-width:640px){.tn-gemname{display:block}}
+.tn-search{flex:1;max-width:280px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);border-radius:7px;padding:7px 12px;font-size:12.5px;color:rgba(255,255,255,0.55);display:none;align-items:center;gap:8px;cursor:pointer}
+@media(min-width:768px){.tn-search{display:flex}}
+.tn-hamburger{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:7px;cursor:pointer;flex-shrink:0}
+.tn-hamburger:hover{background:rgba(255,255,255,0.08)}
+.tn-hamburger svg{width:20px;height:20px;fill:white}
+@media(min-width:900px){.tn-hamburger{display:none}}
+.tn-right{margin-left:auto;display:flex;align-items:center;gap:12px;position:relative}
+.tn-avatar-btn{width:30px;height:30px;border-radius:50%;background:#E3B04B;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#17284D;cursor:pointer;flex-shrink:0}
+.tn-profile-menu{display:none;position:absolute;top:44px;right:0;background:white;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.18);min-width:230px;z-index:500;padding:10px;color:#1A1A1A}
+.tn-profile-menu.open{display:block}
+
+.topnav-2{background:white;border-bottom:1px solid #E5E7EB;padding:0 18px;display:none;gap:2px;overflow-x:auto}
+@media(min-width:900px){.topnav-2{display:flex}}
+.maintab{padding:12px 14px;font-size:13px;font-weight:500;color:#6B7280;display:flex;align-items:center;gap:7px;border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer}
+.maintab svg{width:16px;height:16px}
+.maintab.active{color:#17284D;border-bottom-color:#C8941A;font-weight:600}
+
+.subnav-row{background:#FAFAFB;border-bottom:1px solid #E5E7EB;padding:0 18px;display:none;gap:20px}
+@media(min-width:900px){.subnav-row.on{display:flex}}
+.subnav-item{padding:9px 0;font-size:12.5px;color:#6B7280;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+.subnav-item.active{color:#17284D;font-weight:600;border-bottom-color:#17284D}
+
+/* Mobiles Schubladen-Menue (< 900px) - nutzt die bestehende Sidebar-Optik */
+.mobile-drawer-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:800}
+.mobile-drawer-ov.open{display:block}
+@media(min-width:900px){.mobile-drawer-ov{display:none !important}}
+.sidebar.mobile-drawer{position:fixed;top:0;left:0;bottom:0;z-index:900;transform:translateX(-100%);transition:transform 0.2s ease;overflow-y:auto}
+.sidebar.mobile-drawer.open{transform:translateX(0)}
+@media(min-width:900px){.sidebar.mobile-drawer{display:none !important}}
+
 .sb-sec{padding:14px 10px 3px;font-size:11.5px;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1.2px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none}
 .sb-sec:hover{color:rgba(255,255,255,0.5)}
 .sb-sec-arrow{width:12px;height:12px;fill:currentColor;transition:transform 0.15s}
@@ -771,7 +808,8 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
 <div id="pg-app" style="display:none">
   <div class="app-wrap">
     <!-- SIDEBAR -->
-    <div class="sidebar">
+    <div class="mobile-drawer-ov" id="mobile-drawer-ov" onclick="closeMobileDrawer()"></div>
+    <div class="sidebar mobile-drawer" id="mobile-drawer">
       <div class="sb-logo">
         <div class="sb-mark"></div>
         <div class="sb-divider"></div>
@@ -844,6 +882,68 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
           <button style="width:100%;padding:7px;background:rgba(200,148,26,0.15);color:#e8b84b;border:1px solid rgba(200,148,26,0.3);border-radius:7px;cursor:pointer;font-size:13.5px;font-family:inherit;font-weight:500" onclick="showPage('admin');loadAdminData()">⚙ Admin-Panel</button>
         </div>
       </div>
+    </div>
+    <!-- NEUE TOP-NAVIGATION (Desktop/Tablet) -->
+    <div class="topnav-1">
+      <div class="tn-hamburger" onclick="openMobileDrawer()"><svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></div>
+      <div class="tn-logo"><div class="tn-logo-icon">+</div><div class="tn-logo-text">AJ Connect</div></div>
+      <div class="tn-gemname" id="tn-gemname">Gemeinde</div>
+      <div class="tn-search" onclick="openSearchPalette()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <span>Suchen...</span><span class="sb-search-kbd" style="margin-left:auto">Ctrl K</span>
+      </div>
+      <div class="tn-right">
+        <div class="tn-avatar-btn" id="tn-avatar" onclick="toggleProfileMenu()">AJ</div>
+        <div class="tn-profile-menu" id="tn-profile-menu">
+          <div style="padding:8px 10px;border-bottom:1px solid #F1F2F4;margin-bottom:6px">
+            <div style="font-size:13px;font-weight:600" id="tn-uname">Benutzer</div>
+            <div style="font-size:11.5px;color:#9CA3AF" id="tn-urole">Rolle</div>
+          </div>
+          <div id="tn-admin-wrap" style="display:none">
+            <div style="padding:0 10px 8px">
+              <div style="font-size:10.5px;color:#9CA3AF;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">Arbeiten als:</div>
+              <select id="tn-working-mandant-sel" onchange="setWorkingMandant(this.value)" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #E5E7EB;font-size:13px;outline:none"><option value="">— Gemeinde wählen —</option></select>
+            </div>
+            <div style="padding:0 10px 8px"><button onclick="showPage('admin');loadAdminData();toggleProfileMenu()" style="width:100%;padding:7px;background:#FDF3DC;color:#A5730F;border:1px solid #F0DEA8;border-radius:7px;cursor:pointer;font-size:12.5px;font-family:inherit;font-weight:500">⚙ Admin-Panel</button></div>
+          </div>
+          <div style="padding:0 10px"><button onclick="doLogout()" style="width:100%;padding:7px;background:#F4F5F7;color:#374151;border:1px solid #E5E7EB;border-radius:7px;cursor:pointer;font-size:12.5px;font-family:inherit">Abmelden ↗</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="topnav-2" id="topnav-main">
+      <div class="maintab active" data-section="dashboard" onclick="navToSection('dashboard')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Übersicht</div>
+      <div class="maintab" data-section="gemeinde" onclick="navToSection('gemeinde')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>Gemeinde</div>
+      <div class="maintab" data-section="gottesdienst" onclick="navToSection('gottesdienst')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13z"/></svg>Gottesdienst</div>
+      <div class="maintab" data-section="finanzen" onclick="navToSection('finanzen')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2z"/></svg>Finanzen</div>
+      <div class="maintab" data-section="verwaltung" onclick="navToSection('verwaltung')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>Verwaltung</div>
+    </div>
+    <div class="subnav-row on" data-section="dashboard">
+      <div class="subnav-item active" data-page="dashboard" onclick="navTo('dashboard',this)">Dashboard</div>
+      <div class="subnav-item" data-page="aufgaben" onclick="navTo('aufgaben',this)">Meine Aufgaben</div>
+    </div>
+    <div class="subnav-row" data-section="gemeinde">
+      <div class="subnav-item" data-page="mitglieder" onclick="navTo('mitglieder',this)">Mitglieder</div>
+      <div class="subnav-item" data-page="kontakte" onclick="navTo('kontakte',this)">Kontakte</div>
+      <div class="subnav-item" data-page="groups" onclick="navTo('groups',this)">Small Groups</div>
+    </div>
+    <div class="subnav-row" data-section="gottesdienst">
+      <div class="subnav-item" data-page="gottesdienste" onclick="navTo('gottesdienste',this)">Gottesdienste</div>
+      <div class="subnav-item" data-page="volunteer" onclick="navTo('volunteer',this)">Freiwillige</div>
+      <div class="subnav-item" data-page="worship" onclick="navTo('worship',this)">Worship</div>
+      <div class="subnav-item" data-page="events" onclick="navTo('events',this)">Veranstaltungen</div>
+    </div>
+    <div class="subnav-row" data-section="finanzen">
+      <div class="subnav-item" data-page="spenden" onclick="navTo('spenden',this)">Twint & Spenden</div>
+      <div class="subnav-item" data-page="verkauf" onclick="navTo('verkauf',this)">Verkauf</div>
+      <div class="subnav-item" data-page="buchhaltung" onclick="navTo('buchhaltung',this)">Buchhaltung</div>
+      <div class="subnav-item" data-page="artikel" onclick="navTo('artikel',this)">Artikel</div>
+      <div class="subnav-item" data-page="kreditoren" onclick="navTo('kreditoren',this)">Kreditoren</div>
+    </div>
+    <div class="subnav-row" data-section="verwaltung">
+      <div class="subnav-item" data-page="mitarbeiter" onclick="navTo('mitarbeiter',this)">Mitarbeiter</div>
+      <div class="subnav-item" data-page="ki" onclick="navTo('ki',this)">KI-Assistent</div>
+      <div class="subnav-item" data-page="dokumente" onclick="navTo('dokumente',this)">Dokumente</div>
+      <div class="subnav-item" data-page="einrichtung" onclick="navTo('einrichtung',this)">Einrichtung</div>
     </div>
     <!-- MAIN -->
     <div class="app-main">
@@ -2534,6 +2634,8 @@ async function loadUserAndShow(user) {
         updStats();loadDashboardLive();showDailyBibelvers();
         const adminBtn = document.getElementById('admin-btn-wrap');
         if(adminBtn) adminBtn.style.display = 'block';
+        const tnAdminBtn = document.getElementById('tn-admin-wrap');
+        if(tnAdminBtn) tnAdminBtn.style.display = 'block';
         setTimeout(() => { populateWorkingMandantSel(); }, 300);
       } else {
         // No saved mandant → show welcome/selection screen
@@ -2650,6 +2752,17 @@ function initAppUI() {
   if (el('sb-urole')) {
     const roles = { superadmin:'Super Admin', admin:'Administrator', leiter:'Leiter', mitarbeiter:'Mitarbeiter' };
     el('sb-urole').textContent = (roles[_S.rolle] || _S.rolle) + ' · Abmelden ↗';
+  }
+  // Neue Top-Navigation (Schritt 1 UI-Umbau) — gleiche Werte, andere Elemente
+  if (el('tn-gemname')) el('tn-gemname').textContent = _S.working_mandant_name || _S.mandant_name || '';
+  if (el('tn-uname')) el('tn-uname').textContent = _S.name || _S.email;
+  if (el('tn-avatar')) {
+    const initials2 = (_S.name || _S.email || 'U').split(' ').filter(w=>w).map(w=>w[0]).join('').toUpperCase().substring(0,2);
+    el('tn-avatar').textContent = initials2;
+  }
+  if (el('tn-urole')) {
+    const roles2 = { superadmin:'Super Admin', admin:'Administrator', leiter:'Leiter', mitarbeiter:'Mitarbeiter' };
+    el('tn-urole').textContent = (roles2[_S.rolle] || _S.rolle);
   }
   const d = new Date();
   const days = ['So','Mo','Di','Mi','Do','Fr','Sa'];
@@ -6229,6 +6342,48 @@ async function inviteMAasUser(maId){
 // ═══════════════════════════════════════════
 // NAVIGATION (override)
 // ═══════════════════════════════════════════
+// ── NEUE TOP-NAVIGATION: Sektions-Zuordnung, Klick-Logik, mobiles Menue ──
+const PAGE_SECTION_MAP = {
+  dashboard:'dashboard', aufgaben:'dashboard',
+  mitglieder:'gemeinde', kontakte:'gemeinde', groups:'gemeinde',
+  gottesdienste:'gottesdienst', volunteer:'gottesdienst', worship:'gottesdienst', events:'gottesdienst',
+  spenden:'finanzen', verkauf:'finanzen', buchhaltung:'finanzen', artikel:'finanzen', kreditoren:'finanzen',
+  mitarbeiter:'verwaltung', ki:'verwaltung', dokumente:'verwaltung', einrichtung:'verwaltung'
+};
+
+function updateTopNavActive(p){
+  const section = PAGE_SECTION_MAP[p] || 'dashboard';
+  document.querySelectorAll('.maintab').forEach(t => t.classList.toggle('active', t.dataset.section === section));
+  document.querySelectorAll('.subnav-row').forEach(r => r.classList.toggle('on', r.dataset.section === section));
+  document.querySelectorAll('.subnav-item').forEach(si => si.classList.toggle('active', si.dataset.page === p));
+}
+
+// Klick auf einen Hauptbereich (Desktop-Top-Navigation) — navigiert zur ersten Unterseite dieses Bereichs
+function navToSection(section){
+  const firstItem = document.querySelector('.subnav-row[data-section="'+section+'"] .subnav-item');
+  if(firstItem) navTo(firstItem.dataset.page, firstItem);
+}
+
+function openMobileDrawer(){
+  document.getElementById('mobile-drawer')?.classList.add('open');
+  document.getElementById('mobile-drawer-ov')?.classList.add('open');
+}
+function closeMobileDrawer(){
+  document.getElementById('mobile-drawer')?.classList.remove('open');
+  document.getElementById('mobile-drawer-ov')?.classList.remove('open');
+}
+
+function toggleProfileMenu(){
+  document.getElementById('tn-profile-menu')?.classList.toggle('open');
+}
+document.addEventListener('click', function(e){
+  const menu = document.getElementById('tn-profile-menu');
+  const btn = document.getElementById('tn-avatar');
+  if(menu && menu.classList.contains('open') && !menu.contains(e.target) && e.target !== btn){
+    menu.classList.remove('open');
+  }
+});
+
 function navTo(p,el2){
   if(p!=='dashboard' && (p in MODULE_PERMISSIONS) && !hasPermission(p)){
     toast('Keine Berechtigung für dieses Modul');
@@ -6238,6 +6393,8 @@ function navTo(p,el2){
   document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
   const pg=document.getElementById('pg-'+p);if(pg)pg.classList.add('on');
   if(el2)el2.classList.add('active');
+  updateTopNavActive(p);
+  closeMobileDrawer();
   const titles={dashboard:'Dashboard',mitglieder:'Mitglieder',kontakte:'Kontakte',groups:'Small Groups',gottesdienste:'Gottesdienste',volunteer:'Freiwillige',worship:'Worship',events:'Veranstaltungen',spenden:'Twint & Spenden',artikel:'Artikel',kreditoren:'Kreditoren',mitarbeiter:'Mitarbeiter',dokumente:'Dokumente',einrichtung:'Einrichtung',aufgaben:'Meine Aufgaben',ki:'KI-Assistent',buchhaltung:'Buchhaltung',verkauf:'Verkauf'};
   document.getElementById('tb-title').textContent=titles[p]||p;
   const isM=p==='mitglieder';
@@ -7018,21 +7175,28 @@ async function populateWorkingMandantSel() {
   const {data: mands} = await sb.from('mandanten').select('id,name').eq('aktiv', true).order('name');
   if(!mands) return;
   const sel = document.getElementById('working-mandant-sel');
+  const tnSel = document.getElementById('tn-working-mandant-sel');
   if(!sel) return;
-  sel.innerHTML = '<option value="">— Gemeinde wählen —</option>' + 
+  const optsHtml = '<option value="">— Gemeinde wählen —</option>' + 
     mands.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  sel.innerHTML = optsHtml;
+  if(tnSel) tnSel.innerHTML = optsHtml;
   // Restore saved mandant AFTER options are populated
   const saved = localStorage.getItem('aj-working-mandant');
   if(saved && mands.find(m => m.id === saved)) {
     sel.value = saved;
+    if(tnSel) tnSel.value = saved;
     const warn = document.getElementById('no-mandant-warning');
     if(warn) warn.style.display = 'none';
     // Update sidebar display
     const gemName = document.getElementById('sb-gname');
+    const tnGemName = document.getElementById('tn-gemname');
     const savedName = localStorage.getItem('aj-working-mandant-name');
     if(gemName && savedName) gemName.textContent = savedName;
+    if(tnGemName && savedName) tnGemName.textContent = savedName;
   } else if(mands.length === 1) {
     sel.value = mands[0].id;
+    if(tnSel) tnSel.value = mands[0].id;
     await setWorkingMandant(mands[0].id);
   } else if(!saved) {
     const warn = document.getElementById('no-mandant-warning');
@@ -8429,6 +8593,18 @@ function setAppLang(lang) {
     }
   });
 
+  // 2b. Neue Top-Navigation: Hauptbereiche (letzter Textknoten wegen SVG davor)
+  document.querySelectorAll('.maintab').forEach(el => {
+    const nodes = [...el.childNodes].filter(n=>n.nodeType===3&&n.textContent.trim());
+    if(nodes.length) {
+      const n = nodes[nodes.length-1];
+      if(!el.dataset.de) el.dataset.de = n.textContent.trim();
+      n.textContent = tLookup(el.dataset.de, lang);
+    }
+  });
+  // 2c. Neue Top-Navigation: Untermenue-Punkte
+  document.querySelectorAll('.subnav-item').forEach(tr);
+
   // 3. Stat labels
   document.querySelectorAll('.sl').forEach(tr);
   // 4. Form labels
@@ -8809,9 +8985,9 @@ function hasPermission(module) {
   return _S.berechtigungen.includes(module);
 }
 
-// Blendet Sidebar-Punkte aus, fuer die der Benutzer keine Berechtigung hat
+// Blendet Sidebar-Punkte UND die neuen Top-Navigation-Punkte aus, fuer die der Benutzer keine Berechtigung hat
 function applySidebarPermissions(){
-  document.querySelectorAll('.sb-item').forEach(el => {
+  document.querySelectorAll('.sb-item, .subnav-item').forEach(el => {
     const onclick = el.getAttribute('onclick') || '';
     const match = onclick.match(/navTo\('([a-z]+)'/);
     if(!match) return; // z.B. Dashboard ohne Modul-Gate
@@ -8819,6 +8995,15 @@ function applySidebarPermissions(){
     if(modKey === 'dashboard'){ el.style.display=''; return; }
     if(!(modKey in MODULE_PERMISSIONS)){ el.style.display=''; return; } // Modul nicht in der Liste = immer sichtbar
     el.style.display = hasPermission(modKey) ? '' : 'none';
+  });
+  // Hauptbereiche der Top-Navigation ausblenden, wenn KEIN Unterpunkt davon sichtbar ist
+  document.querySelectorAll('.maintab').forEach(tab => {
+    const section = tab.dataset.section;
+    const items = document.querySelectorAll('.subnav-row[data-section="'+section+'"] .subnav-item');
+    if(items.length){
+      const anyVisible = [...items].some(si => si.style.display !== 'none');
+      tab.style.display = anyVisible ? '' : 'none';
+    }
   });
 }
 
@@ -8869,6 +9054,8 @@ async function enterMandant() {
   showPage('app');
   const adminBtn = document.getElementById('admin-btn-wrap');
   if(adminBtn) adminBtn.style.display = 'block';
+  const tnAdminBtn2 = document.getElementById('tn-admin-wrap');
+  if(tnAdminBtn2) tnAdminBtn2.style.display = 'block';
   setTimeout(() => { populateWorkingMandantSel(); }, 300);
   if(btn) { btn.disabled = false; btn.textContent = 'Einloggen →'; }
   toast('✓ Arbeite jetzt als: ' + mandantName);
