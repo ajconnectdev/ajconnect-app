@@ -895,7 +895,7 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
     <div class="topnav-1">
       <div class="tn-hamburger" onclick="openMobileDrawer()"><svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></div>
       <div class="tn-logo"><div class="tn-logo-icon"><div class="tn-cross-v"></div><div class="tn-cross-h"></div></div><div class="tn-logo-text">AJ Connect</div></div>
-      <div class="tn-gemname"><img class="tn-gemlogo" id="tn-gemlogo" alt=""><span id="tn-gemname-text">Gemeinde</span></div>
+      <div class="tn-gemname"><span id="tn-gemname-text">Gemeinde</span></div>
       <div class="tn-search" onclick="openSearchPalette()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
         <span>Suchen...</span><span class="sb-search-kbd" style="margin-left:auto">Ctrl K</span>
@@ -1005,6 +1005,9 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
                 <div onclick="navTo('events');openNEv()" style="background:#F4F5F7;border:1px solid #E5E7EB;border-radius:9px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px" onmouseover="this.style.borderColor='#C8941A';this.style.background='#FDF3DC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F4F5F7'"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#1A3560"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg><span class="qa-label" style="font-size:13.5px;font-weight:500;color:#1A1A1A">Veranstaltung anlegen</span></div>
               </div>
             </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:14px">
+            <img id="db-gemeinde-logo" alt="" style="max-height:56px;max-width:160px;object-fit:contain;opacity:0.85;display:none">
           </div>
         </div>
         <!-- MEINE AUFGABEN -->
@@ -2749,13 +2752,13 @@ function restoreSbGroupState(){
   });
 }
 
-// Laedt das hochgeladene Gemeinde-Logo (falls vorhanden) in die Top-Navigation
+// Laedt das hochgeladene Gemeinde-Logo (falls vorhanden) unten rechts auf dem Dashboard
 async function loadTopNavGemeindeLogo(){
   const mid = _S?.working_mandant_id || _S?.mandant_id;
   if(!mid) return;
   try{
     const branding = await getGemeindeBranding();
-    const img = document.getElementById('tn-gemlogo');
+    const img = document.getElementById('db-gemeinde-logo');
     if(img){
       if(branding?.logoUrl){ img.src = branding.logoUrl; img.style.display = 'block'; }
       else { img.style.display = 'none'; }
@@ -3278,6 +3281,7 @@ async function loadDashboardLive(){
   const heute = new Date();
   const heuteStr = heute.toISOString().split('T')[0];
   const monatPrefix = heuteStr.slice(0,7); // YYYY-MM
+  loadTopNavGemeindeLogo();
 
   // Spenden diesen Monat
   const spendLabel = document.getElementById('db-spenden-label');
