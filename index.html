@@ -123,32 +123,35 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
 .sb-gemname{font-size:14.5px;color:white;font-weight:500}
 .sb-plan{display:inline-block;background:rgba(200,148,26,0.2);color:#e8b84b;font-size:11.5px;padding:2px 8px;border-radius:4px;margin-top:4px}
 /* ── NEUE TOP-NAVIGATION (Schritt 1 UI-Umbau) ── */
-.topnav-1{background:#17284D;height:52px;display:flex;align-items:center;padding:0 18px;gap:16px;flex-shrink:0}
-.tn-logo{display:flex;align-items:center;gap:8px}
-.tn-logo-icon{width:26px;height:26px;border-radius:6px;background:#C8941A;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#17284D}
-.tn-logo-text{font-size:14px;font-weight:600;color:white;white-space:nowrap}
-.tn-gemname{font-size:12px;color:rgba(255,255,255,0.55);white-space:nowrap;display:none}
-@media(min-width:640px){.tn-gemname{display:block}}
-.tn-search{flex:1;max-width:280px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);border-radius:7px;padding:7px 12px;font-size:12.5px;color:rgba(255,255,255,0.55);display:none;align-items:center;gap:8px;cursor:pointer}
+.topnav-1{background:#17284D;height:58px;display:flex;align-items:center;padding:0 20px;gap:18px;flex-shrink:0}
+.tn-logo{display:flex;align-items:center;gap:9px}
+.tn-logo-icon{width:30px;height:30px;border-radius:7px;background:#17284D;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0}
+.tn-logo-icon .tn-cross-v{position:absolute;left:50%;top:5px;transform:translateX(-50%);width:4px;height:20px;background:#C8941A;border-radius:2px}
+.tn-logo-icon .tn-cross-h{position:absolute;top:11px;left:5.5px;width:19px;height:4px;background:#C8941A;border-radius:2px}
+.tn-logo-text{font-size:15px;font-weight:600;color:white;white-space:nowrap}
+.tn-gemlogo{width:26px;height:26px;border-radius:6px;object-fit:contain;background:white;flex-shrink:0;display:none}
+.tn-gemname{font-size:13px;color:rgba(255,255,255,0.6);white-space:nowrap;display:none;align-items:center;gap:8px}
+@media(min-width:640px){.tn-gemname{display:flex}}
+.tn-search{flex:1;max-width:300px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 13px;font-size:13.5px;color:rgba(255,255,255,0.55);display:none;align-items:center;gap:8px;cursor:pointer}
 @media(min-width:768px){.tn-search{display:flex}}
-.tn-hamburger{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:7px;cursor:pointer;flex-shrink:0}
-.tn-hamburger:hover{background:rgba(255,255,255,0.08)}
-.tn-hamburger svg{width:20px;height:20px;fill:white}
+.tn-hamburger{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:8px;cursor:pointer;flex-shrink:0;background:rgba(255,255,255,0.08)}
+.tn-hamburger:hover{background:rgba(255,255,255,0.15)}
+.tn-hamburger svg{width:22px;height:22px;fill:white}
 @media(min-width:900px){.tn-hamburger{display:none}}
-.tn-right{margin-left:auto;display:flex;align-items:center;gap:12px;position:relative}
-.tn-avatar-btn{width:30px;height:30px;border-radius:50%;background:#E3B04B;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#17284D;cursor:pointer;flex-shrink:0}
-.tn-profile-menu{display:none;position:absolute;top:44px;right:0;background:white;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.18);min-width:230px;z-index:500;padding:10px;color:#1A1A1A}
+.tn-right{margin-left:auto;display:flex;align-items:center;gap:14px;position:relative}
+.tn-avatar-btn{width:34px;height:34px;border-radius:50%;background:#E3B04B;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;color:#17284D;cursor:pointer;flex-shrink:0}
+.tn-profile-menu{display:none;position:absolute;top:48px;right:0;background:white;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.18);min-width:230px;z-index:500;padding:10px;color:#1A1A1A}
 .tn-profile-menu.open{display:block}
 
-.topnav-2{background:white;border-bottom:1px solid #E5E7EB;padding:0 18px;display:none;gap:2px;overflow-x:auto}
+.topnav-2{background:white;border-bottom:1px solid #E5E7EB;padding:0 20px;display:none;gap:4px;overflow-x:auto}
 @media(min-width:900px){.topnav-2{display:flex}}
-.maintab{padding:12px 14px;font-size:13px;font-weight:500;color:#6B7280;display:flex;align-items:center;gap:7px;border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer}
-.maintab svg{width:16px;height:16px}
+.maintab{padding:14px 16px;font-size:14px;font-weight:500;color:#6B7280;display:flex;align-items:center;gap:8px;border-bottom:2.5px solid transparent;white-space:nowrap;cursor:pointer}
+.maintab svg{width:17px;height:17px}
 .maintab.active{color:#17284D;border-bottom-color:#C8941A;font-weight:600}
 
-.subnav-row{background:#FAFAFB;border-bottom:1px solid #E5E7EB;padding:0 18px;display:none;gap:20px}
+.subnav-row{background:#FAFAFB;border-bottom:1px solid #E5E7EB;padding:0 20px;display:none;gap:24px}
 @media(min-width:900px){.subnav-row.on{display:flex}}
-.subnav-item{padding:9px 0;font-size:12.5px;color:#6B7280;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+.subnav-item{padding:10px 0;font-size:13.5px;color:#6B7280;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
 .subnav-item.active{color:#17284D;font-weight:600;border-bottom-color:#17284D}
 
 /* Mobiles Schubladen-Menue (< 900px) - nutzt die bestehende Sidebar-Optik */
@@ -197,7 +200,12 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
 .tbtn-navy{background:#1A3560;color:white}.tbtn-navy:hover{background:#243d6e}
 .tbtn-gold{background:#C8941A;color:white}.tbtn-gold:hover{background:#e8b84b}
 .tbtn-ghost{background:white;color:#6B7280;border:1px solid #E5E7EB}.tbtn-ghost:hover{background:#F4F5F7}
-.pages{flex:1;overflow-y:auto}
+.pages{flex:1;overflow-y:auto;overflow-x:hidden}
+@media(max-width:640px){
+  .sgrid4{grid-template-columns:repeat(2,1fr) !important}
+  .g2{grid-template-columns:1fr !important}
+  .fg2{grid-template-columns:1fr !important}
+}
 .page{display:none;padding:20px;flex-direction:column;gap:16px}
 .page.on{display:flex}
 .sgrid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
@@ -886,8 +894,8 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
     <!-- NEUE TOP-NAVIGATION (Desktop/Tablet) -->
     <div class="topnav-1">
       <div class="tn-hamburger" onclick="openMobileDrawer()"><svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></div>
-      <div class="tn-logo"><div class="tn-logo-icon">+</div><div class="tn-logo-text">AJ Connect</div></div>
-      <div class="tn-gemname" id="tn-gemname">Gemeinde</div>
+      <div class="tn-logo"><div class="tn-logo-icon"><div class="tn-cross-v"></div><div class="tn-cross-h"></div></div><div class="tn-logo-text">AJ Connect</div></div>
+      <div class="tn-gemname"><img class="tn-gemlogo" id="tn-gemlogo" alt=""><span id="tn-gemname-text">Gemeinde</span></div>
       <div class="tn-search" onclick="openSearchPalette()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
         <span>Suchen...</span><span class="sb-search-kbd" style="margin-left:auto">Ctrl K</span>
@@ -991,10 +999,10 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
             <div class="card">
               <div class="cardh"><div class="cardtitle">Schnellzugriff</div></div>
               <div class="cardbody" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-                <div onclick="navTo('mitglieder');openNM()" style="background:#F4F5F7;border:1px solid #E5E7EB;border-radius:9px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px" onmouseover="this.style.borderColor='#C8941A';this.style.background='#FDF3DC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F4F5F7'"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#1A3560"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6z"/></svg><span style="font-size:13.5px;font-weight:500;color:#1A1A1A">Mitglied erfassen</span></div>
-                <div onclick="navTo('spenden');openNS()" style="background:#F4F5F7;border:1px solid #E5E7EB;border-radius:9px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px" onmouseover="this.style.borderColor='#C8941A';this.style.background='#FDF3DC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F4F5F7'"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#1A3560"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg><span style="font-size:13.5px;font-weight:500;color:#1A1A1A">Spende erfassen</span></div>
-                <div onclick="navTo('kontakte');openNK()" style="background:#F4F5F7;border:1px solid #E5E7EB;border-radius:9px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px" onmouseover="this.style.borderColor='#C8941A';this.style.background='#FDF3DC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F4F5F7'"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#1A3560"><path d="M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8z"/></svg><span style="font-size:13.5px;font-weight:500;color:#1A1A1A">Kontakt erfassen</span></div>
-                <div onclick="navTo('events');openNEv()" style="background:#F4F5F7;border:1px solid #E5E7EB;border-radius:9px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px" onmouseover="this.style.borderColor='#C8941A';this.style.background='#FDF3DC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F4F5F7'"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#1A3560"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg><span style="font-size:13.5px;font-weight:500;color:#1A1A1A">Veranstaltung anlegen</span></div>
+                <div onclick="navTo('mitglieder');openNM()" style="background:#F4F5F7;border:1px solid #E5E7EB;border-radius:9px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px" onmouseover="this.style.borderColor='#C8941A';this.style.background='#FDF3DC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F4F5F7'"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#1A3560"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6z"/></svg><span class="qa-label" style="font-size:13.5px;font-weight:500;color:#1A1A1A">Mitglied erfassen</span></div>
+                <div onclick="navTo('spenden');openNS()" style="background:#F4F5F7;border:1px solid #E5E7EB;border-radius:9px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px" onmouseover="this.style.borderColor='#C8941A';this.style.background='#FDF3DC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F4F5F7'"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#1A3560"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg><span class="qa-label" style="font-size:13.5px;font-weight:500;color:#1A1A1A">Spende erfassen</span></div>
+                <div onclick="navTo('kontakte');openNK()" style="background:#F4F5F7;border:1px solid #E5E7EB;border-radius:9px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px" onmouseover="this.style.borderColor='#C8941A';this.style.background='#FDF3DC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F4F5F7'"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#1A3560"><path d="M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8z"/></svg><span class="qa-label" style="font-size:13.5px;font-weight:500;color:#1A1A1A">Kontakt erfassen</span></div>
+                <div onclick="navTo('events');openNEv()" style="background:#F4F5F7;border:1px solid #E5E7EB;border-radius:9px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:5px" onmouseover="this.style.borderColor='#C8941A';this.style.background='#FDF3DC'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F4F5F7'"><svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#1A3560"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg><span class="qa-label" style="font-size:13.5px;font-weight:500;color:#1A1A1A">Veranstaltung anlegen</span></div>
               </div>
             </div>
           </div>
@@ -2630,6 +2638,7 @@ async function loadUserAndShow(user) {
         applySidebarPermissions();
         initAppLang();
         restoreSbGroupState();
+        loadTopNavGemeindeLogo();
         showPage('app');
         updStats();loadDashboardLive();showDailyBibelvers();
         const adminBtn = document.getElementById('admin-btn-wrap');
@@ -2650,6 +2659,7 @@ async function loadUserAndShow(user) {
     applySidebarPermissions();
     initAppLang();
     restoreSbGroupState();
+    loadTopNavGemeindeLogo();
     showPage('app');
     updStats();loadDashboardLive();showDailyBibelvers();
   } catch(e) {
@@ -2739,6 +2749,20 @@ function restoreSbGroupState(){
   });
 }
 
+// Laedt das hochgeladene Gemeinde-Logo (falls vorhanden) in die Top-Navigation
+async function loadTopNavGemeindeLogo(){
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  if(!mid) return;
+  try{
+    const branding = await getGemeindeBranding();
+    const img = document.getElementById('tn-gemlogo');
+    if(img){
+      if(branding?.logoUrl){ img.src = branding.logoUrl; img.style.display = 'block'; }
+      else { img.style.display = 'none'; }
+    }
+  } catch(e){ /* kein Logo vorhanden, kein Problem */ }
+}
+
 function initAppUI() {
   if (!_S) return;
   const el = id => document.getElementById(id);
@@ -2754,7 +2778,7 @@ function initAppUI() {
     el('sb-urole').textContent = (roles[_S.rolle] || _S.rolle) + ' · Abmelden ↗';
   }
   // Neue Top-Navigation (Schritt 1 UI-Umbau) — gleiche Werte, andere Elemente
-  if (el('tn-gemname')) el('tn-gemname').textContent = _S.working_mandant_name || _S.mandant_name || '';
+  if (el('tn-gemname-text')) el('tn-gemname-text').textContent = _S.working_mandant_name || _S.mandant_name || '';
   if (el('tn-uname')) el('tn-uname').textContent = _S.name || _S.email;
   if (el('tn-avatar')) {
     const initials2 = (_S.name || _S.email || 'U').split(' ').filter(w=>w).map(w=>w[0]).join('').toUpperCase().substring(0,2);
@@ -4238,9 +4262,33 @@ function closeSearchPalette(){
 
 function filterSearchPalette(){
   const q = document.getElementById('search-palette-input').value.trim().toLowerCase();
-  _searchResults = !q ? SEARCH_INDEX : SEARCH_INDEX.filter(item =>
+  if(!q){ _searchResults = SEARCH_INDEX; _searchHlIdx = 0; rndrSearchResults(); return; }
+
+  const staticMatches = SEARCH_INDEX.filter(item =>
     item.label.toLowerCase().includes(q) || item.keywords.includes(q)
   );
+
+  // Echte Datensaetze durchsuchen (Mitglieder, Kontakte, Small Groups) — nicht nur Seiten/Aktionen
+  const dataMatches = [];
+  (members||[]).forEach(m => {
+    const full = `${m.vorname||''} ${m.nachname||''}`.trim();
+    if(full.toLowerCase().includes(q)){
+      dataMatches.push({label: full, icon:'👤', sub:'Mitglied', action:()=>{ navTo('mitglieder'); setTimeout(()=>openK(m.id), 200); }});
+    }
+  });
+  (kontakte||[]).forEach(k => {
+    const full = `${k.vorname||''} ${k.nachname||''}`.trim();
+    if(full.toLowerCase().includes(q)){
+      dataMatches.push({label: full, icon:'📇', sub:'Kontakt', action:()=>{ navTo('kontakte'); setTimeout(()=>openKK(k.id), 200); }});
+    }
+  });
+  (sgData||[]).forEach(sg => {
+    if((sg.name||'').toLowerCase().includes(q)){
+      dataMatches.push({label: sg.name, icon:'🧑‍🤝‍🧑', sub:'Small Group', action:()=>{ navTo('groups'); setTimeout(()=>openSGK(sg.id), 200); }});
+    }
+  });
+
+  _searchResults = [...dataMatches, ...staticMatches];
   _searchHlIdx = 0;
   rndrSearchResults();
 }
@@ -4255,6 +4303,7 @@ function rndrSearchResults(){
     <div class="search-result-item ${i===_searchHlIdx?'hl':''}" onclick="runSearchResult(${i})" onmouseover="_searchHlIdx=${i};rndrSearchResults()">
       <div class="search-result-icon">${item.icon}</div>
       <div>${item.label}</div>
+      ${item.sub ? `<div class="search-result-sub">${item.sub}</div>` : ''}
     </div>`).join('');
 }
 
@@ -7190,7 +7239,7 @@ async function populateWorkingMandantSel() {
     if(warn) warn.style.display = 'none';
     // Update sidebar display
     const gemName = document.getElementById('sb-gname');
-    const tnGemName = document.getElementById('tn-gemname');
+    const tnGemName = document.getElementById('tn-gemname-text');
     const savedName = localStorage.getItem('aj-working-mandant-name');
     if(gemName && savedName) gemName.textContent = savedName;
     if(tnGemName && savedName) tnGemName.textContent = savedName;
@@ -8558,6 +8607,10 @@ const APP_T = {
   'Lädt...':{en:'Loading...',fr:'Chargement...',it:'Caricamento...'},
   'Noch keine Daten':{en:'No data yet',fr:'Pas encore de données',it:'Nessun dato ancora'},
   'Ja':{en:'Yes',fr:'Oui',it:'Sì'},
+  'Mitglied erfassen':{en:'Add member',fr:'Ajouter un membre',it:'Aggiungi membro'},
+  'Spende erfassen':{en:'Record donation',fr:'Saisir un don',it:'Registra donazione'},
+  'Kontakt erfassen':{en:'Add contact',fr:'Ajouter un contact',it:'Aggiungi contatto'},
+  'Veranstaltung anlegen':{en:'Create event',fr:'Créer un événement',it:'Crea evento'},
   'Nein':{en:'No',fr:'Non',it:'No'},
   'Pflicht':{en:'Required',fr:'Obligatoire',it:'Obbligatorio'},
 };
@@ -8604,6 +8657,8 @@ function setAppLang(lang) {
   });
   // 2c. Neue Top-Navigation: Untermenue-Punkte
   document.querySelectorAll('.subnav-item').forEach(tr);
+  // 2d. Schnellzugriff-Beschriftungen auf dem Dashboard
+  document.querySelectorAll('.qa-label').forEach(tr);
 
   // 3. Stat labels
   document.querySelectorAll('.sl').forEach(tr);
@@ -9056,6 +9111,7 @@ async function enterMandant() {
   if(adminBtn) adminBtn.style.display = 'block';
   const tnAdminBtn2 = document.getElementById('tn-admin-wrap');
   if(tnAdminBtn2) tnAdminBtn2.style.display = 'block';
+  loadTopNavGemeindeLogo();
   setTimeout(() => { populateWorkingMandantSel(); }, 300);
   if(btn) { btn.disabled = false; btn.textContent = 'Einloggen →'; }
   toast('✓ Arbeite jetzt als: ' + mandantName);
