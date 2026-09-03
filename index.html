@@ -1006,8 +1006,10 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
               </div>
             </div>
           </div>
-          <div style="display:flex;justify-content:flex-end;margin-top:14px">
-            <img id="db-gemeinde-logo" alt="" style="max-height:56px;max-width:160px;object-fit:contain;opacity:0.85;display:none">
+          <div style="display:flex;justify-content:flex-start;margin-top:14px">
+            <div id="db-gemeinde-logo-wrap" style="display:none;background:white;border:1px solid #EEF0F2;border-radius:14px;padding:10px 14px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+              <img id="db-gemeinde-logo" alt="" style="max-height:88px;max-width:220px;object-fit:contain;border-radius:8px;display:block">
+            </div>
           </div>
         </div>
         <!-- MEINE AUFGABEN -->
@@ -2759,9 +2761,10 @@ async function loadTopNavGemeindeLogo(){
   try{
     const branding = await getGemeindeBranding();
     const img = document.getElementById('db-gemeinde-logo');
-    if(img){
-      if(branding?.logoUrl){ img.src = branding.logoUrl; img.style.display = 'block'; }
-      else { img.style.display = 'none'; }
+    const wrap = document.getElementById('db-gemeinde-logo-wrap');
+    if(img && wrap){
+      if(branding?.logoUrl){ img.src = branding.logoUrl; wrap.style.display = 'inline-block'; }
+      else { wrap.style.display = 'none'; }
     }
   } catch(e){ /* kein Logo vorhanden, kein Problem */ }
 }
