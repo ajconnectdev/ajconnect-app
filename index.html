@@ -4,12 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AJ Connect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0F1F3D;min-height:100vh}
+body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0F1F3D;min-height:100vh}
 
 /* === LOADER === */
 #loader{position:fixed;inset:0;background:#0F1F3D;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:9999}
@@ -209,18 +211,20 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
 .page{display:none;padding:20px;flex-direction:column;gap:16px}
 .page.on{display:flex}
 .sgrid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.scard{background:white;border:1px solid #E5E7EB;border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:12px}
+.scard{background:white;border:1px solid #E5E7EB;border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:12px}
 .sico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .sico svg{width:17px;height:17px}
 .sn{font-size:22px;font-weight:600;color:#1A3560;line-height:1}
 .sl{font-size:12.5px;color:#9CA3AF;margin-top:2px}
 .sd{font-size:12.5px;margin-top:2px}
-.card{background:white;border:1px solid #E5E7EB;border-radius:12px;overflow:hidden}
+.card{background:white;border:1px solid #E5E7EB;border-radius:14px;overflow:hidden}
 .cardh{padding:14px 18px;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between}
 .cardtitle{font-size:15.5px;font-weight:600;color:#1A3560}
 .cardbody{padding:16px 18px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.tblwrap{background:white;border:1px solid #E5E7EB;border-radius:12px;overflow:hidden}
+.tblwrap{background:white;border:1px solid #E5E7EB;border-radius:14px;overflow:hidden}
+tbody tr{transition:background 0.12s ease}
+tbody tr:hover td{background:#FAFBFC}
 .tbltoolbar{padding:10px 14px;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .sbox{display:flex;align-items:center;gap:7px;background:#F4F5F7;border:1px solid #E5E7EB;border-radius:7px;padding:6px 11px;flex:1;min-width:160px}
 .sbox svg{width:13px;height:13px;fill:#9CA3AF;flex-shrink:0}
