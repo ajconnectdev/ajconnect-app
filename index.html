@@ -3782,6 +3782,17 @@ async function startJahresabschluss(){
 // ═══════════════════════════════════════════
 // VERKAUF — Offerten & Rechnungen (mit Logo + Schweizer QR-Zahlteil)
 // ═══════════════════════════════════════════
+// Eigenes Bestätigungs-Fenster im AJ-Connect-Design statt des hässlichen Browser-Popups
+function customConfirm(message, onConfirm, title='Bestätigen'){
+  document.getElementById('cc-title').textContent = title;
+  document.getElementById('cc-message').textContent = message;
+  const okBtn = document.getElementById('cc-ok-btn');
+  const newBtn = okBtn.cloneNode(true); // entfernt alte Klick-Handler von vorherigen Aufrufen
+  okBtn.parentNode.replaceChild(newBtn, okBtn);
+  newBtn.onclick = () => { closeMo('mo-custom-confirm'); onConfirm(); };
+  document.getElementById('mo-custom-confirm').classList.add('open');
+}
+
 let verkaufsdokumente = [], vkLoaded = false, _vkTyp = 'offerte', _vkPositionenTemp = [], _vkKonvertiertVon = null;
 
 // ═══════════════════════════════════════════
@@ -3943,28 +3954,46 @@ function rndrVerkauf(){
   const auftraege = verkaufsdokumente.filter(d=>d.typ==='auftrag');
   const rechnungen = verkaufsdokumente.filter(d=>d.typ==='rechnung');
 
+  const statusBadge = (d) => {
+    if(d.typ === 'auftrag'){
+      const teile = [];
+      if(d.geliefert) teile.push('<span style="padding:2px 7px;border-radius:5px;font-size:11px;font-weight:500;background:#DCFCE7;color:#16803B">🚚 Geliefert</span>');
+      if(d.fakturiert) teile.push('<span style="padding:2px 7px;border-radius:5px;font-size:11px;font-weight:500;background:#EFF6FF;color:#2563EB">🧾 Fakturiert</span>');
+      if(!teile.length) teile.push(`<span style="padding:2px 8px;border-radius:5px;font-size:12.5px;font-weight:500;${VK_STATUS_CSS[d.status]||''}">${VK_STATUS_LABEL[d.status]||d.status}</span>`);
+      return `<div style="display:flex;gap:4px;flex-wrap:wrap">${teile.join('')}</div>`;
+    }
+    return `<span style="padding:2px 8px;border-radius:5px;font-size:12.5px;font-weight:500;${VK_STATUS_CSS[d.status]||''}">${VK_STATUS_LABEL[d.status]||d.status}</span>`;
+  };
+
   const aktionen = (d) => {
-    let btns = `<button class="aaction-btn" onclick="downloadVerkaufsPDF('${d.id}')">PDF</button>`;
+    let btns = `<button class="aaction-btn" onclick="event.stopPropagation();downloadVerkaufsPDF('${d.id}')">PDF</button>`;
     if(d.typ === 'offerte' && d.status !== 'storniert'){
-      btns += `<button class="aaction-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE" onclick="konvertiereZuAuftrag('${d.id}')">→ Auftrag</button>`;
+      btns += `<button class="aaction-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE" onclick="event.stopPropagation();konvertiereZuAuftrag('${d.id}')">→ Auftrag</button>`;
     }
-    if(d.typ === 'auftrag' && d.status !== 'gebucht' && d.status !== 'storniert'){
-      btns += `<button class="aaction-btn" style="background:#F0FDF4;color:#16803B;border-color:#86efac" onclick="bucheAuftrag('${d.id}')">📦 Buchen</button>`;
+    if(d.typ === 'auftrag'){
+      if(!d.geliefert){
+        btns += `<button class="aaction-btn" style="background:#F0FDF4;color:#16803B;border-color:#86efac" onclick="event.stopPropagation();liefereAuftrag('${d.id}')">🚚 Liefern</button>`;
+      } else {
+        btns += `<button class="aaction-btn" onclick="event.stopPropagation();downloadLieferscheinPDF('${d.id}')">Lieferschein</button>`;
+      }
+      if(!d.fakturiert){
+        btns += `<button class="aaction-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE" onclick="event.stopPropagation();fakturiereAuftrag('${d.id}')">🧾 Fakturieren</button>`;
+      }
     }
-    if(d.typ === 'auftrag' && d.status === 'gebucht'){
-      btns += `<button class="aaction-btn" onclick="downloadLieferscheinPDF('${d.id}')">Lieferschein</button>`;
+    if(d.typ === 'rechnung' && d.kunde_email){
+      btns += `<button class="aaction-btn" style="background:#FDF3DC;color:#A5730F;border-color:#F0DEA8" onclick="event.stopPropagation();sendeRechnungPerEmail('${d.id}')">📧 Senden</button>`;
     }
-    btns += `<button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteVerkaufsdokument('${d.id}')">🗑</button>`;
+    btns += `<button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="event.stopPropagation();deleteVerkaufsdokument('${d.id}')">🗑</button>`;
     return btns;
   };
 
-  const rowHtml = (d) => `<tr>
+  const rowHtml = (d) => `<tr onclick="openVerkaufsdokument('${d.id}')" style="cursor:pointer">
     <td style="font-size:13.5px;font-family:monospace">${d.nummer||'—'}</td>
     <td style="font-size:13.5px">${fD(d.datum)}</td>
     <td style="font-size:14px">${d.kunde_name}</td>
     <td style="font-size:13.5px">${fD(d.faellig_bis)}</td>
     <td style="text-align:right;font-weight:600;font-size:14px">CHF ${parseFloat(d.gesamtbetrag||0).toLocaleString('de-CH',{minimumFractionDigits:2})}</td>
-    <td><span style="padding:2px 8px;border-radius:5px;font-size:12.5px;font-weight:500;${VK_STATUS_CSS[d.status]||''}">${VK_STATUS_LABEL[d.status]||d.status}</span></td>
+    <td>${statusBadge(d)}</td>
     <td style="display:flex;gap:4px;flex-wrap:wrap">${aktionen(d)}</td>
   </tr>`;
 
@@ -3973,8 +4002,11 @@ function rndrVerkauf(){
   document.getElementById('vk-rechnungen-tbody').innerHTML = rechnungen.length ? rechnungen.map(rowHtml).join('') : '<tr><td colspan="7" class="aempty">Keine Rechnungen</td></tr>';
 }
 
+let _vkEditId = null; // wenn gesetzt: bestehendes Dokument wird bearbeitet statt neu erstellt
+
 function openNVerkauf(typ){
   _vkTyp = typ;
+  _vkEditId = null;
   _vkPositionenTemp = [];
   _vkKonvertiertVon = null;
   const titel = {offerte:'📄 Neue Offerte', auftrag:'📦 Neuer Auftrag', rechnung:'🧾 Neue Rechnung'};
@@ -3989,16 +4021,47 @@ function openNVerkauf(typ){
   document.getElementById('vk-datum2').value = d2.toISOString().split('T')[0];
   document.getElementById('vk-notiz').value = '';
 
-  // Kunden-Auswahl befuellen: Mitglieder + Kontakte, zum schnellen Auswaehlen mit Auto-Ausfuellen
+  vkBefuelleKundenPicker();
+  rndrVerkaufPositionen();
+  document.getElementById('mo-nverkauf').classList.add('open');
+}
+
+// Oeffnet ein BESTEHENDES Dokument zum Ansehen/Bearbeiten (Klick auf eine Zeile in der Liste)
+async function openVerkaufsdokument(id){
+  const dok = verkaufsdokumente.find(d=>d.id===id);
+  if(!dok) return;
+  _vkTyp = dok.typ;
+  _vkEditId = id;
+  _vkKonvertiertVon = dok.konvertiert_von || null;
+
+  const titel = {offerte:'📄 Offerte bearbeiten', auftrag:'📦 Auftrag bearbeiten', rechnung:'🧾 Rechnung bearbeiten'};
+  const datum2Label = {offerte:'Gültig bis', auftrag:'Liefertermin', rechnung:'Fällig am'};
+  document.getElementById('vk-modal-title').textContent = `${titel[dok.typ]||'Dokument bearbeiten'} — ${dok.nummer}`;
+  document.getElementById('vk-datum2-label').textContent = datum2Label[dok.typ] || 'Gültig bis';
+  document.getElementById('vk-kunde-name').value = dok.kunde_name || '';
+  document.getElementById('vk-kunde-email').value = dok.kunde_email || '';
+  document.getElementById('vk-kunde-adresse').value = dok.kunde_adresse || '';
+  document.getElementById('vk-datum').value = dok.datum || '';
+  document.getElementById('vk-datum2').value = dok.faellig_bis || '';
+  document.getElementById('vk-notiz').value = dok.notiz || '';
+
+  vkBefuelleKundenPicker();
+  document.getElementById('vk-kunde-picker').value = '';
+
+  toast('Positionen werden geladen...');
+  const {data: positionen} = await sb.from('verkaufspositionen').select('*').eq('dokument_id', id).order('created_at');
+  _vkPositionenTemp = (positionen||[]).map(p => ({ beschreibung: p.beschreibung, menge: p.menge, einzelpreis: p.einzelpreis, artikel_id: p.artikel_id || null }));
+  rndrVerkaufPositionen();
+  document.getElementById('mo-nverkauf').classList.add('open');
+}
+
+function vkBefuelleKundenPicker(){
   const picker = document.getElementById('vk-kunde-picker');
   const mitgliederOpts = (members||[]).map(m=>`<option value="m:${m.id}">${m.vorname} ${m.nachname}</option>`).join('');
   const kontakteOpts = (kontakte||[]).map(k=>`<option value="k:${k.id}">${k.vorname} ${k.nachname}</option>`).join('');
   picker.innerHTML = '<option value="">— Frei eintragen —</option>'
     + (mitgliederOpts ? `<optgroup label="Mitglieder">${mitgliederOpts}</optgroup>` : '')
     + (kontakteOpts ? `<optgroup label="Kontakte">${kontakteOpts}</optgroup>` : '');
-
-  rndrVerkaufPositionen();
-  document.getElementById('mo-nverkauf').classList.add('open');
 }
 
 // Beim Auswaehlen eines Mitglieds/Kontakts: Name, E-Mail und Adresse automatisch uebernehmen
@@ -4015,7 +4078,7 @@ function vkKundeGewaehlt(){
 }
 
 function addVerkaufPosition(){
-  _vkPositionenTemp.push({beschreibung:'', menge:1, einzelpreis:0});
+  _vkPositionenTemp.push({beschreibung:'', menge:1, einzelpreis:0, artikel_id:null});
   rndrVerkaufPositionen();
 }
 function removeVerkaufPosition(idx){
@@ -4033,14 +4096,28 @@ function updateVerkaufPosition(idx, field, value){
   const gesamt = _vkPositionenTemp.reduce((s,pp)=>s+(pp.menge||0)*(pp.einzelpreis||0),0);
   document.getElementById('vk-gesamtbetrag').textContent = gesamt.toLocaleString('de-CH',{minimumFractionDigits:2});
 }
+// Wenn in einer Position ein Artikel aus dem Lager ausgewaehlt wird: Beschreibung + Preis automatisch uebernehmen
+function waehleArtikelFuerPosition(idx, artikelId){
+  _vkPositionenTemp[idx].artikel_id = artikelId || null;
+  if(artikelId){
+    const a = (artikel||[]).find(x=>x.id===artikelId);
+    if(a){
+      _vkPositionenTemp[idx].beschreibung = a.bezeichnung;
+      _vkPositionenTemp[idx].einzelpreis = parseFloat(a.preis)||0;
+    }
+  }
+  rndrVerkaufPositionen();
+}
 function rndrVerkaufPositionen(){
   const tb = document.getElementById('vk-positionen-body');
   if(!_vkPositionenTemp.length){
-    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#9CA3AF;font-size:13.5px;padding:10px">Noch keine Position — "+ Position hinzufügen" klicken</td></tr>';
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#9CA3AF;font-size:13.5px;padding:10px">Noch keine Position — "+ Position hinzufügen" klicken</td></tr>';
   } else {
+    const artikelOpts = (artikel||[]).map(a=>`<option value="${a.id}">${a.bezeichnung} (CHF ${parseFloat(a.preis||0).toFixed(2)})</option>`).join('');
     tb.innerHTML = _vkPositionenTemp.map((p,i)=>{
       const total = (p.menge||0) * (p.einzelpreis||0);
       return `<tr>
+        <td><select class="fs" style="padding:5px;font-size:12.5px" onchange="waehleArtikelFuerPosition(${i},this.value)"><option value="">— Frei —</option>${artikelOpts.replace(`value="${p.artikel_id}"`, `value="${p.artikel_id}" selected`)}</select></td>
         <td><input class="fi" style="padding:5px" value="${p.beschreibung}" oninput="updateVerkaufPosition(${i},'beschreibung',this.value)"></td>
         <td><input class="fi" style="padding:5px" type="number" min="0" step="0.5" value="${p.menge}" oninput="updateVerkaufPosition(${i},'menge',this.value)"></td>
         <td><input class="fi" style="padding:5px" type="number" min="0" step="0.05" value="${p.einzelpreis}" oninput="updateVerkaufPosition(${i},'einzelpreis',this.value)"></td>
@@ -4090,7 +4167,39 @@ async function saveVerkaufsdokument(){
   if(!_vkPositionenTemp.length){ toast('Bitte mindestens eine Position hinzufügen'); return; }
   const mid = _S?.working_mandant_id || _S?.mandant_id;
   const gesamtbetrag = _vkPositionenTemp.reduce((s,p)=>s+(p.menge||0)*(p.einzelpreis||0),0);
+  const typLabel = {offerte:'Offerte', auftrag:'Auftrag', rechnung:'Rechnung'};
 
+  if(_vkEditId){
+    // ── BEARBEITEN eines bestehenden Dokuments (Nummer bleibt erhalten) ──
+    const updatePayload = {
+      kunde_name: kundeName,
+      kunde_email: document.getElementById('vk-kunde-email').value,
+      kunde_adresse: document.getElementById('vk-kunde-adresse').value,
+      datum: document.getElementById('vk-datum').value,
+      faellig_bis: document.getElementById('vk-datum2').value,
+      gesamtbetrag,
+      notiz: document.getElementById('vk-notiz').value
+    };
+    const {error} = await sb.from('verkaufsdokumente').update(updatePayload).eq('id', _vkEditId);
+    if(error){ toast('Fehler: '+error.message); return; }
+
+    // Positionen komplett ersetzen (einfacher und robuster als einzeln abzugleichen)
+    await sb.from('verkaufspositionen').delete().eq('dokument_id', _vkEditId);
+    const posPayloads = _vkPositionenTemp.map(p=>({
+      mandant_id: mid, dokument_id: _vkEditId,
+      beschreibung: p.beschreibung, menge: p.menge, einzelpreis: p.einzelpreis, artikel_id: p.artikel_id
+    }));
+    await sb.from('verkaufspositionen').insert(posPayloads);
+
+    const idx = verkaufsdokumente.findIndex(d=>d.id===_vkEditId);
+    if(idx>-1) Object.assign(verkaufsdokumente[idx], updatePayload);
+    rndrVerkauf();
+    closeMo('mo-nverkauf');
+    toast(`${typLabel[_vkTyp]||'Dokument'} gespeichert ✓`);
+    return;
+  }
+
+  // ── NEU ERSTELLEN ──
   const prefixMap = { offerte: 'OFF', auftrag: 'AUF', rechnung: 'RG' };
   const { data: nummer, error: nummerErr } = await sb.rpc('naechste_belegnummer', {
     p_mandant_id: mid,
@@ -4116,14 +4225,13 @@ async function saveVerkaufsdokument(){
 
   const posPayloads = _vkPositionenTemp.map(p=>({
     mandant_id: mid, dokument_id: saved.id,
-    beschreibung: p.beschreibung, menge: p.menge, einzelpreis: p.einzelpreis
+    beschreibung: p.beschreibung, menge: p.menge, einzelpreis: p.einzelpreis, artikel_id: p.artikel_id
   }));
   await sb.from('verkaufspositionen').insert(posPayloads);
 
   verkaufsdokumente.push(saved);
   rndrVerkauf();
   closeMo('mo-nverkauf');
-  const typLabel = {offerte:'Offerte', auftrag:'Auftrag', rechnung:'Rechnung'};
   toast(`${typLabel[_vkTyp]||'Dokument'} ${nummer} erstellt ✓`);
 }
 
@@ -4132,55 +4240,100 @@ async function saveVerkaufsdokument(){
 async function konvertiereZuAuftrag(offerteId){
   const offerte = verkaufsdokumente.find(d=>d.id===offerteId);
   if(!offerte) return;
-  if(!confirm(`"${offerte.nummer}" wirklich in einen Auftrag umwandeln?`)) return;
+  customConfirm(`"${offerte.nummer}" wirklich in einen Auftrag umwandeln?`, async () => {
+    const mid = _S?.working_mandant_id || _S?.mandant_id;
+    const {data: positionen} = await sb.from('verkaufspositionen').select('*').eq('dokument_id', offerteId).order('created_at');
 
-  const mid = _S?.working_mandant_id || _S?.mandant_id;
-  const {data: positionen} = await sb.from('verkaufspositionen').select('*').eq('dokument_id', offerteId).order('created_at');
+    const { data: nummer, error: nummerErr } = await sb.rpc('naechste_belegnummer', {
+      p_mandant_id: mid, p_dokumenttyp: 'auftrag', p_default_prefix: 'AUF'
+    });
+    if(nummerErr){ toast('Fehler bei der Nummernvergabe: '+nummerErr.message); return; }
 
-  const { data: nummer, error: nummerErr } = await sb.rpc('naechste_belegnummer', {
-    p_mandant_id: mid, p_dokumenttyp: 'auftrag', p_default_prefix: 'AUF'
+    const auftragPayload = {
+      typ: 'auftrag', nummer,
+      kunde_name: offerte.kunde_name, kunde_email: offerte.kunde_email, kunde_adresse: offerte.kunde_adresse,
+      datum: new Date().toISOString().split('T')[0],
+      faellig_bis: null,
+      gesamtbetrag: offerte.gesamtbetrag,
+      status: 'entwurf',
+      geliefert: false, fakturiert: false,
+      notiz: offerte.notiz,
+      konvertiert_von: offerteId
+    };
+    const savedAuftrag = await dbSave('verkaufsdokumente', auftragPayload);
+    if(!savedAuftrag) return;
+
+    const posPayloads = (positionen||[]).map(p=>({
+      mandant_id: mid, dokument_id: savedAuftrag.id,
+      beschreibung: p.beschreibung, menge: p.menge, einzelpreis: p.einzelpreis, artikel_id: p.artikel_id
+    }));
+    if(posPayloads.length) await sb.from('verkaufspositionen').insert(posPayloads);
+
+    await sb.from('verkaufsdokumente').update({status:'akzeptiert'}).eq('id', offerteId);
+    offerte.status = 'akzeptiert';
+    verkaufsdokumente.push(savedAuftrag);
+
+    rndrVerkauf();
+    toast(`✅ Auftrag ${nummer} erstellt aus Offerte ${offerte.nummer}`);
   });
-  if(nummerErr){ toast('Fehler bei der Nummernvergabe: '+nummerErr.message); return; }
-
-  const auftragPayload = {
-    typ: 'auftrag', nummer,
-    kunde_name: offerte.kunde_name, kunde_email: offerte.kunde_email, kunde_adresse: offerte.kunde_adresse,
-    datum: new Date().toISOString().split('T')[0],
-    faellig_bis: null,
-    gesamtbetrag: offerte.gesamtbetrag,
-    status: 'entwurf',
-    notiz: offerte.notiz,
-    konvertiert_von: offerteId
-  };
-  const savedAuftrag = await dbSave('verkaufsdokumente', auftragPayload);
-  if(!savedAuftrag) return;
-
-  const posPayloads = (positionen||[]).map(p=>({
-    mandant_id: mid, dokument_id: savedAuftrag.id,
-    beschreibung: p.beschreibung, menge: p.menge, einzelpreis: p.einzelpreis
-  }));
-  if(posPayloads.length) await sb.from('verkaufspositionen').insert(posPayloads);
-
-  await sb.from('verkaufsdokumente').update({status:'akzeptiert'}).eq('id', offerteId);
-  offerte.status = 'akzeptiert';
-  verkaufsdokumente.push(savedAuftrag);
-
-  rndrVerkauf();
-  toast(`✅ Auftrag ${nummer} erstellt aus Offerte ${offerte.nummer}`);
 }
 
-// Bucht einen Auftrag: markiert ihn als "gebucht" und erstellt automatisch einen Lieferschein
-async function bucheAuftrag(auftragId){
+// "Liefern" (wie D365 Business Central) — erstellt einen Lieferschein und markiert den Auftrag als geliefert.
+// Unabhaengig von der Fakturierung, damit man auch teilweise/zuerst liefern kann.
+async function liefereAuftrag(auftragId){
   const auftrag = verkaufsdokumente.find(d=>d.id===auftragId);
   if(!auftrag) return;
-  if(!confirm(`Auftrag "${auftrag.nummer}" jetzt buchen? Dabei wird automatisch ein Lieferschein erstellt.`)) return;
+  customConfirm(`Auftrag "${auftrag.nummer}" jetzt liefern? Dabei wird automatisch ein Lieferschein erstellt.`, async () => {
+    const {error} = await sb.from('verkaufsdokumente').update({geliefert:true}).eq('id', auftragId);
+    if(error){ toast('Fehler: '+error.message); return; }
+    auftrag.geliefert = true;
+    rndrVerkauf();
+    toast('✅ Als geliefert markiert — Lieferschein wird erstellt...');
+    await downloadLieferscheinPDF(auftragId);
+  });
+}
 
-  const {error} = await sb.from('verkaufsdokumente').update({status:'gebucht'}).eq('id', auftragId);
-  if(error){ toast('Fehler: '+error.message); return; }
-  auftrag.status = 'gebucht';
-  rndrVerkauf();
-  toast('✅ Auftrag gebucht — Lieferschein wird erstellt...');
-  await downloadLieferscheinPDF(auftragId);
+// "Fakturieren" (wie D365 Business Central) — erstellt automatisch eine Rechnung aus dem Auftrag
+async function fakturiereAuftrag(auftragId){
+  const auftrag = verkaufsdokumente.find(d=>d.id===auftragId);
+  if(!auftrag) return;
+  customConfirm(`Auftrag "${auftrag.nummer}" jetzt fakturieren? Es wird automatisch eine Rechnung erstellt.`, async () => {
+    const mid = _S?.working_mandant_id || _S?.mandant_id;
+    const {data: positionen} = await sb.from('verkaufspositionen').select('*').eq('dokument_id', auftragId).order('created_at');
+
+    const { data: nummer, error: nummerErr } = await sb.rpc('naechste_belegnummer', {
+      p_mandant_id: mid, p_dokumenttyp: 'rechnung', p_default_prefix: 'RG'
+    });
+    if(nummerErr){ toast('Fehler bei der Nummernvergabe: '+nummerErr.message); return; }
+
+    const heute = new Date();
+    const faelligAm = new Date(heute); faelligAm.setDate(faelligAm.getDate()+30);
+    const rechnungPayload = {
+      typ: 'rechnung', nummer,
+      kunde_name: auftrag.kunde_name, kunde_email: auftrag.kunde_email, kunde_adresse: auftrag.kunde_adresse,
+      datum: heute.toISOString().split('T')[0],
+      faellig_bis: faelligAm.toISOString().split('T')[0],
+      gesamtbetrag: auftrag.gesamtbetrag,
+      status: 'entwurf',
+      notiz: auftrag.notiz,
+      konvertiert_von: auftragId
+    };
+    const savedRechnung = await dbSave('verkaufsdokumente', rechnungPayload);
+    if(!savedRechnung) return;
+
+    const posPayloads = (positionen||[]).map(p=>({
+      mandant_id: mid, dokument_id: savedRechnung.id,
+      beschreibung: p.beschreibung, menge: p.menge, einzelpreis: p.einzelpreis, artikel_id: p.artikel_id
+    }));
+    if(posPayloads.length) await sb.from('verkaufspositionen').insert(posPayloads);
+
+    await sb.from('verkaufsdokumente').update({fakturiert:true}).eq('id', auftragId);
+    auftrag.fakturiert = true;
+    verkaufsdokumente.push(savedRechnung);
+
+    rndrVerkauf();
+    toast(`✅ Rechnung ${nummer} erstellt aus Auftrag ${auftrag.nummer}`);
+  });
 }
 
 async function downloadLieferscheinPDF(id){
@@ -4260,10 +4413,44 @@ async function buildLieferscheinPDF(dok, positionen, branding){
 }
 
 async function deleteVerkaufsdokument(id){
-  if(!confirm('Dokument wirklich löschen?')) return;
-  await sb.from('verkaufspositionen').delete().eq('dokument_id', id);
-  const ok = await dbDelete('verkaufsdokumente', id);
-  if(ok){ verkaufsdokumente = verkaufsdokumente.filter(d=>d.id!==id); rndrVerkauf(); toast('Gelöscht'); }
+  const dok = verkaufsdokumente.find(d=>d.id===id);
+  customConfirm(`"${dok?.nummer||'Dokument'}" wirklich unwiderruflich löschen?`, async () => {
+    await sb.from('verkaufspositionen').delete().eq('dokument_id', id);
+    const ok = await dbDelete('verkaufsdokumente', id);
+    if(ok){ verkaufsdokumente = verkaufsdokumente.filter(d=>d.id!==id); rndrVerkauf(); toast('Gelöscht'); }
+  });
+}
+
+// Sendet eine Rechnung als PDF-Anhang direkt per E-Mail an den Kunden
+async function sendeRechnungPerEmail(id){
+  const dok = verkaufsdokumente.find(d=>d.id===id);
+  if(!dok) return;
+  if(!dok.kunde_email){ toast('Keine E-Mail-Adresse beim Kunden hinterlegt'); return; }
+  customConfirm(`Rechnung "${dok.nummer}" per E-Mail an ${dok.kunde_email} senden?`, async () => {
+    toast('E-Mail wird versendet...');
+    const mid = _S?.working_mandant_id || _S?.mandant_id;
+    const [{data: positionen}, branding, {data: mand}] = await Promise.all([
+      sb.from('verkaufspositionen').select('*').eq('dokument_id', id).order('created_at'),
+      getGemeindeBranding(),
+      sb.from('mandanten').select('iban,kontoinhaber').eq('id',mid).single()
+    ]);
+    const pdfBase64 = await buildVerkaufsPDF(dok, positionen||[], branding, mand);
+    const result = await sendEmail('verkaufsrechnung', dok.kunde_email, {
+      kundeName: dok.kunde_name, nummer: dok.nummer, betrag: parseFloat(dok.gesamtbetrag||0).toFixed(2), faelligAm: fD(dok.faellig_bis),
+      gemeinde: branding.name, gemeindeAdresse: branding.adresse, logoUrl: branding.logoUrl
+    }, {
+      name: `Rechnung_${dok.nummer}.pdf`,
+      content: pdfBase64
+    });
+    if(result.success){
+      await sb.from('verkaufsdokumente').update({status:'versendet'}).eq('id', id);
+      dok.status = 'versendet';
+      rndrVerkauf();
+      toast('✅ Rechnung per E-Mail versendet');
+    } else {
+      toast('❌ E-Mail konnte nicht versendet werden: ' + (result.error||''));
+    }
+  });
 }
 
 async function downloadVerkaufsPDF(id){
@@ -10148,8 +10335,17 @@ async function doRegister() {
 </div>
 
 <!-- MODAL: NEUE OFFERTE / RECHNUNG -->
+<!-- EIGENES BESTAETIGUNGS-FENSTER (ersetzt Browser confirm()) -->
+<div class="mo" id="mo-custom-confirm" style="z-index:1300">
+  <div class="modal" style="max-width:420px">
+    <div class="mh"><div class="mt2" id="cc-title">Bestätigen</div><div class="mx" onclick="closeMo('mo-custom-confirm')">✕</div></div>
+    <div class="mb2"><p id="cc-message" style="font-size:14px;color:#374151;line-height:1.5"></p></div>
+    <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-custom-confirm')">Abbrechen</button><button class="tbtn tbtn-navy" id="cc-ok-btn">OK</button></div>
+  </div>
+</div>
+
 <div class="mo" id="mo-nverkauf">
-  <div class="modal" style="max-width:920px;width:94vw;max-height:88vh;display:flex;flex-direction:column">
+  <div class="modal" style="max-width:1200px;width:96vw;max-height:94vh;display:flex;flex-direction:column">
     <div class="mh"><div class="mt2" id="vk-modal-title">📄 Neue Offerte</div><div class="mx" onclick="closeMo('mo-nverkauf')">✕</div></div>
     <div class="mb2" style="overflow-y:auto;flex:1">
       <div class="fgg full"><label class="fl">Kunde / Kontakt auswählen (optional)</label><select class="fs" id="vk-kunde-picker" onchange="vkKundeGewaehlt()"><option value="">— Frei eintragen —</option></select></div>
@@ -10162,7 +10358,7 @@ async function doRegister() {
       </div>
       <div style="margin-top:14px">
         <label class="fl">Positionen</label>
-        <table style="width:100%;margin-top:6px"><thead><tr><th style="width:auto">Beschreibung</th><th style="width:80px">Menge</th><th style="width:110px">Einzelpreis</th><th style="width:110px;text-align:right">Total</th><th style="width:30px"></th></tr></thead><tbody id="vk-positionen-body"></tbody></table>
+        <table style="width:100%;margin-top:6px"><thead><tr><th style="width:170px">Artikel (optional)</th><th style="width:auto">Beschreibung</th><th style="width:80px">Menge</th><th style="width:110px">Einzelpreis</th><th style="width:110px;text-align:right">Total</th><th style="width:30px"></th></tr></thead><tbody id="vk-positionen-body"></tbody></table>
         <button class="tbtn tbtn-ghost" style="font-size:13.5px;margin-top:8px" onclick="addVerkaufPosition()">+ Position hinzufügen</button>
       </div>
       <div style="text-align:right;margin-top:14px;font-size:17px;font-weight:700;color:#1A3560">Gesamtbetrag: CHF <span id="vk-gesamtbetrag">0.00</span></div>
