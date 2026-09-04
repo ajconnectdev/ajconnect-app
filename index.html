@@ -1352,7 +1352,7 @@ tbody tr:hover td{background:#FAFBFC}
 </div>
         <div class="page" id="pg-artikel">
   <div class="topbar">
-    <div class="topbar-title">Artikel</div>
+    <div class="topbar-title" style="display:flex;align-items:center;gap:12px">Artikel<button class="tbtn tbtn-navy" style="font-size:12.5px" onclick="openNArtikel()">+ Neuer Artikel</button></div>
     <div class="topbar-right" style="display:flex;gap:8px">
       <input type="text" placeholder="Artikel suchen..." id="art-srch" class="srch" oninput="filterArtikel()" style="width:220px">
       <select class="afs" id="art-filter-kat" onchange="filterArtikel()" style="min-width:140px">
@@ -1364,7 +1364,6 @@ tbody tr:hover td{background:#FAFBFC}
         <option value="verbrauch">Verbrauchsmaterial</option>
         <option value="sonstiges">Sonstiges</option>
       </select>
-      <button class="tbtn tbtn-navy" onclick="openNArtikel()">+ Neuer Artikel</button>
     </div>
   </div>
   <!-- Stats -->
@@ -1456,13 +1455,21 @@ tbody tr:hover td{background:#FAFBFC}
           <p style="font-size:14px;color:#9CA3AF;margin:-8px 0 16px">Offerten und Verkaufsrechnungen mit Logo — Rechnungen inkl. Schweizer QR-Zahlteil.</p>
           <div class="ktabs" style="margin-bottom:16px">
             <div class="ktab on" onclick="sTabVK('vk-tab-offerten',this)">Offerten</div>
+            <div class="ktab" onclick="sTabVK('vk-tab-auftraege',this)">Aufträge</div>
             <div class="ktab" onclick="sTabVK('vk-tab-rechnungen',this)">Rechnungen</div>
           </div>
 
           <div class="tpane on" id="vk-tab-offerten">
             <div class="tcard">
               <div class="tcardh"><div style="font-size:14.5px;color:#6B7280">Angebote an Kunden (z.B. Pastoren, externe Anlässe)</div><button class="tbtn tbtn-navy" style="margin-left:auto" onclick="openNVerkauf('offerte')">+ Neue Offerte</button></div>
-              <div style="overflow-x:auto"><table><thead><tr><th>Nr.</th><th>Datum</th><th>Kunde</th><th>Gültig bis</th><th style="text-align:right">Total</th><th>Status</th><th style="width:120px"></th></tr></thead><tbody id="vk-offerten-tbody"><tr><td colspan="7" class="aempty">Lädt...</td></tr></tbody></table></div>
+              <div style="overflow-x:auto"><table><thead><tr><th>Nr.</th><th>Datum</th><th>Kunde</th><th>Gültig bis</th><th style="text-align:right">Total</th><th>Status</th><th style="width:180px"></th></tr></thead><tbody id="vk-offerten-tbody"><tr><td colspan="7" class="aempty">Lädt...</td></tr></tbody></table></div>
+            </div>
+          </div>
+
+          <div class="tpane" id="vk-tab-auftraege">
+            <div class="tcard">
+              <div class="tcardh"><div style="font-size:14.5px;color:#6B7280">Bestätigte Aufträge — beim Buchen entsteht automatisch ein Lieferschein</div><button class="tbtn tbtn-navy" style="margin-left:auto" onclick="openNVerkauf('auftrag')">+ Neuer Auftrag</button></div>
+              <div style="overflow-x:auto"><table><thead><tr><th>Nr.</th><th>Datum</th><th>Kunde</th><th>Liefertermin</th><th style="text-align:right">Total</th><th>Status</th><th style="width:220px"></th></tr></thead><tbody id="vk-auftraege-tbody"><tr><td colspan="7" class="aempty">Lädt...</td></tr></tbody></table></div>
             </div>
           </div>
 
@@ -1740,12 +1747,14 @@ tbody tr:hover td{background:#FAFBFC}
               <!-- Team & Berechtigungen (nur sichtbar fuer Rolle "Super") -->
               <!-- Nummernkreise fuer Verkaufsdokumente -->
               <div class="card">
-                <div class="cardh"><div class="cardtitle" style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#7C3AED;display:inline-block"></span>Nummernkreise (Offerten & Rechnungen)</div><button class="tbtn tbtn-navy" style="font-size:12.5px" onclick="saveNummernkreise()">Speichern</button></div>
+                <div class="cardh"><div class="cardtitle" style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#7C3AED;display:inline-block"></span>Nummernkreise (Offerten, Aufträge & Rechnungen)</div><button class="tbtn tbtn-navy" style="font-size:12.5px" onclick="saveNummernkreise()">Speichern</button></div>
                 <div class="cardbody" style="display:flex;flex-direction:column;gap:12px">
                   <p style="font-size:13px;color:#9CA3AF;margin:0">Jede Nummer wird nur einmal vergeben, auch bei gleichzeitigen Zugriffen. Änderungen wirken sich nur auf zukünftige Belege aus.</p>
                   <div class="fg2">
                     <div class="fgg"><label class="fl">Präfix Offerten</label><input class="fi" id="nk-offerte-prefix" placeholder="OFF"></div>
                     <div class="fgg"><label class="fl">Nächste Nummer</label><input class="fi" id="nk-offerte-naechste" type="number" min="1"></div>
+                    <div class="fgg"><label class="fl">Präfix Aufträge</label><input class="fi" id="nk-auftrag-prefix" placeholder="AUF"></div>
+                    <div class="fgg"><label class="fl">Nächste Nummer</label><input class="fi" id="nk-auftrag-naechste" type="number" min="1"></div>
                     <div class="fgg"><label class="fl">Präfix Rechnungen</label><input class="fi" id="nk-rechnung-prefix" placeholder="RG"></div>
                     <div class="fgg"><label class="fl">Nächste Nummer</label><input class="fi" id="nk-rechnung-naechste" type="number" min="1"></div>
                   </div>
@@ -3773,7 +3782,7 @@ async function startJahresabschluss(){
 // ═══════════════════════════════════════════
 // VERKAUF — Offerten & Rechnungen (mit Logo + Schweizer QR-Zahlteil)
 // ═══════════════════════════════════════════
-let verkaufsdokumente = [], vkLoaded = false, _vkTyp = 'offerte', _vkPositionenTemp = [];
+let verkaufsdokumente = [], vkLoaded = false, _vkTyp = 'offerte', _vkPositionenTemp = [], _vkKonvertiertVon = null;
 
 // ═══════════════════════════════════════════
 // SPENDENVERSPRECHEN — Soll-Ist-Vergleich pro Zweck
@@ -3926,12 +3935,29 @@ async function loadVerkauf(){
   rndrVerkauf();
 }
 
-const VK_STATUS_CSS = {entwurf:'background:#F4F5F7;color:#6B7280', versendet:'background:#DBEAFE;color:#2563EB', akzeptiert:'background:#DCFCE7;color:#16A34A', bezahlt:'background:#DCFCE7;color:#16A34A', storniert:'background:#FEE2E2;color:#DC2626'};
-const VK_STATUS_LABEL = {entwurf:'Entwurf', versendet:'Versendet', akzeptiert:'Akzeptiert', bezahlt:'Bezahlt', storniert:'Storniert'};
+const VK_STATUS_CSS = {entwurf:'background:#F4F5F7;color:#6B7280', versendet:'background:#DBEAFE;color:#2563EB', akzeptiert:'background:#DCFCE7;color:#16A34A', bezahlt:'background:#DCFCE7;color:#16A34A', gebucht:'background:#DCFCE7;color:#16803B', storniert:'background:#FEE2E2;color:#DC2626'};
+const VK_STATUS_LABEL = {entwurf:'Entwurf', versendet:'Versendet', akzeptiert:'Akzeptiert', bezahlt:'Bezahlt', gebucht:'Gebucht (Lieferschein erstellt)', storniert:'Storniert'};
 
 function rndrVerkauf(){
   const offerten = verkaufsdokumente.filter(d=>d.typ==='offerte');
+  const auftraege = verkaufsdokumente.filter(d=>d.typ==='auftrag');
   const rechnungen = verkaufsdokumente.filter(d=>d.typ==='rechnung');
+
+  const aktionen = (d) => {
+    let btns = `<button class="aaction-btn" onclick="downloadVerkaufsPDF('${d.id}')">PDF</button>`;
+    if(d.typ === 'offerte' && d.status !== 'storniert'){
+      btns += `<button class="aaction-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE" onclick="konvertiereZuAuftrag('${d.id}')">→ Auftrag</button>`;
+    }
+    if(d.typ === 'auftrag' && d.status !== 'gebucht' && d.status !== 'storniert'){
+      btns += `<button class="aaction-btn" style="background:#F0FDF4;color:#16803B;border-color:#86efac" onclick="bucheAuftrag('${d.id}')">📦 Buchen</button>`;
+    }
+    if(d.typ === 'auftrag' && d.status === 'gebucht'){
+      btns += `<button class="aaction-btn" onclick="downloadLieferscheinPDF('${d.id}')">Lieferschein</button>`;
+    }
+    btns += `<button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteVerkaufsdokument('${d.id}')">🗑</button>`;
+    return btns;
+  };
+
   const rowHtml = (d) => `<tr>
     <td style="font-size:13.5px;font-family:monospace">${d.nummer||'—'}</td>
     <td style="font-size:13.5px">${fD(d.datum)}</td>
@@ -3939,20 +3965,22 @@ function rndrVerkauf(){
     <td style="font-size:13.5px">${fD(d.faellig_bis)}</td>
     <td style="text-align:right;font-weight:600;font-size:14px">CHF ${parseFloat(d.gesamtbetrag||0).toLocaleString('de-CH',{minimumFractionDigits:2})}</td>
     <td><span style="padding:2px 8px;border-radius:5px;font-size:12.5px;font-weight:500;${VK_STATUS_CSS[d.status]||''}">${VK_STATUS_LABEL[d.status]||d.status}</span></td>
-    <td style="display:flex;gap:4px">
-      <button class="aaction-btn" onclick="downloadVerkaufsPDF('${d.id}')">PDF</button>
-      <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteVerkaufsdokument('${d.id}')">🗑</button>
-    </td>
+    <td style="display:flex;gap:4px;flex-wrap:wrap">${aktionen(d)}</td>
   </tr>`;
+
   document.getElementById('vk-offerten-tbody').innerHTML = offerten.length ? offerten.map(rowHtml).join('') : '<tr><td colspan="7" class="aempty">Keine Offerten</td></tr>';
+  document.getElementById('vk-auftraege-tbody').innerHTML = auftraege.length ? auftraege.map(rowHtml).join('') : '<tr><td colspan="7" class="aempty">Keine Aufträge</td></tr>';
   document.getElementById('vk-rechnungen-tbody').innerHTML = rechnungen.length ? rechnungen.map(rowHtml).join('') : '<tr><td colspan="7" class="aempty">Keine Rechnungen</td></tr>';
 }
 
 function openNVerkauf(typ){
   _vkTyp = typ;
   _vkPositionenTemp = [];
-  document.getElementById('vk-modal-title').textContent = typ==='offerte' ? '📄 Neue Offerte' : '🧾 Neue Rechnung';
-  document.getElementById('vk-datum2-label').textContent = typ==='offerte' ? 'Gültig bis' : 'Fällig am';
+  _vkKonvertiertVon = null;
+  const titel = {offerte:'📄 Neue Offerte', auftrag:'📦 Neuer Auftrag', rechnung:'🧾 Neue Rechnung'};
+  const datum2Label = {offerte:'Gültig bis', auftrag:'Liefertermin', rechnung:'Fällig am'};
+  document.getElementById('vk-modal-title').textContent = titel[typ] || titel.offerte;
+  document.getElementById('vk-datum2-label').textContent = datum2Label[typ] || 'Gültig bis';
   document.getElementById('vk-kunde-name').value = '';
   document.getElementById('vk-kunde-email').value = '';
   document.getElementById('vk-kunde-adresse').value = '';
@@ -3960,8 +3988,30 @@ function openNVerkauf(typ){
   const d2 = new Date(); d2.setDate(d2.getDate() + 30);
   document.getElementById('vk-datum2').value = d2.toISOString().split('T')[0];
   document.getElementById('vk-notiz').value = '';
+
+  // Kunden-Auswahl befuellen: Mitglieder + Kontakte, zum schnellen Auswaehlen mit Auto-Ausfuellen
+  const picker = document.getElementById('vk-kunde-picker');
+  const mitgliederOpts = (members||[]).map(m=>`<option value="m:${m.id}">${m.vorname} ${m.nachname}</option>`).join('');
+  const kontakteOpts = (kontakte||[]).map(k=>`<option value="k:${k.id}">${k.vorname} ${k.nachname}</option>`).join('');
+  picker.innerHTML = '<option value="">— Frei eintragen —</option>'
+    + (mitgliederOpts ? `<optgroup label="Mitglieder">${mitgliederOpts}</optgroup>` : '')
+    + (kontakteOpts ? `<optgroup label="Kontakte">${kontakteOpts}</optgroup>` : '');
+
   rndrVerkaufPositionen();
   document.getElementById('mo-nverkauf').classList.add('open');
+}
+
+// Beim Auswaehlen eines Mitglieds/Kontakts: Name, E-Mail und Adresse automatisch uebernehmen
+function vkKundeGewaehlt(){
+  const val = document.getElementById('vk-kunde-picker').value;
+  if(!val) return;
+  const [quelle, id] = val.split(':');
+  const person = quelle === 'm' ? members.find(x=>x.id===id) : (kontakte||[]).find(x=>x.id===id);
+  if(!person) return;
+  document.getElementById('vk-kunde-name').value = `${person.vorname} ${person.nachname}`;
+  document.getElementById('vk-kunde-email').value = person.email || '';
+  const adresseTeile = [person.strasse, person.plzort].filter(Boolean).join(', ');
+  document.getElementById('vk-kunde-adresse').value = adresseTeile;
 }
 
 function addVerkaufPosition(){
@@ -4003,16 +4053,19 @@ function rndrVerkaufPositionen(){
   document.getElementById('vk-gesamtbetrag').textContent = gesamt.toLocaleString('de-CH',{minimumFractionDigits:2});
 }
 
-// ── Nummernkreise (Offerten & Rechnungen) ──
+// ── Nummernkreise (Offerten, Aufträge & Rechnungen) ──
 async function loadNummernkreise(){
   const mid = _S?.working_mandant_id || _S?.mandant_id;
   if(!mid) return;
   const {data} = await sb.from('nummernkreise').select('*').eq('mandant_id',mid);
   const offerte = (data||[]).find(n=>n.dokumenttyp==='offerte');
+  const auftrag = (data||[]).find(n=>n.dokumenttyp==='auftrag');
   const rechnung = (data||[]).find(n=>n.dokumenttyp==='rechnung');
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
   set('nk-offerte-prefix', offerte?.prefix || 'OFF');
   set('nk-offerte-naechste', offerte?.naechste_nummer || 1);
+  set('nk-auftrag-prefix', auftrag?.prefix || 'AUF');
+  set('nk-auftrag-naechste', auftrag?.naechste_nummer || 1);
   set('nk-rechnung-prefix', rechnung?.prefix || 'RG');
   set('nk-rechnung-naechste', rechnung?.naechste_nummer || 1);
 }
@@ -4023,6 +4076,7 @@ async function saveNummernkreise(){
   const jahr = new Date().getFullYear();
   const rows = [
     { mandant_id: mid, dokumenttyp: 'offerte', prefix: document.getElementById('nk-offerte-prefix').value || 'OFF', naechste_nummer: parseInt(document.getElementById('nk-offerte-naechste').value)||1, jahr_reset: true, letztes_jahr: jahr },
+    { mandant_id: mid, dokumenttyp: 'auftrag', prefix: document.getElementById('nk-auftrag-prefix').value || 'AUF', naechste_nummer: parseInt(document.getElementById('nk-auftrag-naechste').value)||1, jahr_reset: true, letztes_jahr: jahr },
     { mandant_id: mid, dokumenttyp: 'rechnung', prefix: document.getElementById('nk-rechnung-prefix').value || 'RG', naechste_nummer: parseInt(document.getElementById('nk-rechnung-naechste').value)||1, jahr_reset: true, letztes_jahr: jahr }
   ];
   const {error} = await sb.from('nummernkreise').upsert(rows, { onConflict: 'mandant_id,dokumenttyp' });
@@ -4037,10 +4091,11 @@ async function saveVerkaufsdokument(){
   const mid = _S?.working_mandant_id || _S?.mandant_id;
   const gesamtbetrag = _vkPositionenTemp.reduce((s,p)=>s+(p.menge||0)*(p.einzelpreis||0),0);
 
+  const prefixMap = { offerte: 'OFF', auftrag: 'AUF', rechnung: 'RG' };
   const { data: nummer, error: nummerErr } = await sb.rpc('naechste_belegnummer', {
     p_mandant_id: mid,
     p_dokumenttyp: _vkTyp,
-    p_default_prefix: _vkTyp==='offerte' ? 'OFF' : 'RG'
+    p_default_prefix: prefixMap[_vkTyp] || 'DOK'
   });
   if(nummerErr){ toast('Fehler bei der Nummernvergabe: '+nummerErr.message); return; }
 
@@ -4053,7 +4108,8 @@ async function saveVerkaufsdokument(){
     faellig_bis: document.getElementById('vk-datum2').value,
     gesamtbetrag,
     status: 'entwurf',
-    notiz: document.getElementById('vk-notiz').value
+    notiz: document.getElementById('vk-notiz').value,
+    konvertiert_von: _vkKonvertiertVon
   };
   const saved = await dbSave('verkaufsdokumente', payload);
   if(!saved) return;
@@ -4067,7 +4123,140 @@ async function saveVerkaufsdokument(){
   verkaufsdokumente.push(saved);
   rndrVerkauf();
   closeMo('mo-nverkauf');
-  toast(`${_vkTyp==='offerte'?'Offerte':'Rechnung'} ${nummer} erstellt ✓`);
+  const typLabel = {offerte:'Offerte', auftrag:'Auftrag', rechnung:'Rechnung'};
+  toast(`${typLabel[_vkTyp]||'Dokument'} ${nummer} erstellt ✓`);
+}
+
+// Wandelt eine Offerte in einen Auftrag um: kopiert Kunde + Positionen, vergibt eine neue
+// Auftrags-Nummer, markiert die urspruengliche Offerte als "akzeptiert"
+async function konvertiereZuAuftrag(offerteId){
+  const offerte = verkaufsdokumente.find(d=>d.id===offerteId);
+  if(!offerte) return;
+  if(!confirm(`"${offerte.nummer}" wirklich in einen Auftrag umwandeln?`)) return;
+
+  const mid = _S?.working_mandant_id || _S?.mandant_id;
+  const {data: positionen} = await sb.from('verkaufspositionen').select('*').eq('dokument_id', offerteId).order('created_at');
+
+  const { data: nummer, error: nummerErr } = await sb.rpc('naechste_belegnummer', {
+    p_mandant_id: mid, p_dokumenttyp: 'auftrag', p_default_prefix: 'AUF'
+  });
+  if(nummerErr){ toast('Fehler bei der Nummernvergabe: '+nummerErr.message); return; }
+
+  const auftragPayload = {
+    typ: 'auftrag', nummer,
+    kunde_name: offerte.kunde_name, kunde_email: offerte.kunde_email, kunde_adresse: offerte.kunde_adresse,
+    datum: new Date().toISOString().split('T')[0],
+    faellig_bis: null,
+    gesamtbetrag: offerte.gesamtbetrag,
+    status: 'entwurf',
+    notiz: offerte.notiz,
+    konvertiert_von: offerteId
+  };
+  const savedAuftrag = await dbSave('verkaufsdokumente', auftragPayload);
+  if(!savedAuftrag) return;
+
+  const posPayloads = (positionen||[]).map(p=>({
+    mandant_id: mid, dokument_id: savedAuftrag.id,
+    beschreibung: p.beschreibung, menge: p.menge, einzelpreis: p.einzelpreis
+  }));
+  if(posPayloads.length) await sb.from('verkaufspositionen').insert(posPayloads);
+
+  await sb.from('verkaufsdokumente').update({status:'akzeptiert'}).eq('id', offerteId);
+  offerte.status = 'akzeptiert';
+  verkaufsdokumente.push(savedAuftrag);
+
+  rndrVerkauf();
+  toast(`✅ Auftrag ${nummer} erstellt aus Offerte ${offerte.nummer}`);
+}
+
+// Bucht einen Auftrag: markiert ihn als "gebucht" und erstellt automatisch einen Lieferschein
+async function bucheAuftrag(auftragId){
+  const auftrag = verkaufsdokumente.find(d=>d.id===auftragId);
+  if(!auftrag) return;
+  if(!confirm(`Auftrag "${auftrag.nummer}" jetzt buchen? Dabei wird automatisch ein Lieferschein erstellt.`)) return;
+
+  const {error} = await sb.from('verkaufsdokumente').update({status:'gebucht'}).eq('id', auftragId);
+  if(error){ toast('Fehler: '+error.message); return; }
+  auftrag.status = 'gebucht';
+  rndrVerkauf();
+  toast('✅ Auftrag gebucht — Lieferschein wird erstellt...');
+  await downloadLieferscheinPDF(auftragId);
+}
+
+async function downloadLieferscheinPDF(id){
+  const dok = verkaufsdokumente.find(d=>d.id===id);
+  if(!dok) return;
+  const {data: positionen} = await sb.from('verkaufspositionen').select('*').eq('dokument_id', id).order('created_at');
+  const branding = await getGemeindeBranding();
+  const pdfBase64 = await buildLieferscheinPDF(dok, positionen||[], branding);
+  const link = document.createElement('a');
+  link.href = 'data:application/pdf;base64,'+pdfBase64;
+  link.download = `Lieferschein_${dok.nummer}_${dok.kunde_name}.pdf`;
+  link.click();
+}
+
+// Baut einen einfachen Lieferschein: Positionen ohne Zahlungsteil, Referenz auf den Auftrag
+async function buildLieferscheinPDF(dok, positionen, branding){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'mm', format:'a4'});
+  let y = 20;
+
+  if(branding.logoUrl){
+    const dataUri = await imageUrlToDataUri(branding.logoUrl);
+    if(dataUri){
+      try{
+        const img = await loadImageElement(dataUri);
+        const maxW=45, maxH=20;
+        let w=img.naturalWidth, h=img.naturalHeight;
+        const scale = Math.min(maxW/w, maxH/h);
+        w*=scale; h*=scale;
+        doc.addImage(dataUri, 15, y, w, h, undefined, 'FAST');
+      }catch(e){}
+    }
+  }
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(20,20,20);
+  doc.text(branding.name||'', 195, y+5, {align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(90,90,90);
+  if(branding.adresse) doc.text(branding.adresse, 195, y+11, {align:'right'});
+
+  y += 35;
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(20,20,20);
+  doc.text(`Lieferschein zu Auftrag ${dok.nummer}`, 15, y);
+  y += 10;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(60,60,60);
+  doc.text(`Lieferdatum: ${fD(new Date().toISOString().split('T')[0])}`, 15, y);
+  y += 10;
+  doc.setFont('helvetica','bold'); doc.text('Empfänger:', 15, y); y+=5;
+  doc.setFont('helvetica','normal');
+  doc.text([dok.kunde_name, dok.kunde_adresse||''].filter(Boolean), 15, y);
+  y += 18;
+
+  doc.setFillColor(250,250,250);
+  doc.rect(15, y-6, 180, 9, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(120,120,120);
+  doc.text('BESCHREIBUNG', 17, y);
+  doc.text('MENGE', 193, y, {align:'right'});
+  y += 8;
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(40,40,40);
+  positionen.forEach(p=>{
+    if(y>250){ doc.addPage(); y=20; }
+    doc.text(String(p.beschreibung||''), 17, y);
+    doc.text(String(p.menge), 193, y, {align:'right'});
+    doc.setDrawColor(235,235,235); doc.line(15,y+3,195,y+3);
+    y+=8;
+  });
+
+  y += 20;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(90,90,90);
+  doc.text('Empfangsbestätigung:', 15, y); y+=16;
+  doc.setDrawColor(180,180,180);
+  doc.line(15, y, 90, y);
+  doc.setFontSize(8);
+  doc.text('Datum / Unterschrift', 15, y+5);
+
+  drawPdfFooter(doc, branding);
+  return doc.output('datauristring').split(',')[1];
 }
 
 async function deleteVerkaufsdokument(id){
@@ -4118,12 +4307,14 @@ async function buildVerkaufsPDF(dok, positionen, branding, mand){
   if(branding.adresse) doc.text(branding.adresse, 195, y+11, {align:'right'});
 
   y += 35;
+  const vkTitel = {offerte:'Offerte', auftrag:'Auftragsbestätigung', rechnung:'Rechnung'};
+  const vkDatum2Label = {offerte:'Gültig bis: ', auftrag:'Liefertermin: ', rechnung:'Fällig am: '};
   doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(20,20,20);
-  doc.text(dok.typ==='offerte' ? `Offerte ${dok.nummer}` : `Rechnung ${dok.nummer}`, 15, y);
+  doc.text(`${vkTitel[dok.typ]||'Dokument'} ${dok.nummer}`, 15, y);
   y += 10;
   doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(60,60,60);
   doc.text(`Datum: ${fD(dok.datum)}`, 15, y);
-  doc.text((dok.typ==='offerte' ? 'Gültig bis: ' : 'Fällig am: ') + fD(dok.faellig_bis), 80, y);
+  if(dok.faellig_bis) doc.text((vkDatum2Label[dok.typ]||'') + fD(dok.faellig_bis), 80, y);
   y += 10;
   doc.setFont('helvetica','bold'); doc.text('Kunde:', 15, y); y+=5;
   doc.setFont('helvetica','normal');
@@ -9958,9 +10149,10 @@ async function doRegister() {
 
 <!-- MODAL: NEUE OFFERTE / RECHNUNG -->
 <div class="mo" id="mo-nverkauf">
-  <div class="modal" style="max-width:640px">
+  <div class="modal" style="max-width:920px;width:94vw;max-height:88vh;display:flex;flex-direction:column">
     <div class="mh"><div class="mt2" id="vk-modal-title">📄 Neue Offerte</div><div class="mx" onclick="closeMo('mo-nverkauf')">✕</div></div>
-    <div class="mb2">
+    <div class="mb2" style="overflow-y:auto;flex:1">
+      <div class="fgg full"><label class="fl">Kunde / Kontakt auswählen (optional)</label><select class="fs" id="vk-kunde-picker" onchange="vkKundeGewaehlt()"><option value="">— Frei eintragen —</option></select></div>
       <div class="fg2">
         <div class="fgg"><label class="fl">Kunde / Firma *</label><input class="fi" id="vk-kunde-name" placeholder="z.B. Pastor Müller / Firma XY GmbH"></div>
         <div class="fgg"><label class="fl">E-Mail</label><input class="fi" id="vk-kunde-email" type="email"></div>
@@ -9970,10 +10162,10 @@ async function doRegister() {
       </div>
       <div style="margin-top:14px">
         <label class="fl">Positionen</label>
-        <table style="width:100%;margin-top:6px"><thead><tr><th style="width:auto">Beschreibung</th><th style="width:70px">Menge</th><th style="width:100px">Einzelpreis</th><th style="width:100px;text-align:right">Total</th><th style="width:30px"></th></tr></thead><tbody id="vk-positionen-body"></tbody></table>
+        <table style="width:100%;margin-top:6px"><thead><tr><th style="width:auto">Beschreibung</th><th style="width:80px">Menge</th><th style="width:110px">Einzelpreis</th><th style="width:110px;text-align:right">Total</th><th style="width:30px"></th></tr></thead><tbody id="vk-positionen-body"></tbody></table>
         <button class="tbtn tbtn-ghost" style="font-size:13.5px;margin-top:8px" onclick="addVerkaufPosition()">+ Position hinzufügen</button>
       </div>
-      <div style="text-align:right;margin-top:14px;font-size:16.5px;font-weight:700;color:#1A3560">Gesamtbetrag: CHF <span id="vk-gesamtbetrag">0.00</span></div>
+      <div style="text-align:right;margin-top:14px;font-size:17px;font-weight:700;color:#1A3560">Gesamtbetrag: CHF <span id="vk-gesamtbetrag">0.00</span></div>
       <div class="fgg full" style="margin-top:10px"><label class="fl">Notiz (erscheint auf dem Dokument)</label><input class="fi" id="vk-notiz"></div>
     </div>
     <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-nverkauf')">Abbrechen</button><button class="tbtn tbtn-navy" onclick="saveVerkaufsdokument()">Speichern</button></div>
