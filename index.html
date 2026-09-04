@@ -6561,6 +6561,7 @@ function konvertToMitglied(){
 // MEINE AUFGABEN — rein persönlich, jeder Benutzer sieht nur seine eigenen
 // ═══════════════════════════════════════════
 let aufgaben = [];
+let _activeAufgabeId = null;
 
 async function loadAufgaben(){
   if(!_S?.id) return;
@@ -6588,8 +6589,8 @@ function rndrAufgaben(){
       box.innerHTML = list.map(a => {
         const ueberfaellig = a.faellig_am && a.faellig_am < heute && a.status !== 'erledigt';
         const erledigt = a.status === 'erledigt';
-        return `<div style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid ${ueberfaellig?'#fca5a5':'#E5E7EB'};border-radius:8px;background:${erledigt?'#F9FAFB':'white'}">
-          <input type="checkbox" ${erledigt?'checked':''} onchange="toggleAufgabe('${a.id}')" style="width:17px;height:17px;margin-top:2px;accent-color:#16A34A;cursor:pointer">
+        return `<div onclick="openAufgabeDetail('${a.id}')" style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid ${ueberfaellig?'#fca5a5':'#E5E7EB'};border-radius:8px;background:${erledigt?'#F9FAFB':'white'};cursor:pointer">
+          <div style="width:17px;height:17px;margin-top:2px;border-radius:5px;border:1.5px solid ${erledigt?'#16A34A':'#D1D5DB'};background:${erledigt?'#16A34A':'white'};display:flex;align-items:center;justify-content:center;flex-shrink:0">${erledigt?'<svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>':''}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:15px;font-weight:500;color:${erledigt?'#9CA3AF':'#1A3560'};text-decoration:${erledigt?'line-through':'none'}">${a.titel}</div>
             ${a.beschreibung ? `<div style="font-size:13.5px;color:#9CA3AF;margin-top:2px">${a.beschreibung}</div>` : ''}
@@ -6598,7 +6599,6 @@ function rndrAufgaben(){
               ${a.faellig_am ? `<span style="font-size:12.5px;color:${ueberfaellig?'#DC2626':'#9CA3AF'};font-weight:${ueberfaellig?'600':'400'}">${ueberfaellig?'⚠ ':''}Fällig: ${fD(a.faellig_am)}</span>` : ''}
             </div>
           </div>
-          <button class="aaction-btn" style="background:#FEE2E2;color:#DC2626;border-color:#fca5a5" onclick="deleteAufgabe('${a.id}')">Löschen</button>
         </div>`;
       }).join('');
     }
@@ -6612,6 +6612,68 @@ function rndrAufgaben(){
   if(e('auf-offen-n')) e('auf-offen-n').textContent = offen.length;
   if(e('auf-ueberf-n')) e('auf-ueberf-n').textContent = ueberf.length;
   if(e('auf-erledigt-n')) e('auf-erledigt-n').textContent = erledigtCount.length;
+}
+
+async function openAufgabeDetail(id){
+  const a = aufgaben.find(x=>x.id===id);
+  if(!a) return;
+  _activeAufgabeId = id;
+  const e = i => document.getElementById(i);
+  e('aufd-titel').value = a.titel || '';
+  e('aufd-beschreibung').value = a.beschreibung || '';
+  e('aufd-faellig').value = a.faellig_am || '';
+  e('aufd-prioritaet').value = a.prioritaet || 'mittel';
+  const erledigt = a.status === 'erledigt';
+  const doneBtn = e('aufd-done-btn');
+  doneBtn.textContent = erledigt ? '↺ Als offen markieren' : '✓ Als erledigt markieren';
+  doneBtn.style.background = erledigt ? '#F4F5F7' : '#DCFCE7';
+  doneBtn.style.color = erledigt ? '#374151' : '#16803B';
+  document.getElementById('mo-aufdetail').classList.add('open');
+}
+
+async function saveAufgabeDetail(){
+  if(!_activeAufgabeId) return;
+  const titel = document.getElementById('aufd-titel').value.trim();
+  if(!titel){ toast('Titel ist Pflicht'); return; }
+  const payload = {
+    titel,
+    beschreibung: document.getElementById('aufd-beschreibung').value,
+    faellig_am: document.getElementById('aufd-faellig').value || null,
+    prioritaet: document.getElementById('aufd-prioritaet').value
+  };
+  const {error} = await sb.from('aufgaben').update(payload).eq('id', _activeAufgabeId);
+  if(error){ toast('Fehler: '+error.message); return; }
+  const a = aufgaben.find(x=>x.id===_activeAufgabeId);
+  if(a) Object.assign(a, payload);
+  closeMo('mo-aufdetail');
+  rndrAufgaben();
+  toast('Gespeichert ✓');
+}
+
+async function toggleAufgabeDetailStatus(){
+  if(!_activeAufgabeId) return;
+  const a = aufgaben.find(x=>x.id===_activeAufgabeId);
+  if(!a) return;
+  const neuerStatus = a.status === 'erledigt' ? 'offen' : 'erledigt';
+  const {error} = await sb.from('aufgaben').update({status: neuerStatus}).eq('id', _activeAufgabeId);
+  if(error){ toast('Fehler: '+error.message); return; }
+  a.status = neuerStatus;
+  closeMo('mo-aufdetail');
+  rndrAufgaben();
+  updAufgabenDashboardStat();
+  toast(neuerStatus === 'erledigt' ? '✓ Als erledigt markiert' : 'Wieder geöffnet');
+}
+
+async function deleteAufgabeDetail(){
+  if(!_activeAufgabeId) return;
+  if(!confirm('Aufgabe wirklich löschen?')) return;
+  const {error} = await sb.from('aufgaben').delete().eq('id', _activeAufgabeId);
+  if(error){ toast('Fehler: '+error.message); return; }
+  aufgaben = aufgaben.filter(a=>a.id!==_activeAufgabeId);
+  closeMo('mo-aufdetail');
+  rndrAufgaben();
+  updAufgabenDashboardStat();
+  toast('Gelöscht');
 }
 
 function openNAufgabe(){
@@ -9788,6 +9850,25 @@ async function doRegister() {
       <div class="fgg"><label class="fl">Priorität</label><select class="fs" id="auf-prioritaet"><option value="niedrig">Niedrig</option><option value="mittel" selected>Mittel</option><option value="hoch">Hoch</option></select></div>
     </div>
     <div class="mfoot"><button class="tbtn tbtn-ghost" onclick="closeMo('mo-nauf')">Abbrechen</button><button class="tbtn tbtn-navy" onclick="saveAufgabe()">Speichern</button></div>
+  </div>
+</div>
+
+<!-- MODAL: AUFGABE ÖFFNEN/BEARBEITEN -->
+<div class="mo" id="mo-aufdetail">
+  <div class="modal" style="max-width:440px">
+    <div class="mh"><div class="mt2">Aufgabe bearbeiten</div><div class="mx" onclick="closeMo('mo-aufdetail')">✕</div></div>
+    <div class="mb2">
+      <div class="fgg"><label class="fl">Titel *</label><input class="fi" id="aufd-titel"></div>
+      <div class="fgg"><label class="fl">Beschreibung</label><textarea class="fta" id="aufd-beschreibung" placeholder="Details (optional)..."></textarea></div>
+      <div class="fgg"><label class="fl">Fällig am</label><input class="fi" id="aufd-faellig" type="date"></div>
+      <div class="fgg"><label class="fl">Priorität</label><select class="fs" id="aufd-prioritaet"><option value="niedrig">Niedrig</option><option value="mittel">Mittel</option><option value="hoch">Hoch</option></select></div>
+      <button id="aufd-done-btn" onclick="toggleAufgabeDetailStatus()" style="width:100%;padding:10px;border-radius:8px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px">✓ Als erledigt markieren</button>
+    </div>
+    <div class="mfoot">
+      <button class="tbtn tbtn-ghost" style="color:#DC2626" onclick="deleteAufgabeDetail()">Löschen</button>
+      <button class="tbtn tbtn-ghost" onclick="closeMo('mo-aufdetail')">Schliessen</button>
+      <button class="tbtn tbtn-navy" onclick="saveAufgabeDetail()">Speichern</button>
+    </div>
   </div>
 </div>
 
