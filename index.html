@@ -132,7 +132,6 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
 .tn-logo-icon .tn-cross-v{position:absolute;left:50%;top:5px;transform:translateX(-50%);width:5px;height:28px;background:#C8941A;border-radius:2px}
 .tn-logo-icon .tn-cross-h{position:absolute;top:12px;left:7px;width:24px;height:5px;background:#C8941A;border-radius:2px}
 .tn-logo-text{font-size:18px;font-weight:700;color:white;white-space:nowrap}
-.tn-gemlogo{width:26px;height:26px;border-radius:6px;object-fit:contain;background:white;flex-shrink:0;display:none}
 .tn-gemname{font-size:15px;color:rgba(255,255,255,0.65);white-space:nowrap;display:none;align-items:center;gap:8px}
 @media(min-width:640px){.tn-gemname{display:flex}}
 .tn-search{flex:1;max-width:330px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);border-radius:9px;padding:10px 15px;font-size:15px;color:rgba(255,255,255,0.55);display:none;align-items:center;gap:9px;cursor:pointer}
@@ -187,7 +186,6 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
 .sb-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.85)}
 .sb-item.active{background:rgba(200,148,26,0.18);color:#e8b84b}
 .sb-item svg{width:14px;height:14px;fill:currentColor;flex-shrink:0}
-.sb-badge{margin-left:auto;background:#C8941A;color:white;font-size:11.5px;padding:1px 6px;border-radius:10px;font-weight:500}
 .sb-foot{margin-top:auto;padding:10px 6px;border-top:1px solid rgba(255,255,255,0.07)}
 .sb-user{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;cursor:pointer}
 .sb-user:hover{background:rgba(255,255,255,0.06)}
@@ -2823,11 +2821,6 @@ function initAppUI() {
 // ═══════════════════════════════════════════
 let _AM = [], _AU = [];
 
-function initAdmin() {
-  if (_S) document.getElementById('a-uname').textContent = _S.name || _S.email;
-  loadAdminData();
-}
-
 async function loadAdminData() {
   const [{ data: m }, { data: u }] = await Promise.all([
     sb.from('mandanten').select('*').order('created_at',{ascending:false}),
@@ -2860,11 +2853,6 @@ async function loadAdminData() {
 
 // renderAM: see updated version below
 
-function filterAdminUsers() {
-  const sel = document.getElementById('user-mandant-filter');
-  const mid = sel ? sel.value : '';
-  if(_activeMandant) renderAU(mid || _activeMandant.id);
-}
 
 function renderAU(mandantFilter) {
   // renderAU is now replaced by renderDetailUsers in the new admin design
@@ -3057,18 +3045,6 @@ async function uploadWizardLogo(file){
   const prev = document.getElementById('wiz-logo-preview');
   if(prev) prev.innerHTML = `<img src="${logoUrl}" style="width:100%;height:100%;object-fit:contain">`;
   toast('✅ Logo gespeichert');
-}
-
-function openAUMoFiltered() {
-  // Pre-select currently filtered mandant
-  const filter = document.getElementById('user-mandant-filter')?.value || '';
-  openAUMo();
-  if (filter) {
-    setTimeout(() => {
-      const sel = document.getElementById('au-mandant');
-      if (sel) sel.value = filter;
-    }, 50);
-  }
 }
 
 function openAUMo() {
@@ -3439,12 +3415,6 @@ async function saveM(){
   const newId = saved?.id || mIdSeq++;
   members.unshift({id:newId,_dbId:saved?.id,anrede:payload.anrede,vorname:v,nachname:n,geschlecht:'',email:payload.email,mobil:payload.mobil,strasse:payload.strasse,plzort:plzortVal,kanton:'ZH',familienstand:'',status:payload.status,rolleId:parseInt(document.getElementById('nm-rol').value)||rollen[0].id,groupId:0,eingetreten:payload.eingetreten,taufe:'',geburt:'',notizen:payload.notizen,color,spenden:[]});
   closeMo('mo-nm');applyMF();updStats();toast(v+' '+n+' gespeichert');
-}
-async function delM(id){
-  if(!confirm('Mitglied löschen?'))return;
-  const m=members.find(x=>x.id===id);
-  if(m?._dbId) await dbDelete('mitglieder',m._dbId);
-  members=members.filter(m=>m.id!==id);applyMF();updStats();toast('Gelöscht');
 }
 function exportCSV(){const rows=[['Anrede','Vorname','Nachname','E-Mail','Mobil','Status','Eingetreten']];members.forEach(m=>{rows.push([m.anrede,m.vorname,m.nachname,m.email,m.mobil,m.status,m.eingetreten]);});const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.map(r=>r.map(v=>`"${v||''}"`).join(',')).join('\n'));a.download='mitglieder.csv';a.click();toast('CSV exportiert');}
 
@@ -5169,7 +5139,6 @@ function confirmSGAdd(){
   rndrSGGrid();toast(n+' Mitglied(er) hinzugefügt ✓');
 }
 
-function doAddMemberSG(sgId){const sel=document.getElementById('sg-add-sel');if(!sel)return;const m=members.find(x=>x.id===sel.value);if(!m)return;m.groupId=sgId;const sg=sgData.find(x=>x.id===sgId);if(sg){rndrSGMembers(sg);document.getElementById('sg-cnt').textContent=members.filter(x=>x.groupId===sgId).length;}rndrSGGrid();toast(m.vorname+' '+m.nachname+' hinzugefügt');}
 function removeMemberSG(mid,sgId){
   if(!confirm('Aus Gruppe entfernen?'))return;
   const m=members.find(x=>x.id===mid);
@@ -6712,27 +6681,6 @@ async function saveAufgabe(){
   toast('Aufgabe angelegt ✓');
 }
 
-async function toggleAufgabe(id){
-  const a = aufgaben.find(x=>x.id===id);
-  if(!a) return;
-  const neuerStatus = a.status === 'erledigt' ? 'offen' : 'erledigt';
-  const {error} = await sb.from('aufgaben').update({status: neuerStatus}).eq('id', id);
-  if(error){ toast('Fehler: '+error.message); return; }
-  a.status = neuerStatus;
-  rndrAufgaben();
-  updAufgabenDashboardStat();
-}
-
-async function deleteAufgabe(id){
-  if(!confirm('Aufgabe löschen?')) return;
-  const {error} = await sb.from('aufgaben').delete().eq('id', id);
-  if(error){ toast('Fehler: '+error.message); return; }
-  aufgaben = aufgaben.filter(a=>a.id!==id);
-  rndrAufgaben();
-  updAufgabenDashboardStat();
-  toast('Gelöscht');
-}
-
 // Aktualisiert die "Offene Aufgaben"-Kachel auf dem Dashboard
 async function updAufgabenDashboardStat(){
   if(!_S?.id) return;
@@ -8091,15 +8039,6 @@ async function delDok(id) {
   filterDok();updDokStats();toast('Gelöscht ✓');
 }
 
-function makeEmailClickable(spanId, email) {
-  const el = document.getElementById(spanId);
-  if(!el) return;
-  if(email) {
-    el.innerHTML = `<a href="mailto:${email}" onclick="event.stopPropagation()" style="color:#2563EB;text-decoration:none;cursor:pointer" title="E-Mail öffnen">${email}</a>`;
-  } else {
-    el.textContent = '—';
-  }
-}
 function svEmail(id, email) {
   const el = document.getElementById(id);
   if(!el) return;
@@ -8980,16 +8919,6 @@ async function testKIKey() {
   }
 }
 
-function initKIKey() {
-  const key = localStorage.getItem('aj-ki-key');
-  const inp = document.getElementById('ki-api-key-input');
-  const status = document.getElementById('ki-key-status');
-  if(key && inp) {
-    inp.value = key;
-    if(status) status.innerHTML = '<span style="color:#16A34A">✓ API-Key gespeichert</span>';
-  }
-}
-
 // ══════════════════════════════════════════════════════════
 // USER ROLES & PERMISSIONS
 // ══════════════════════════════════════════════════════════
@@ -9232,19 +9161,6 @@ function switchToWelcome() {
 let _regData = {};
 let _regDenom = '';
 let _regStep = 0;
-
-function showRegister() {
-  _regData = {}; _regDenom = ''; _regStep = 0;
-  document.querySelectorAll('.reg-denom-btn').forEach(b=>b.classList.remove('sel'));
-  ['reg-gname','reg-city','reg-vorname','reg-nachname','reg-email','reg-tel','reg-pw1','reg-pw2'].forEach(id=>{
-    const el = document.getElementById(id); if(el) el.value='';
-  });
-  document.getElementById('pw-str').className = 'pw-strength';
-  document.getElementById('reg-err').style.display = 'none';
-  regGoTo(0);
-  document.getElementById('pg-login').style.display = 'none';
-  document.getElementById('pg-register').style.display = 'block';
-}
 
 function showLogin() {
   document.getElementById('pg-register').style.display = 'none';
