@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AJ Connect</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2317284D'/%3E%3Crect x='27' y='10' width='10' height='44' rx='3' fill='%23C8941A'/%3E%3Crect x='12' y='22' width='40' height='10' rx='3' fill='%23C8941A'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -128,8 +129,8 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
 .topnav-1{background:#17284D;height:68px;display:flex;align-items:center;padding:0 22px;gap:20px;flex-shrink:0}
 .tn-logo{display:flex;align-items:center;gap:10px}
 .tn-logo-icon{width:38px;height:38px;border-radius:9px;background:#17284D;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0}
-.tn-logo-icon .tn-cross-v{position:absolute;left:50%;top:6px;transform:translateX(-50%);width:5px;height:26px;background:#C8941A;border-radius:2.5px}
-.tn-logo-icon .tn-cross-h{position:absolute;top:14.5px;left:7px;width:24px;height:5px;background:#C8941A;border-radius:2.5px}
+.tn-logo-icon .tn-cross-v{position:absolute;left:50%;top:5px;transform:translateX(-50%);width:5px;height:28px;background:#C8941A;border-radius:2px}
+.tn-logo-icon .tn-cross-h{position:absolute;top:12px;left:7px;width:24px;height:5px;background:#C8941A;border-radius:2px}
 .tn-logo-text{font-size:18px;font-weight:700;color:white;white-space:nowrap}
 .tn-gemlogo{width:26px;height:26px;border-radius:6px;object-fit:contain;background:white;flex-shrink:0;display:none}
 .tn-gemname{font-size:15px;color:rgba(255,255,255,0.65);white-space:nowrap;display:none;align-items:center;gap:8px}
@@ -227,6 +228,8 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
 .tcardh{padding:13px 16px;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .afs{padding:7px 11px;border:1px solid #E5E7EB;border-radius:8px;font-size:13.5px;color:#374151;background:white;outline:none}
 .srch{padding:7px 12px;border:1px solid #E5E7EB;border-radius:8px;font-size:13.5px;color:#374151;background:white;outline:none}
+.aufd-done-btn{transition:filter 0.12s ease}
+.aufd-done-btn:hover{filter:brightness(0.94)}
 tbody tr{transition:background 0.12s ease}
 tbody tr:hover td{background:#FAFBFC}
 .tbltoolbar{padding:10px 14px;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -902,8 +905,8 @@ tbody tr:hover td{background:#FAFBFC}
     <!-- NEUE TOP-NAVIGATION (Desktop/Tablet) -->
     <div class="topnav-1">
       <div class="tn-hamburger" onclick="openMobileDrawer()"><svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></div>
-      <div class="tn-logo"><div class="tn-logo-icon"><div class="tn-cross-v"></div><div class="tn-cross-h"></div></div><div class="tn-logo-text">AJ Connect</div></div>
-      <div class="tn-gemname"><span id="tn-gemname-text">Gemeinde</span></div>
+      <div class="tn-logo" onclick="navTo('dashboard')" style="cursor:pointer"><div class="tn-logo-icon"><div class="tn-cross-v"></div><div class="tn-cross-h"></div></div><div class="tn-logo-text">AJ Connect</div></div>
+      <div class="tn-gemname" onclick="navTo('dashboard')" style="cursor:pointer"><span id="tn-gemname-text">Gemeinde</span></div>
       <div class="tn-search" onclick="openSearchPalette()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
         <span>Suchen...</span><span class="sb-search-kbd" style="margin-left:auto">Ctrl K</span>
@@ -1030,14 +1033,15 @@ tbody tr:hover td{background:#FAFBFC}
           </div>
           <p style="font-size:14px;color:#9CA3AF;margin:-8px 0 16px">Nur du siehst deine eigenen Aufgaben — andere Benutzer sehen sie nicht.</p>
           <div class="sgrid4" style="margin-bottom:16px">
-            <div class="scard"><div class="sico" style="background:#EFF6FF"><svg viewBox="0 0 24 24" style="fill:#2563EB"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg></div><div><div class="sn" id="auf-offen-n">0</div><div class="sl">Offen</div></div></div>
-            <div class="scard"><div class="sico" style="background:#FEE2E2"><svg viewBox="0 0 24 24" style="fill:#DC2626"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div><div><div class="sn" id="auf-ueberf-n">0</div><div class="sl">Überfällig</div></div></div>
-            <div class="scard"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><div><div class="sn" id="auf-erledigt-n">0</div><div class="sl">Erledigt</div></div></div>
+            <div class="scard" style="cursor:pointer" onclick="filterAufgabenViaKachel('offen')"><div class="sico" style="background:#EFF6FF"><svg viewBox="0 0 24 24" style="fill:#2563EB"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg></div><div><div class="sn" id="auf-offen-n">0</div><div class="sl">Offen</div></div></div>
+            <div class="scard" style="cursor:pointer" onclick="filterAufgabenViaKachel('ueberfaellig')"><div class="sico" style="background:#FEE2E2"><svg viewBox="0 0 24 24" style="fill:#DC2626"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div><div><div class="sn" id="auf-ueberf-n">0</div><div class="sl">Überfällig</div></div></div>
+            <div class="scard" style="cursor:pointer" onclick="filterAufgabenViaKachel('erledigt')"><div class="sico" style="background:#DCFCE7"><svg viewBox="0 0 24 24" style="fill:#16A34A"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><div><div class="sn" id="auf-erledigt-n">0</div><div class="sl">Erledigt</div></div></div>
           </div>
           <div class="tcard">
             <div class="tcardh">
               <select class="afs" id="auf-filter" onchange="rndrAufgaben()">
                 <option value="offen">Offene Aufgaben</option>
+                <option value="ueberfaellig">Überfällig</option>
                 <option value="alle">Alle Aufgaben</option>
                 <option value="erledigt">Erledigt</option>
               </select>
@@ -6574,12 +6578,18 @@ async function loadAufgaben(){
 const PRIO_CSS = {niedrig:'background:#F4F5F7;color:#6B7280', mittel:'background:#FEF3C7;color:#D97706', hoch:'background:#FEE2E2;color:#DC2626'};
 const PRIO_LABEL = {niedrig:'Niedrig', mittel:'Mittel', hoch:'Hoch'};
 
+function filterAufgabenViaKachel(filterWert){
+  const sel = document.getElementById('auf-filter');
+  if(sel){ sel.value = filterWert; rndrAufgaben(); }
+}
+
 function rndrAufgaben(){
   const filter = document.getElementById('auf-filter')?.value || 'offen';
   const heute = new Date().toISOString().split('T')[0];
   let list = aufgaben;
   if(filter === 'offen') list = aufgaben.filter(a => a.status !== 'erledigt');
   else if(filter === 'erledigt') list = aufgaben.filter(a => a.status === 'erledigt');
+  else if(filter === 'ueberfaellig') list = aufgaben.filter(a => a.status !== 'erledigt' && a.faellig_am && a.faellig_am < heute);
 
   const box = document.getElementById('auf-list');
   if(box){
@@ -9862,7 +9872,7 @@ async function doRegister() {
       <div class="fgg"><label class="fl">Beschreibung</label><textarea class="fta" id="aufd-beschreibung" placeholder="Details (optional)..."></textarea></div>
       <div class="fgg"><label class="fl">Fällig am</label><input class="fi" id="aufd-faellig" type="date"></div>
       <div class="fgg"><label class="fl">Priorität</label><select class="fs" id="aufd-prioritaet"><option value="niedrig">Niedrig</option><option value="mittel">Mittel</option><option value="hoch">Hoch</option></select></div>
-      <button id="aufd-done-btn" onclick="toggleAufgabeDetailStatus()" style="width:100%;padding:10px;border-radius:8px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px">✓ Als erledigt markieren</button>
+      <button id="aufd-done-btn" onclick="toggleAufgabeDetailStatus()" class="aufd-done-btn" style="padding:7px 14px;border-radius:7px;border:none;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:6px">✓ Als erledigt markieren</button>
     </div>
     <div class="mfoot">
       <button class="tbtn tbtn-ghost" style="color:#DC2626" onclick="deleteAufgabeDetail()">Löschen</button>
