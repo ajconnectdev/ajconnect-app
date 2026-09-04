@@ -65,11 +65,11 @@ body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0F1F3D;min-
 .aptitle{font-size:20px;font-weight:600;color:#1A3560}
 .apsub{font-size:14.5px;color:#6B7280;margin-top:3px}
 .astats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.astat{background:white;border:1px solid #E5E7EB;border-radius:12px;padding:16px;display:flex;align-items:center;gap:12px}
+.astat{background:white;border:1px solid #E5E7EB;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px}
 .astat-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px}
 .astat-n{font-size:22px;font-weight:600;color:#1A3560;line-height:1}
 .astat-l{font-size:12.5px;color:#9CA3AF;margin-top:2px}
-.acard{background:white;border:1px solid #E5E7EB;border-radius:12px;overflow:hidden}
+.acard{background:white;border:1px solid #E5E7EB;border-radius:14px;overflow:hidden}
 .acardh{padding:14px 18px;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between}
 .acardtitle{font-size:15.5px;font-weight:600;color:#1A3560}
 .abtn{padding:7px 14px;border-radius:7px;font-size:13.5px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;border:none;font-family:inherit}
@@ -223,6 +223,10 @@ td{padding:10px 14px;font-size:14.5px;vertical-align:middle}
 .cardbody{padding:16px 18px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .tblwrap{background:white;border:1px solid #E5E7EB;border-radius:14px;overflow:hidden}
+.tcard{background:white;border:1px solid #E5E7EB;border-radius:14px;overflow:hidden;margin-bottom:16px}
+.tcardh{padding:13px 16px;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.afs{padding:7px 11px;border:1px solid #E5E7EB;border-radius:8px;font-size:13.5px;color:#374151;background:white;outline:none}
+.srch{padding:7px 12px;border:1px solid #E5E7EB;border-radius:8px;font-size:13.5px;color:#374151;background:white;outline:none}
 tbody tr{transition:background 0.12s ease}
 tbody tr:hover td{background:#FAFBFC}
 .tbltoolbar{padding:10px 14px;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -273,7 +277,7 @@ tbody tr:hover td{background:#FAFBFC}
 .pg-btn.on{background:#1A3560;color:white;border-color:#1A3560}
 .edit-sel{padding:3px 7px;border:1px solid #E5E7EB;border-radius:5px;font-size:12.5px;background:white;cursor:pointer;outline:none;max-width:150px}
 .cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.mc{background:white;border:1px solid #E5E7EB;border-radius:12px;padding:18px;cursor:pointer;transition:all 0.15s}
+.mc{background:white;border:1px solid #E5E7EB;border-radius:14px;padding:18px;cursor:pointer;transition:all 0.15s}
 .mc:hover{border-color:#C8941A;box-shadow:0 2px 12px rgba(200,148,26,0.1)}
 .mc-av{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:white;margin:0 auto 10px}
 .mc-n{font-size:15.5px;font-weight:600;color:#1A3560;text-align:center;margin-bottom:6px}
@@ -8101,7 +8105,7 @@ function rndrBereiche() {
       const we=new Date(ws); we.setDate(ws.getDate()+7);
       return d>=ws&&d<we;
     }).length;
-    return `<div style="background:white;border:1px solid #E5E7EB;border-radius:12px;padding:16px;border-left:4px solid ${b.farbe}">
+    return `<div style="background:white;border:1px solid #E5E7EB;border-radius:14px;padding:16px;border-left:4px solid ${b.farbe}">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <span style="font-size:24px">${b.icon}</span>
         <div>
